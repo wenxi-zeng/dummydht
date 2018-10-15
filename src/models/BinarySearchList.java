@@ -1,7 +1,9 @@
+package models;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class BinarySearchList extends ArrayList<VirtualNode> {
+public class BinarySearchList extends ArrayList<Indexable> {
 
     /**
      * @param t Node to be added
@@ -17,7 +19,7 @@ public class BinarySearchList extends ArrayList<VirtualNode> {
      *          Time Complexity O(log n)
      */
     @Override
-    public boolean add(VirtualNode t) {
+    public boolean add(Indexable t) {
         int index = Collections.binarySearch(this, t);
 
         if (index >= 0) {
@@ -33,7 +35,7 @@ public class BinarySearchList extends ArrayList<VirtualNode> {
     }
 
     /**
-     * @param hash
+     * @param node dummy node with hash
      * @return the node where the hash is hosted.
      *
      *          This function uses binary search {@see Collections.binarySearch} to locate the
@@ -49,9 +51,7 @@ public class BinarySearchList extends ArrayList<VirtualNode> {
      *
      *          Time Complexity O(log n)
      */
-    public VirtualNode find(int hash) {
-        VirtualNode node = new VirtualNode();
-        node.setHash(hash);
+    public Indexable find(Indexable node) {
         int index = Collections.binarySearch(this, node);
 
         if (index < 0)
@@ -70,9 +70,9 @@ public class BinarySearchList extends ArrayList<VirtualNode> {
      *          Index is cached to the node, for fast access of its successor.
      */
     @Override
-    public VirtualNode get(int index) {
-        VirtualNode node = super.get(index);
-        node.setIndex(index); // set current index in the table, for fast access to successor
+    public Indexable get(int index) {
+        Indexable node = super.get(index);
+        node.setIndex(index); // set current index in the table, for fast access to successor and predecessor
 
         return node;
     }
@@ -83,12 +83,27 @@ public class BinarySearchList extends ArrayList<VirtualNode> {
      *
      *          Time Complexity O(1)
      */
-    public VirtualNode next(VirtualNode node) {
-        if (node.getIndex() < 0) // no index set
+    public Indexable next(Indexable node) {
+        if (node.getIndex() < 0) // no index cache
             return null;
         else if (node.getIndex() + 1 >= size()) // current node is the last element in list
             return get(0);
         else
             return get(node.getIndex() + 1);
+    }
+
+    /**
+     * @param node source node
+     * @return the predecessor of the given node
+     *
+     *          Time Complexity O(1)
+     */
+    public Indexable pre(Indexable node) {
+        if (node.getIndex() < 0) // no index cache
+            return null;
+        else if (node.getIndex() == 0) // current node is the first element in list
+            return get(size() - 1);
+        else
+            return get(node.getIndex() - 1);
     }
 }

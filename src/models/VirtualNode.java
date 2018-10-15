@@ -1,4 +1,6 @@
-public class VirtualNode implements Comparable<VirtualNode> {
+package models;
+
+public class VirtualNode implements Indexable {
 
     private int hash;
 
@@ -10,10 +12,14 @@ public class VirtualNode implements Comparable<VirtualNode> {
         this.index = -1;
     }
 
-    public VirtualNode(int hash, String physicalNodeId) {
+    public VirtualNode(int hash) {
+        this();
         this.hash = hash;
+    }
+
+    public VirtualNode(int hash, String physicalNodeId) {
+        this(hash);
         this.physicalNodeId = physicalNodeId;
-        this.index = -1;
     }
 
     public int getHash() {
@@ -41,12 +47,7 @@ public class VirtualNode implements Comparable<VirtualNode> {
     }
 
     @Override
-    public int compareTo(VirtualNode o) {
-        if (this.hash < o.getHash())
-            return -1;
-        else if (this.hash > o.getHash())
-            return 1;
-        else
-            return 0;
+    public int compareTo(Indexable o) {
+        return Integer.compare(this.hash, o.getHash());
     }
 }
