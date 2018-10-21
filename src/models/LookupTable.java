@@ -32,7 +32,8 @@ public class LookupTable {
     }
 
     public void initialize(String config) {
-
+        physicalNodeMap = new HashMap<>();
+        table = new BinarySearchList();
     }
 
     public List<PhysicalNode> getReplicas(int hash) {

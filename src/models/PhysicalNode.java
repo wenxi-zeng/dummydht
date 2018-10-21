@@ -1,5 +1,6 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PhysicalNode {
@@ -19,6 +20,7 @@ public class PhysicalNode {
     public final static String STATUS_INACTIVE = "inactive";
 
     public PhysicalNode() {
+        virtualNodes = new ArrayList<>();
     }
 
     public String getId() {
