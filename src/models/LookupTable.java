@@ -1,6 +1,6 @@
 package models;
 
-import algorithms.ReplicaPlacementAlgorithm;
+import algorithms.replciaplacement.ReplicaPlacementAlgorithm;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +30,11 @@ public class LookupTable {
 
         return instance;
     }
+
+    public void initialize(String config) {
+
+    }
+
     public List<PhysicalNode> getReplicas(int hash) {
         return algorithm.getReplicas(this, hash);
     }
