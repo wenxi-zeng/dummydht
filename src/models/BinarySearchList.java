@@ -71,6 +71,7 @@ public class BinarySearchList extends ArrayList<Indexable> {
      */
     @Override
     public Indexable get(int index) {
+        index = index < 0 ? size() + index : index;
         Indexable node = super.get(index);
         node.setIndex(index); // set current index in the table, for fast access to successor and predecessor
 
