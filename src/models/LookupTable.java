@@ -15,9 +15,21 @@ public class LookupTable {
 
     private ReplicaPlacementAlgorithm algorithm;
 
-    public LookupTable() {
-    }
+    private static volatile LookupTable instance = null;
 
+    private LookupTable() {}
+
+    public static LookupTable getInstance() {
+        if (instance == null) {
+            synchronized(LookupTable.class) {
+                if (instance == null) {
+                    instance = new LookupTable();
+                }
+            }
+        }
+
+        return instance;
+    }
     public List<PhysicalNode> getReplicas(int hash) {
         return algorithm.getReplicas(this, hash);
     }
@@ -52,5 +64,17 @@ public class LookupTable {
 
     public void setAlgorithm(ReplicaPlacementAlgorithm algorithm) {
         this.algorithm = algorithm;
+    }
+
+    public void update() {
+
+    }
+
+    public void addNode(int index, Indexable node) {
+
+    }
+
+    public void remove(Indexable index) {
+
     }
 }
