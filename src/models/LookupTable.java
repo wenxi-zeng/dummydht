@@ -11,6 +11,7 @@ import algorithms.replciaplacement.RingReplicaAlgorithm;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static util.Config.CONFIG_RING;
 
@@ -163,5 +164,20 @@ public class LookupTable {
 
     public Indexable read(String filename) {
         return readWriteAlgorithm.read(this, filename);
+    }
+
+    public String listPhysicalNodes() {
+        StringBuilder result = new StringBuilder();
+
+        for(Map.Entry entry : physicalNodeMap.entrySet()) {
+            result.append(entry.getValue().toString()).append('\n');
+        }
+
+        return result.toString();
+    }
+
+    @Override
+    public String toString() {
+        return "Epoch: " + epoch + "\n" + table.toString();
     }
 }

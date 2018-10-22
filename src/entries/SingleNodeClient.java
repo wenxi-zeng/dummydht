@@ -40,7 +40,9 @@ public class SingleNodeClient {
                     "addNode <ip> <port>\n" +
                     "removeNode <ip> <port>\n" +
                     "increaseLoad <ip> <port>\n" +
-                    "decreaseLoad <ip> <port>\n");
+                    "decreaseLoad <ip> <port>\n" +
+                    "listPhysicalNodes\n" +
+                    "printLookupTable\n");
 
             String cmdLine[] = in.nextLine().split("\\s+");
 

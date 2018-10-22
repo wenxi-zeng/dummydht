@@ -111,4 +111,14 @@ public class BinarySearchList extends ArrayList<Indexable> {
         else
             return get(node.getIndex() - 1);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < size(); i++) {
+            result.append(get(i).toString()).append('\n');
+        }
+        return result.toString();
+    }
 }

@@ -84,6 +84,28 @@ public enum Command {
             pnode.setPort(Integer.valueOf(args[2]));
             LookupTable.getInstance().decreaseLoad(pnode);
         }
+    },
+
+    LISTPHYSICALNODES {
+        public void execute(String[] args) {
+            if (args.length != 1) {
+                SimpleLog.i("Wrong arguments. Try: listPhysicalNodes");
+                return;
+            }
+
+            SimpleLog.i(LookupTable.getInstance().listPhysicalNodes());
+        }
+    },
+
+    PRINTLOOKUPTABLE {
+        public void execute(String[] args) {
+            if (args.length != 1) {
+                SimpleLog.i("Wrong arguments. Try: printLookupTable");
+                return;
+            }
+
+            SimpleLog.i(LookupTable.getInstance().toString());
+        }
     };
 
     public abstract void execute(String[] args);

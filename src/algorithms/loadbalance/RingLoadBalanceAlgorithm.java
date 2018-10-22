@@ -23,7 +23,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
 
         for (VirtualNode vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
-            int bound = vnode.getHash() - successor.getHash();
+            int bound = successor.getHash() - vnode.getHash();
             int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
 
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
@@ -57,7 +57,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         int hf = hi - dh;
         if (hf < 0) hf = NUMBER_OF_HASH_SLOTS + hf;
 
-        if (hf == LookupTable.getInstance().getTable().pre(node).getHash()) {
+        if (dh == 0 || hf == LookupTable.getInstance().getTable().pre(node).getHash()) {
             SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }
@@ -75,8 +75,8 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         int hi = node.getHash();
         int hf = (hi + dh) % NUMBER_OF_HASH_SLOTS;
 
-        if (hf == LookupTable.getInstance().getTable().next(node).getHash()) {
-            SimpleLog.i("Invalid hash change, delta=" + dh);
+        if (dh == 0 || hf == LookupTable.getInstance().getTable().next(node).getHash()) {
+            SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }
 
