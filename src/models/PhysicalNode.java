@@ -5,8 +5,6 @@ import java.util.List;
 
 public class PhysicalNode {
 
-    private String id;
-
     private String address;
 
     private int port;
@@ -24,11 +22,7 @@ public class PhysicalNode {
     }
 
     public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+        return "P" + getAddress() + ":" + getPort();
     }
 
     public String getAddress() {
@@ -61,5 +55,10 @@ public class PhysicalNode {
 
     public void setVirtualNodes(List<VirtualNode> virtualNodes) {
         this.virtualNodes = virtualNodes;
+    }
+
+    @Override
+    public String toString() {
+        return address + ":" + port;
     }
 }

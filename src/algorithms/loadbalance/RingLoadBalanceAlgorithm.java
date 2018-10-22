@@ -2,46 +2,96 @@ package algorithms.loadbalance;
 
 import models.Indexable;
 import models.LookupTable;
+import models.PhysicalNode;
+import models.VirtualNode;
+import util.MathX;
+import util.SimpleLog;
 
+import static util.Config.NUMBER_OF_HASH_SLOTS;
 import static util.Config.NUMBER_OF_REPLICAS;
 
 public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
     @Override
-    public void decreaseLoad(int dh, Indexable node) {
+    public void increaseLoad(LookupTable table, PhysicalNode node) {
+        SimpleLog.i("Increasing load for physical node " + node.toString());
+
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+            Indexable successor = table.getTable().next(vnode);
+            int bound = vnode.getHash() - successor.getHash();
+            int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
+
+            SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
+            increaseLoad(table, dh, vnode);
+        }
+    }
+
+    @Override
+    public void decreaseLoad(LookupTable table, PhysicalNode node) {
+        SimpleLog.i("Decreasing load for physical node " + node.toString());
+
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+            Indexable predecessor = table.getTable().pre(vnode);
+            int bound = vnode.getHash() - predecessor.getHash();
+            int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
+
+            SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
+            decreaseLoad(table, dh, vnode);
+        }
+    }
+
+    @Override
+    public void decreaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
         int hf = hi - dh;
+        if (hf < 0) hf = NUMBER_OF_HASH_SLOTS + hf;
 
-        if (!validMove(hf, node)) return;
+        if (hf == LookupTable.getInstance().getTable().pre(node).getHash()) {
+            SimpleLog.i("Invalid hash change, delta h=" + dh);
+            return;
+        }
 
-        Indexable toNode = LookupTable.getInstance().getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
+        Indexable toNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
         transfer(hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
-        LookupTable.getInstance().update(); // commit the change, gossip to other nodes
+        SimpleLog.i("Decreased load for virtual node " + hi + " to " + hf);
     }
 
     @Override
-    public void increaseLoad(int dh, Indexable node) {
+    public void increaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
-        int hf = hi + dh;
+        int hf = (hi + dh) % NUMBER_OF_HASH_SLOTS;
 
-        if (!validMove(hf, node)) return;
+        if (hf == LookupTable.getInstance().getTable().next(node).getHash()) {
+            SimpleLog.i("Invalid hash change, delta=" + dh);
+            return;
+        }
 
-        Indexable fromNode = LookupTable.getInstance().getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
+        Indexable fromNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
         requestTransfer(hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
-        LookupTable.getInstance().update(); // commit the change, gossip to other nodes
+        SimpleLog.i("Increased load for virtual node " + hi + " to " + hf);
     }
 
     @Override
-    public void nodeJoin(Indexable node) {
-        LookupTable table = LookupTable.getInstance();
-        Indexable index = table.getTable().find(node); // where the new node is inserted to
-        table.addNode(index.getIndex(), node); // only add the node to table, not gossiping the change yet
+    public void nodeJoin(LookupTable table, Indexable node) {
+        SimpleLog.i("Adding virtual node [hash=" + node.getHash() + "] for " + ((VirtualNode)node).getPhysicalNodeId());
 
         Indexable successor = table.getTable().next(node);
-        Indexable startNode = table.getTable().get(index.getIndex() - NUMBER_OF_REPLICAS);
+        Indexable startNode = table.getTable().get(node.getIndex() - NUMBER_OF_REPLICAS);
         Indexable endNode = table.getTable().next(startNode);
 
         for (int i = 0; i < NUMBER_OF_REPLICAS; i++) {
@@ -55,18 +105,16 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             successor = table.getTable().next(successor);
         }
 
-        table.update(); // commit the change, gossip to other nodes
+        SimpleLog.i("Virtual node [hash=" + node.getHash() + "] added");
     }
 
     @Override
-    public void nodeLeave(Indexable node) {
-        LookupTable table = LookupTable.getInstance();
-        Indexable index = table.getTable().find(node); // where the new node is inserted to
-        table.remove(index); // only remove from table, not gossiping the change yet
+    public void nodeLeave(LookupTable table, Indexable node) {
+        SimpleLog.i("Removing virtual node [hash=" + node.getHash() + "] from " + ((VirtualNode)node).getPhysicalNodeId());
 
-        Indexable successor = table.getTable().get(index.getIndex());
+        Indexable successor = table.getTable().get(node.getIndex());
         Indexable predecessor = table.getTable().pre(successor);
-        Indexable startNode = table.getTable().get(index.getIndex() - NUMBER_OF_REPLICAS);
+        Indexable startNode = table.getTable().get(node.getIndex() - NUMBER_OF_REPLICAS);
         Indexable endNode = table.getTable().next(startNode);
 
         for (int i = 0; i < NUMBER_OF_REPLICAS; i++) {
@@ -81,29 +129,18 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             successor = table.getTable().next(successor);
         }
 
-        table.update(); // commit the change, gossip to other nodes
-    }
-
-    private boolean validMove(int hf, Indexable node) {
-        if (hf < node.getHash()) {
-            // load decreased, check if hf is greater than predecessor
-            return hf > LookupTable.getInstance().getTable().pre(node).getHash();
-        }
-        else {
-            // load increased, check if hf is smaller than sucessor
-            return hf < LookupTable.getInstance().getTable().next(node).getHash();
-        }
+        SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
     }
 
     private void transfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
-
+        SimpleLog.i("Transfer hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
     }
 
     private void requestTransfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
-
+        SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
     }
 
     private void requestReplication(int hi, int hf, Indexable fromNode, Indexable toNode) {
-
+        SimpleLog.i("Copy hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
     }
 }

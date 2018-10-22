@@ -50,4 +50,13 @@ public class VirtualNode implements Indexable {
     public int compareTo(Indexable o) {
         return Integer.compare(this.hash, o.getHash());
     }
+
+    @Override
+    public String toString() {
+        return "VirtualNode{" +
+                "hash=" + hash +
+                ", index=" + index +
+                ", physicalNodeId='" + physicalNodeId + '\'' +
+                '}';
+    }
 }

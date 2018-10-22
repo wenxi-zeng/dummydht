@@ -16,5 +16,6 @@ public class Config {
     public final static String PROPERTY_VIRTUAL_PHYSICAL_RATIO = "virtual_physical_ratio";
 
     public static int NUMBER_OF_REPLICAS = 3;
-
+    public static int NUMBER_OF_HASH_SLOTS = 100;
+    public static int VIRTUAL_PHYSICAL_RATIO = 1;
 }
