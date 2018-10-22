@@ -128,13 +128,13 @@ public class LookupTable {
     public void addNode(Indexable node) {
         Indexable index = table.find(node); // where the new node is inserted to
         table.add(index.getIndex(), node); // only add the node to table, not gossiping the change yet
-        loadBalanceAlgorithm.nodeJoin(this, node);
+        loadBalanceAlgorithm.nodeJoin(this, index);
     }
 
     public void removeNode(Indexable node) {
         Indexable index = table.find(node); // where the new node is inserted to
         table.remove(index.getIndex()); // only remove from table, not gossiping the change yet
-        loadBalanceAlgorithm.nodeLeave(this, node);
+        loadBalanceAlgorithm.nodeLeave(this, index);
     }
 
     public void addNode(PhysicalNode node) {

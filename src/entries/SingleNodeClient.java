@@ -16,6 +16,7 @@ public class SingleNodeClient {
                 "3. Ceph\n");
         Scanner in = new Scanner(System.in);
         int type = in.nextInt();
+        in.nextLine();
 
         LookupTable table = LookupTable.getInstance();
         if (type == 1) {
@@ -41,9 +42,15 @@ public class SingleNodeClient {
                     "increaseLoad <ip> <port>\n" +
                     "decreaseLoad <ip> <port>\n");
 
-            String cmdLine[]=in.nextLine().split("\\s+");
-            Command cmd = Command.valueOf(cmdLine[0].toUpperCase());
-            cmd.execute(cmdLine);
+            String cmdLine[] = in.nextLine().split("\\s+");
+
+            try {
+                Command cmd = Command.valueOf(cmdLine[0].toUpperCase());
+                cmd.execute(cmdLine);
+            }
+            catch (Exception e) {
+                System.out.println("Command not found");
+            }
         }
     }
 

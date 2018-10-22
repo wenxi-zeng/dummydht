@@ -67,6 +67,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
 
         node.setHash(hf);
         SimpleLog.i("Decreased load for virtual node " + hi + " to " + hf);
+        SimpleLog.i("Updated node info: " + node.toString());
     }
 
     @Override
@@ -84,6 +85,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
 
         node.setHash(hf);
         SimpleLog.i("Increased load for virtual node " + hi + " to " + hf);
+        SimpleLog.i("Updated node info: " + node.toString());
     }
 
     @Override
@@ -133,14 +135,14 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
     }
 
     private void transfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
-        SimpleLog.i("Transfer hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
+        SimpleLog.i("Transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
     }
 
     private void requestTransfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
-        SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
+        SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
     }
 
     private void requestReplication(int hi, int hf, Indexable fromNode, Indexable toNode) {
-        SimpleLog.i("Copy hash (" + hi + ", "+ hf + " + ] \nfrom " + fromNode.toString() + "\nto " + toNode.toString());
+        SimpleLog.i("Copy hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
     }
 }

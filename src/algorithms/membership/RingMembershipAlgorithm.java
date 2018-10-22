@@ -29,9 +29,9 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
         int numberOfPhysicalNodes = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
         VIRTUAL_PHYSICAL_RATIO = Integer.valueOf(rb.getString(PROPERTY_VIRTUAL_PHYSICAL_RATIO));
 
-        int lastDot = startIp.lastIndexOf(".");
+        int lastDot = startIp.lastIndexOf(".") + 1;
         String ipPrefix = startIp.substring(0, lastDot);
-        int intStartIp = Integer.valueOf(startIp.substring(startIp.lastIndexOf(".") + 1, startIp.length() - 1));
+        int intStartIp = Integer.valueOf(startIp.substring(lastDot));
 
         int totalNodes = numberOfPhysicalNodes * VIRTUAL_PHYSICAL_RATIO;
         Queue<Integer> ipPool = MathX.nonrepeatRandom(ipRange, numberOfPhysicalNodes);
