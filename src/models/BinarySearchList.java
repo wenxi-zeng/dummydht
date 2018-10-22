@@ -84,12 +84,15 @@ public class BinarySearchList extends ArrayList<Indexable> {
 
     /**
      * @param node source node
-     * @return the successor of the given node
+     * @return the successor of the given node.
+     *          make sure you used find() or get(),
+     *          before calling this method. otherwise,
+     *          the returned index would be incorrect.
      *
      *          Time Complexity O(1)
      */
     public Indexable next(Indexable node) {
-        if (node.getIndex() < 0) // no index cache
+        if (node.getIndex() < 0) // no index cache, did you call find() or get()?
             return null;
         else if (node.getIndex() + 1 >= size()) // current node is the last element in list
             return get(0);
@@ -100,11 +103,14 @@ public class BinarySearchList extends ArrayList<Indexable> {
     /**
      * @param node source node
      * @return the predecessor of the given node
+     *          make sure you used find() or get(),
+     *          before calling this method. otherwise,
+     *          the returned index would be incorrect.
      *
      *          Time Complexity O(1)
      */
     public Indexable pre(Indexable node) {
-        if (node.getIndex() < 0) // no index cache
+        if (node.getIndex() < 0) // no index cache, did you call find() or get()?
             return null;
         else if (node.getIndex() == 0) // current node is the first element in list
             return get(size() - 1);
