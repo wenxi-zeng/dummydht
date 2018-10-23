@@ -1,4 +1,6 @@
-package models;
+package ring;
+
+import commonmodels.Indexable;
 
 public class VirtualNode implements Indexable {
 

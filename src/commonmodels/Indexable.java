@@ -1,4 +1,4 @@
-package models;
+package commonmodels;
 
 public interface Indexable extends Comparable<Indexable>{
     int getHash();

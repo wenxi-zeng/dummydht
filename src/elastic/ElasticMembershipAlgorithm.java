@@ -1,9 +1,7 @@
-package algorithms.membership;
+package elastic;
 
-import models.Indexable;
-import models.LookupTable;
-import models.PhysicalNode;
-import models.VirtualNode;
+import commonmodels.PhysicalNode;
+import ring.LookupTable;
 import util.MathX;
 import util.SimpleLog;
 
@@ -14,12 +12,12 @@ import java.util.ResourceBundle;
 
 import static util.Config.*;
 
-public class RingMembershipAlgorithm implements MembershipAlgorithm {
-    @Override
+public class ElasticMembershipAlgorithm {
+
     public void initialize(LookupTable table) {
         SimpleLog.i("Initializing table...");
 
-        ResourceBundle rb = ResourceBundle.getBundle(CONFIG_RING);
+        ResourceBundle rb = ResourceBundle.getBundle(CONFIG_ELASTIC);
 
         NUMBER_OF_HASH_SLOTS = Integer.valueOf(rb.getString(PROPERTY_HASH_SLOTS));
         String startIp = rb.getString(PROPERTY_START_IP);
@@ -28,17 +26,15 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
         int portRange = Integer.valueOf(rb.getString(PROPERTY_PORT_RANGE));
         NUMBER_OF_REPLICAS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
         int numberOfPhysicalNodes = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
-        VIRTUAL_PHYSICAL_RATIO = Integer.valueOf(rb.getString(PROPERTY_VIRTUAL_PHYSICAL_RATIO));
 
         int lastDot = startIp.lastIndexOf(".") + 1;
         String ipPrefix = startIp.substring(0, lastDot);
         int intStartIp = Integer.valueOf(startIp.substring(lastDot));
 
-        int totalNodes = numberOfPhysicalNodes * VIRTUAL_PHYSICAL_RATIO;
         Queue<Integer> ipPool = MathX.nonrepeatRandom(ipRange, numberOfPhysicalNodes);
         Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfPhysicalNodes);
-        Queue<Integer> hashPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, totalNodes);
 
+        List<PhysicalNode> pnodes = new ArrayList<>(); // use for reference when generate table
         while (!ipPool.isEmpty()){
             Integer ip = ipPool.poll();
             Integer port = portPool.poll();
@@ -48,21 +44,31 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
             node.setAddress(ipPrefix + (intStartIp + ip));
             node.setPort(startPort + port);
             table.getPhysicalNodeMap().put(node.getId(), node);
+            pnodes.add(node);
+        }
 
-            for (int i = 0; i < VIRTUAL_PHYSICAL_RATIO; i++) {
-                Integer hash = hashPool.poll();
-                assert hash != null;
+        // generate table
+        int[] array = new int[NUMBER_OF_HASH_SLOTS];
+        for (int i = 0; i < NUMBER_OF_HASH_SLOTS; i++) {
+            table.getTable().add(new BucketNode(i));
+            array[i] = i;
+        }
 
-                VirtualNode vnode = new VirtualNode(hash, node.getId());
-                node.getVirtualNodes().add(vnode);
-                table.getTable().add(vnode);
+        // randomly map bucket to physical nodes
+        MathX.shuffle(array);
+        for (int i : array) {
+            int count = 0;
+            while (count < NUMBER_OF_REPLICAS) {
+                BucketNode bucketNode = (BucketNode) table.getTable().get(i);
+                PhysicalNode physicalNode = pnodes.get((i + count++) % numberOfPhysicalNodes);
+                bucketNode.getPhysicalNodes().add(physicalNode.getId());
+                physicalNode.getVirtualNodes().add(bucketNode);
             }
         }
 
         SimpleLog.i("Table initialized...");
     }
 
-    @Override
     public void addPhysicalNode(LookupTable table, PhysicalNode node) {
         if (table.getPhysicalNodeMap().containsKey(node.getId())) {
             SimpleLog.i(node.getId() + " already exists. Try a different ip:port");
@@ -72,39 +78,20 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
-        List<Integer> usedSlots = new ArrayList<>();
-        for (int i = 0; i < table.getTable().size(); i++) {
-            usedSlots.add(table.getTable().get(i).getHash());
-        }
-        Queue<Integer> hashPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, VIRTUAL_PHYSICAL_RATIO, usedSlots);
+        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_REPLICAS);
 
-        while (!hashPool.isEmpty()) {
-            Integer hash = hashPool.poll();
+        while (!bucketPool.isEmpty()) {
+            int bucket = bucketPool.poll();
 
-            VirtualNode vnode = new VirtualNode(hash, node.getId());
-            node.getVirtualNodes().add(vnode);
-            table.addNode(vnode);
+            BucketNode bucketNode = (BucketNode) table.getTable().get(bucket);
+            bucketNode.getPhysicalNodes().add(node.getId());
+            node.getVirtualNodes().add(bucketNode);
         }
 
         SimpleLog.i("Physical node added...");
     }
 
-    @Override
     public void removePhysicalNode(LookupTable table, PhysicalNode node) {
-        SimpleLog.i("Remove physical node: " + node.toString() + "...");
 
-        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
-        if (pnode == null) {
-            SimpleLog.i(node.getId() + " does not exist.");
-            return;
-        }
-
-        for (Indexable vnode : pnode.getVirtualNodes()) {
-            table.removeNode(vnode);
-        }
-
-        table.getPhysicalNodeMap().remove(node.getId());
-
-        SimpleLog.i("Physical node removed...");
     }
 }

@@ -1,11 +1,10 @@
-package entries;
+package ring;
 
-import models.Indexable;
-import models.LookupTable;
-import models.PhysicalNode;
+import commonmodels.Indexable;
+import commonmodels.PhysicalNode;
 import util.SimpleLog;
 
-public enum Command {
+public enum RingCommand {
     READ {
         public void execute(String[] args) {
             if (args.length != 2) {
