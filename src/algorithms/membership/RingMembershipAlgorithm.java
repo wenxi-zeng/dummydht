@@ -1,5 +1,6 @@
 package algorithms.membership;
 
+import models.Indexable;
 import models.LookupTable;
 import models.PhysicalNode;
 import models.VirtualNode;
@@ -98,7 +99,7 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             table.removeNode(vnode);
         }
 

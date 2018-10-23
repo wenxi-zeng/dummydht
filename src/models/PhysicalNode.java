@@ -11,7 +11,7 @@ public class PhysicalNode {
 
     private String status;
 
-    private List<VirtualNode> virtualNodes;
+    private List<Indexable> virtualNodes;
 
     public final static String STATUS_ACTIVE = "active";
 
@@ -49,11 +49,11 @@ public class PhysicalNode {
         this.status = status;
     }
 
-    public List<VirtualNode> getVirtualNodes() {
+    public List<Indexable> getVirtualNodes() {
         return virtualNodes;
     }
 
-    public void setVirtualNodes(List<VirtualNode> virtualNodes) {
+    public void setVirtualNodes(List<Indexable> virtualNodes) {
         this.virtualNodes = virtualNodes;
     }
 

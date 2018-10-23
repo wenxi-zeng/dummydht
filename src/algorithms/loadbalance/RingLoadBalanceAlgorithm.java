@@ -21,7 +21,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
             int bound = successor.getHash() - vnode.getHash();
             int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
@@ -41,7 +41,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
             int bound = vnode.getHash() - predecessor.getHash();
             int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
