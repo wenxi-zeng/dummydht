@@ -1,7 +1,6 @@
 package elastic;
 
 import commonmodels.PhysicalNode;
-import ring.LookupTable;
 import util.MathX;
 import util.SimpleLog;
 
@@ -49,8 +48,8 @@ public class ElasticMembershipAlgorithm {
 
         // generate table
         int[] array = new int[NUMBER_OF_HASH_SLOTS];
+        table.createTable(NUMBER_OF_HASH_SLOTS);
         for (int i = 0; i < NUMBER_OF_HASH_SLOTS; i++) {
-            table.getTable().add(new BucketNode(i));
             array[i] = i;
         }
 
@@ -59,7 +58,7 @@ public class ElasticMembershipAlgorithm {
         for (int i : array) {
             int count = 0;
             while (count < NUMBER_OF_REPLICAS) {
-                BucketNode bucketNode = (BucketNode) table.getTable().get(i);
+                BucketNode bucketNode = table.getTable()[i];
                 PhysicalNode physicalNode = pnodes.get((i + count++) % numberOfPhysicalNodes);
                 bucketNode.getPhysicalNodes().add(physicalNode.getId());
                 physicalNode.getVirtualNodes().add(bucketNode);
@@ -83,15 +82,37 @@ public class ElasticMembershipAlgorithm {
         while (!bucketPool.isEmpty()) {
             int bucket = bucketPool.poll();
 
-            BucketNode bucketNode = (BucketNode) table.getTable().get(bucket);
+            BucketNode bucketNode = table.getTable()[bucket];
             bucketNode.getPhysicalNodes().add(node.getId());
             node.getVirtualNodes().add(bucketNode);
+
+            table.copyBucket(bucketNode, node);
         }
 
         SimpleLog.i("Physical node added...");
     }
 
     public void removePhysicalNode(LookupTable table, PhysicalNode node) {
+        SimpleLog.i("Remove physical node: " + node.toString() + "...");
 
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        table.getPhysicalNodeMap().remove(node.getId());
+        List<PhysicalNode> physicalNodes = table.getOrderedPhysicalNodeList();
+
+        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
+            PhysicalNode replica = physicalNodes.get(i);
+            BucketNode bucketNode = table.getTable()[pnode.getVirtualNodes().get(i).getHash()];
+            bucketNode.getPhysicalNodes().add(replica.getId());
+            replica.getVirtualNodes().add(bucketNode);
+
+            table.copyBucket(bucketNode, replica);
+        }
+
+        SimpleLog.i("Physical node removed...");
     }
 }
