@@ -108,6 +108,7 @@ public class ElasticMembershipAlgorithm {
             PhysicalNode replica = physicalNodes.get(i);
             BucketNode bucketNode = table.getTable()[pnode.getVirtualNodes().get(i).getHash()];
             bucketNode.getPhysicalNodes().add(replica.getId());
+            bucketNode.getPhysicalNodes().remove(pnode.getId());
             replica.getVirtualNodes().add(bucketNode);
 
             table.copyBucket(bucketNode, replica);

@@ -94,12 +94,12 @@ public class LookupTable {
     }
 
     public void moveBucket(BucketNode node, PhysicalNode from , PhysicalNode to) {
-        loadBalanceAlgorithm.increaseLoad(this, node);
+        loadBalanceAlgorithm.moveBucket(this, node, from, to);
         update(); // commit the change, gossip to other nodes
     }
 
     public void copyBucket(BucketNode node, PhysicalNode to) {
-
+        loadBalanceAlgorithm.copyBucket(this, node, to);
     }
 
     public Indexable write(String filename) {
