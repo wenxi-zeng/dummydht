@@ -1,10 +1,10 @@
-package ring;
+package elastic;
 
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import util.SimpleLog;
 
-public enum RingCommand {
+public enum ElasticCommand {
     INITIALIZE {
         public void execute(String[] args) {
             LookupTable.getInstance();
@@ -63,31 +63,26 @@ public enum RingCommand {
         }
     },
 
-    INCREASELOAD{
+    MOVEBUCKET{
         public void execute(String[] args) {
-            if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: increaseLoad <ip> <port>");
+            if (args.length != 4) {
+                SimpleLog.i("Wrong arguments. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
                 return;
             }
 
-            PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(args[1]);
-            pnode.setPort(Integer.valueOf(args[2]));
-            LookupTable.getInstance().increaseLoad(pnode);
-        }
-    },
+            BucketNode bucketNode = new BucketNode(Integer.valueOf(args[1]));
 
-    DECREASELOAD{
-        public void execute(String[] args) {
-            if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: decreaseLoad <ip> <port>");
+            String[] address1 = args[2].split(":");
+            String[] address2 = args[3].split(":");
+
+            if (address1.length != 2 || address2.length != 2) {
+                SimpleLog.i("Invalid address format. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
                 return;
             }
 
-            PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(args[1]);
-            pnode.setPort(Integer.valueOf(args[2]));
-            LookupTable.getInstance().decreaseLoad(pnode);
+            PhysicalNode from = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
+            PhysicalNode to = new PhysicalNode(address2[0], Integer.valueOf(address2[1]));
+            LookupTable.getInstance().moveBucket(bucketNode, from , to);
         }
     },
 

@@ -50,6 +50,10 @@ public class LookupTable {
 
     public void createTable(int size) {
         table = new BucketNode[size];
+
+        for (int i = 0; i < size; i++) {
+            table[i] = new BucketNode(i);
+        }
     }
 
     public long getEpoch() {

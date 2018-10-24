@@ -44,4 +44,8 @@ public class MathX {
         array[i] = array[j];
         array[j] = temp;
     }
+
+    public static int positiveHash(int hash) {
+        return hash & 0x7fffffff;
+    }
 }

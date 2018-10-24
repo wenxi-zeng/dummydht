@@ -1,6 +1,7 @@
 package entries;
 
 import commonmodels.Terminal;
+import elastic.ElasticTerminal;
 import ring.RingTerminal;
 
 import java.util.Scanner;
@@ -20,7 +21,7 @@ public class SingleNodeClient {
             terminal = new RingTerminal();
         }
         else if (type == 2) {
-            terminal = new RingTerminal();
+            terminal = new ElasticTerminal();
         }
         else if (type == 3) {
             terminal = new RingTerminal();
@@ -30,6 +31,7 @@ public class SingleNodeClient {
             return;
         }
 
+        terminal.initialize();
         while (true){
             terminal.printInfo();
             String cmdLine[] = in.nextLine().split("\\s+");
@@ -39,6 +41,7 @@ public class SingleNodeClient {
             }
             catch (Exception e) {
                 System.out.println("Command not found");
+                e.printStackTrace();
             }
         }
     }

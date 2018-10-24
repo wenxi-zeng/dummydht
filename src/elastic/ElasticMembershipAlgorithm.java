@@ -55,11 +55,12 @@ public class ElasticMembershipAlgorithm {
 
         // randomly map bucket to physical nodes
         MathX.shuffle(array);
+        int iterator = 0;
         for (int i : array) {
             int count = 0;
-            while (count < NUMBER_OF_REPLICAS) {
+            while (count++ < NUMBER_OF_REPLICAS) {
                 BucketNode bucketNode = table.getTable()[i];
-                PhysicalNode physicalNode = pnodes.get((i + count++) % numberOfPhysicalNodes);
+                PhysicalNode physicalNode = pnodes.get(iterator++ % numberOfPhysicalNodes);
                 bucketNode.getPhysicalNodes().add(physicalNode.getId());
                 physicalNode.getVirtualNodes().add(bucketNode);
             }
@@ -77,7 +78,7 @@ public class ElasticMembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
-        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_REPLICAS);
+        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_HASH_SLOTS / table.getPhysicalNodeMap().size());
 
         while (!bucketPool.isEmpty()) {
             int bucket = bucketPool.poll();
@@ -105,7 +106,7 @@ public class ElasticMembershipAlgorithm {
         List<PhysicalNode> physicalNodes = table.getOrderedPhysicalNodeList();
 
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
-            PhysicalNode replica = physicalNodes.get(i);
+            PhysicalNode replica = physicalNodes.get(i % physicalNodes.size());
             BucketNode bucketNode = table.getTable()[pnode.getVirtualNodes().get(i).getHash()];
             bucketNode.getPhysicalNodes().add(replica.getId());
             bucketNode.getPhysicalNodes().remove(pnode.getId());

@@ -48,4 +48,25 @@ public class BucketNode implements Indexable {
     public int compareTo(Indexable o) {
         return Integer.compare(this.hash, o.getHash());
     }
+
+    @Override
+    public String toString() {
+        return "Bucket{" +
+                "hash=" + hash +
+                ", physicalNodes=" + physicalNodes +
+                "}\n";
+    }
+
+    @Override
+    public int hashCode() {
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BucketNode)
+            return this.hashCode() == obj.hashCode();
+        else
+            return false;
+    }
 }

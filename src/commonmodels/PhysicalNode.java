@@ -19,6 +19,13 @@ public class PhysicalNode {
 
     public PhysicalNode() {
         virtualNodes = new ArrayList<>();
+        status = STATUS_ACTIVE;
+    }
+
+    public PhysicalNode(String address, int port) {
+        this();
+        this.address = address;
+        this.port = port;
     }
 
     public String getId() {
@@ -59,6 +66,17 @@ public class PhysicalNode {
 
     @Override
     public String toString() {
-        return address + ":" + port;
+        StringBuilder result = new StringBuilder();
+        result.append("PhysicalNode{" +
+                "address='" + address + '\'' +
+                ", port=" + port +
+                ", status='" + status + '\'' +
+                ", virtualNodes=");
+
+        for (Indexable indexable : virtualNodes) {
+            result.append(indexable.getHash()).append(" ");
+        }
+        result.append('}');
+        return result.toString();
     }
 }
