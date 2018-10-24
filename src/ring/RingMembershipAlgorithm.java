@@ -1,8 +1,7 @@
-package algorithms.membership;
+package ring;
 
-import models.LookupTable;
-import models.PhysicalNode;
-import models.VirtualNode;
+import commonmodels.Indexable;
+import commonmodels.PhysicalNode;
 import util.MathX;
 import util.SimpleLog;
 
@@ -13,8 +12,8 @@ import java.util.ResourceBundle;
 
 import static util.Config.*;
 
-public class RingMembershipAlgorithm implements MembershipAlgorithm {
-    @Override
+public class RingMembershipAlgorithm {
+
     public void initialize(LookupTable table) {
         SimpleLog.i("Initializing table...");
 
@@ -61,7 +60,6 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
         SimpleLog.i("Table initialized...");
     }
 
-    @Override
     public void addPhysicalNode(LookupTable table, PhysicalNode node) {
         if (table.getPhysicalNodeMap().containsKey(node.getId())) {
             SimpleLog.i(node.getId() + " already exists. Try a different ip:port");
@@ -88,7 +86,6 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
         SimpleLog.i("Physical node added...");
     }
 
-    @Override
     public void removePhysicalNode(LookupTable table, PhysicalNode node) {
         SimpleLog.i("Remove physical node: " + node.toString() + "...");
 
@@ -98,7 +95,7 @@ public class RingMembershipAlgorithm implements MembershipAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             table.removeNode(vnode);
         }
 

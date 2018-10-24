@@ -1,17 +1,15 @@
-package algorithms.loadbalance;
+package ring;
 
-import models.Indexable;
-import models.LookupTable;
-import models.PhysicalNode;
-import models.VirtualNode;
+import commonmodels.Indexable;
+import commonmodels.PhysicalNode;
 import util.MathX;
 import util.SimpleLog;
 
 import static util.Config.NUMBER_OF_HASH_SLOTS;
 import static util.Config.NUMBER_OF_REPLICAS;
 
-public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
-    @Override
+public class RingLoadBalanceAlgorithm {
+
     public void increaseLoad(LookupTable table, PhysicalNode node) {
         SimpleLog.i("Increasing load for physical node " + node.toString());
 
@@ -21,7 +19,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
             int bound = successor.getHash() - vnode.getHash();
             int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
@@ -31,7 +29,6 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         }
     }
 
-    @Override
     public void decreaseLoad(LookupTable table, PhysicalNode node) {
         SimpleLog.i("Decreasing load for physical node " + node.toString());
 
@@ -41,7 +38,7 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
             return;
         }
 
-        for (VirtualNode vnode : pnode.getVirtualNodes()) {
+        for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
             int bound = vnode.getHash() - predecessor.getHash();
             int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
@@ -51,7 +48,6 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         }
     }
 
-    @Override
     public void decreaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
         int hf = hi - dh;
@@ -70,7 +66,6 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         SimpleLog.i("Updated node info: " + node.toString());
     }
 
-    @Override
     public void increaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
         int hf = (hi + dh) % NUMBER_OF_HASH_SLOTS;
@@ -88,7 +83,6 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         SimpleLog.i("Updated node info: " + node.toString());
     }
 
-    @Override
     public void nodeJoin(LookupTable table, Indexable node) {
         SimpleLog.i("Adding virtual node [hash=" + node.getHash() + "] for " + ((VirtualNode)node).getPhysicalNodeId());
 
@@ -110,7 +104,6 @@ public class RingLoadBalanceAlgorithm implements LoadBalanceAlgorithm {
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] added");
     }
 
-    @Override
     public void nodeLeave(LookupTable table, Indexable node) {
         SimpleLog.i("Removing virtual node [hash=" + node.getHash() + "] from " + ((VirtualNode)node).getPhysicalNodeId());
 

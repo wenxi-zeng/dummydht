@@ -1,12 +1,10 @@
 package entries;
 
-import models.LookupTable;
+import commonmodels.Terminal;
+import elastic.ElasticTerminal;
+import ring.RingTerminal;
 
 import java.util.Scanner;
-
-import static util.Config.CONFIG_CEPH;
-import static util.Config.CONFIG_ELASTIC;
-import static util.Config.CONFIG_RING;
 
 public class SingleNodeClient {
     public static void main(String args[]) {
@@ -18,40 +16,32 @@ public class SingleNodeClient {
         int type = in.nextInt();
         in.nextLine();
 
-        LookupTable table = LookupTable.getInstance();
+        Terminal terminal;
         if (type == 1) {
-            table.initialize(CONFIG_RING);
+            terminal = new RingTerminal();
         }
         else if (type == 2) {
-            table.initialize(CONFIG_ELASTIC);
+            terminal = new ElasticTerminal();
         }
         else if (type == 3) {
-            table.initialize(CONFIG_CEPH);
+            terminal = new RingTerminal();
         }
         else {
             System.out.println("Unknown type\n");
             return;
         }
 
+        terminal.initialize();
         while (true){
-            System.out.println("\nAvailable commands:\n" +
-                    "read <filename>\n" +
-                    "write <filename>\n" +
-                    "addNode <ip> <port>\n" +
-                    "removeNode <ip> <port>\n" +
-                    "increaseLoad <ip> <port>\n" +
-                    "decreaseLoad <ip> <port>\n" +
-                    "listPhysicalNodes\n" +
-                    "printLookupTable\n");
-
+            terminal.printInfo();
             String cmdLine[] = in.nextLine().split("\\s+");
 
             try {
-                Command cmd = Command.valueOf(cmdLine[0].toUpperCase());
-                cmd.execute(cmdLine);
+                terminal.execute(cmdLine);
             }
             catch (Exception e) {
                 System.out.println("Command not found");
+                e.printStackTrace();
             }
         }
     }

@@ -1,4 +1,4 @@
-package models;
+package commonmodels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class PhysicalNode {
 
     private String status;
 
-    private List<VirtualNode> virtualNodes;
+    private List<Indexable> virtualNodes;
 
     public final static String STATUS_ACTIVE = "active";
 
@@ -19,6 +19,13 @@ public class PhysicalNode {
 
     public PhysicalNode() {
         virtualNodes = new ArrayList<>();
+        status = STATUS_ACTIVE;
+    }
+
+    public PhysicalNode(String address, int port) {
+        this();
+        this.address = address;
+        this.port = port;
     }
 
     public String getId() {
@@ -49,16 +56,27 @@ public class PhysicalNode {
         this.status = status;
     }
 
-    public List<VirtualNode> getVirtualNodes() {
+    public List<Indexable> getVirtualNodes() {
         return virtualNodes;
     }
 
-    public void setVirtualNodes(List<VirtualNode> virtualNodes) {
+    public void setVirtualNodes(List<Indexable> virtualNodes) {
         this.virtualNodes = virtualNodes;
     }
 
     @Override
     public String toString() {
-        return address + ":" + port;
+        StringBuilder result = new StringBuilder();
+        result.append("PhysicalNode{" +
+                "address='" + address + '\'' +
+                ", port=" + port +
+                ", status='" + status + '\'' +
+                ", virtualNodes=");
+
+        for (Indexable indexable : virtualNodes) {
+            result.append(indexable.getHash()).append(" ");
+        }
+        result.append('}');
+        return result.toString();
     }
 }

@@ -1,19 +1,11 @@
-package models;
+package ring;
 
-import algorithms.loadbalance.LoadBalanceAlgorithm;
-import algorithms.loadbalance.RingLoadBalanceAlgorithm;
-import algorithms.membership.MembershipAlgorithm;
-import algorithms.membership.RingMembershipAlgorithm;
-import algorithms.readwrite.ReadWriteAlgorithm;
-import algorithms.readwrite.RingReadWriteAlgorithm;
-import algorithms.replciaplacement.ReplicaPlacementAlgorithm;
-import algorithms.replciaplacement.RingReplicaAlgorithm;
+import commonmodels.BinarySearchList;
+import commonmodels.Indexable;
+import commonmodels.PhysicalNode;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import static util.Config.CONFIG_RING;
 
 public class LookupTable {
 
@@ -23,17 +15,17 @@ public class LookupTable {
 
     private HashMap<String, PhysicalNode> physicalNodeMap;
 
-    private ReplicaPlacementAlgorithm algorithm;
+    private RingLoadBalanceAlgorithm loadBalanceAlgorithm;
 
-    private LoadBalanceAlgorithm loadBalanceAlgorithm;
+    private RingMembershipAlgorithm membershipAlgorithm;
 
-    private MembershipAlgorithm membershipAlgorithm;
-
-    private ReadWriteAlgorithm readWriteAlgorithm;
+    private RingReadWriteAlgorithm readWriteAlgorithm;
 
     private static volatile LookupTable instance = null;
 
-    private LookupTable() {}
+    private LookupTable() {
+        initialize();
+    }
 
     public static LookupTable getInstance() {
         if (instance == null) {
@@ -47,23 +39,16 @@ public class LookupTable {
         return instance;
     }
 
-    public void initialize(String config) {
+    public void initialize() {
         physicalNodeMap = new HashMap<>();
         table = new BinarySearchList();
         epoch = System.currentTimeMillis();
 
-        if (config.equals(CONFIG_RING)) {
-            membershipAlgorithm = new RingMembershipAlgorithm();
-            loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();
-            readWriteAlgorithm = new RingReadWriteAlgorithm();
-            algorithm = new RingReplicaAlgorithm();
-        }
+        membershipAlgorithm = new RingMembershipAlgorithm();
+        loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();
+        readWriteAlgorithm = new RingReadWriteAlgorithm();
 
         membershipAlgorithm.initialize(this);
-    }
-
-    public List<PhysicalNode> getReplicas(int hash) {
-        return algorithm.getReplicas(this, hash);
     }
 
     public long getEpoch() {
@@ -88,38 +73,6 @@ public class LookupTable {
 
     public void setPhysicalNodeMap(HashMap<String, PhysicalNode> physicalNodeMap) {
         this.physicalNodeMap = physicalNodeMap;
-    }
-
-    public ReplicaPlacementAlgorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(ReplicaPlacementAlgorithm algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public LoadBalanceAlgorithm getLoadBalanceAlgorithm() {
-        return loadBalanceAlgorithm;
-    }
-
-    public void setLoadBalanceAlgorithm(LoadBalanceAlgorithm loadBalanceAlgorithm) {
-        this.loadBalanceAlgorithm = loadBalanceAlgorithm;
-    }
-
-    public MembershipAlgorithm getMembershipAlgorithm() {
-        return membershipAlgorithm;
-    }
-
-    public void setMembershipAlgorithm(MembershipAlgorithm membershipAlgorithm) {
-        this.membershipAlgorithm = membershipAlgorithm;
-    }
-
-    public ReadWriteAlgorithm getReadWriteAlgorithm() {
-        return readWriteAlgorithm;
-    }
-
-    public void setReadWriteAlgorithm(ReadWriteAlgorithm readWriteAlgorithm) {
-        this.readWriteAlgorithm = readWriteAlgorithm;
     }
 
     public void update() {

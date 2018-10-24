@@ -30,4 +30,22 @@ public class MathX {
     public static int NextInt(int bound) {
         return (int)(Math.random() * (bound));
     }
+
+    public static void shuffle(int[] array) {
+        Random random = new Random();
+        int count = array.length;
+        for (int i = count; i > 1; i--) {
+            swap(array, i - 1, random.nextInt(i));
+        }
+    }
+
+    private static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    public static int positiveHash(int hash) {
+        return hash & 0x7fffffff;
+    }
 }
