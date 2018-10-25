@@ -3,7 +3,7 @@ package commonmodels;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PhysicalNode {
+public class PhysicalNode implements Clusterable{
 
     private String address;
 
@@ -12,6 +12,8 @@ public class PhysicalNode {
     private String status;
 
     private List<Indexable> virtualNodes;
+
+    private float weight; // for ceph only
 
     public final static String STATUS_ACTIVE = "active";
 
@@ -30,6 +32,20 @@ public class PhysicalNode {
 
     public String getId() {
         return "P" + getAddress() + ":" + getPort();
+    }
+
+    @Override
+    public float getWeight() {
+        return weight;
+    }
+
+    public void setWeight(float weight) {
+        this.weight = weight;
+    }
+
+    @Override
+    public Clusterable[] getSubClusters() {
+        return null;
     }
 
     public String getAddress() {
@@ -67,11 +83,7 @@ public class PhysicalNode {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append("PhysicalNode{" +
-                "address='" + address + '\'' +
-                ", port=" + port +
-                ", status='" + status + '\'' +
-                ", virtualNodes=");
+        result.append("PhysicalNode{" + "address='").append(address).append('\'').append(", port=").append(port).append(", status='").append(status).append('\'').append(", virtualNodes=");
 
         for (Indexable indexable : virtualNodes) {
             result.append(indexable.getHash()).append(" ");
