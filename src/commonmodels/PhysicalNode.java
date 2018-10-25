@@ -107,7 +107,7 @@ public class PhysicalNode implements Clusterable{
         result.append("PhysicalNode{" + "address='").append(address).append('\'').append(", port=").append(port).append(", status='").append(status).append('\'').append(", virtualNodes=");
 
         for (Indexable indexable : virtualNodes) {
-            result.append(indexable.getHash()).append(" ");
+            result.append(indexable.getDisplayId()).append(" ");
         }
         result.append('}');
         return result.toString();

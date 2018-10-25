@@ -13,11 +13,11 @@ public class CephTerminal implements Terminal {
         System.out.println("\nAvailable commands:\n" +
                 "read <filename>\n" +
                 "write <filename>\n" +
-                "addNode <ip> <port>\n" +
+                "addNode <cluster id> <ip>:<port>\n" +
                 "removeNode <ip> <port>\n" +
-                "moveBucket <bucket> <from ip>:<port> <to ip>:<port>\n" +
+                "changeWeight <delta weight> <ip>:<port>\n" +
                 "listPhysicalNodes\n" +
-                "printLookupTable\n");
+                "printClusterMap\n");
     }
 
     @Override

@@ -8,4 +8,6 @@ public interface Indexable extends Comparable<Indexable>{
     int getIndex();
 
     void setIndex(int index);
+
+    String getDisplayId();
 }

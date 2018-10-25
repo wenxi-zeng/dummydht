@@ -33,7 +33,18 @@ public enum CephCommand {
             }
 
             List<Clusterable> nodes = ClusterMap.getInstance().write(args[1]);
-            SimpleLog.i("Write " + args[1] + " to:\n" + nodes.toString());
+
+            StringBuilder result = new StringBuilder();
+            if (nodes != null) {
+                for (Clusterable node : nodes) {
+                    result.append(node.toString()).append('\n');
+                }
+
+                SimpleLog.i("Write " + args[1] + " to:\n" + result.toString());
+            }
+            else {
+                SimpleLog.i("Failed to write " + args[1]);
+            }
         }
     },
 
@@ -80,7 +91,7 @@ public enum CephCommand {
             float deltaWeight = Float.valueOf(args[1]);
             String[] address1 = args[2].split(":");
             if (address1.length != 2) {
-                SimpleLog.i("Invalid address format. Try: addNode <cluster id> <ip>:<port>");
+                SimpleLog.i("Invalid address format. Try: changeWeight <delta weight> <ip>:<port>");
                 return;
             }
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));

@@ -29,12 +29,12 @@ public class CephMembershipAlgorithm {
         int clusterCapacity = Integer.valueOf(rb.getString(PROPERTY_CLUSTER_CAPACITY));
         String[] rushLevelNames = rb.getString(PROPERTY_RUSH_LEVEL_NAMES).split(",");
 
-        int totalCapacity = (int)Math.pow(clusterCapacity, numberOfRushLevel);
+        int totalCapacity = (int)Math.pow(clusterCapacity, numberOfRushLevel - 1);
         if (numberOfPhysicalNodes > totalCapacity) {
             SimpleLog.i("Number of physical nodes exceeds the total capacity of current settings!");
             return;
         }
-        int avgPhysicalNodesPerCluster = (int)Math.ceil(numberOfPhysicalNodes / Math.pow(clusterCapacity, numberOfRushLevel - 1));
+        int avgPhysicalNodesPerCluster = (int)Math.ceil(numberOfPhysicalNodes / Math.pow(clusterCapacity, numberOfRushLevel - 2));
 
         int lastDot = startIp.lastIndexOf(".") + 1;
         String ipPrefix = startIp.substring(0, lastDot);
@@ -43,7 +43,9 @@ public class CephMembershipAlgorithm {
         Queue<Integer> ipPool = MathX.nonrepeatRandom(ipRange, numberOfPhysicalNodes);
         Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfPhysicalNodes);
 
-        generateMap(map.getRoot(),
+        generateMap(
+                map,
+                map.getRoot(),
                 1,
                 ipPool,
                 portPool,
@@ -54,7 +56,8 @@ public class CephMembershipAlgorithm {
                 ipPrefix,
                 intStartIp,
                 startPort,
-                avgPhysicalNodesPerCluster);
+                avgPhysicalNodesPerCluster,
+                (int)Math.pow(clusterCapacity, numberOfRushLevel - 1));
 
         SimpleLog.i("Allocating placement groups...");
         allocatePlacementGroups(map);
@@ -63,21 +66,23 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Map initialized...");
     }
 
-    private void generateMap(Clusterable cluster, int currentLevel,
+    private void generateMap(ClusterMap map, Clusterable cluster, int currentLevel,
                             Queue<Integer> ipPool, Queue<Integer> portPool,
                             String[] rushLevelNames, int numberOfRushLevel,
                             float initialWeight, int clusterCapacity,
                             String ipPrefix, int intStartIp, int startPort,
-                            int avgPhysicalNodesPerCluster) {
-        cluster.setId(rushLevelNames[currentLevel - 1]);
+                            int avgPhysicalNodesPerCluster, int id) {
+        cluster.setId(rushLevelNames[currentLevel - 1] + id);
         cluster.setStatus(STATUS_ACTIVE);
         cluster.setSubClusters(new Clusterable[clusterCapacity]);
         cluster.setWeight(0);
 
         for (int i = 0; i < cluster.getSubClusters().length; i++){
-            if (currentLevel + 1 < numberOfRushLevel) {
+            if (currentLevel + 1< numberOfRushLevel) {
                 cluster.getSubClusters()[i] = new Cluster();
-                generateMap(cluster.getSubClusters()[i],
+                generateMap(
+                        map,
+                        cluster.getSubClusters()[i],
                         currentLevel + 1,
                         ipPool,
                         portPool,
@@ -88,23 +93,25 @@ public class CephMembershipAlgorithm {
                         ipPrefix,
                         intStartIp,
                         startPort,
-                        avgPhysicalNodesPerCluster);
+                        avgPhysicalNodesPerCluster,
+                        --id);
 
                 if (cluster.getSubClusters()[i] != null)
                     cluster.setWeight(cluster.getWeight() + cluster.getSubClusters()[i].getWeight());
             }
             else {
-                Integer ip = ipPool.poll();
-                Integer port = portPool.poll();
-
-                if (i >= avgPhysicalNodesPerCluster || ip == null || port == null)
+                if (i >= avgPhysicalNodesPerCluster || ipPool.peek() == null || portPool.peek() == null)
                     return;
 
+                Integer ip = ipPool.poll();
+                Integer port = portPool.poll();
                 PhysicalNode node = new PhysicalNode();
                 node.setAddress(ipPrefix + (intStartIp + ip));
                 node.setPort(startPort + port);
                 node.setWeight(initialWeight);
                 cluster.getSubClusters()[clusterCapacity - i - 1] = node;
+                cluster.setWeight(cluster.getWeight() + initialWeight);
+                map.getPhysicalNodeMap().put(node.getId(), node);
             }
         }
     }
@@ -143,15 +150,11 @@ public class CephMembershipAlgorithm {
             return;
         }
 
-        float totalWeight = 0;
         int i;
         for (i = cluster.getSubClusters().length - 1; i >= 0; i--) {
             if (cluster.getSubClusters()[i] == null) {
                 cluster.getSubClusters()[i] = node;
                 break;
-            }
-            else {
-                totalWeight += cluster.getSubClusters()[i].getWeight();
             }
         }
         if (i == 0) {
@@ -160,13 +163,13 @@ public class CephMembershipAlgorithm {
         }
 
         map.getPhysicalNodeMap().put(node.getId(), node);
-        float redistributeWeight = totalWeight / (cluster.getSubClusters().length - i);
+        float redistributeWeight = cluster.getWeight() / (cluster.getSubClusters().length - i);
         for (i = cluster.getSubClusters().length - 1; i >= 0; i--) {
             if (cluster.getSubClusters()[i] != null) {
                 cluster.getSubClusters()[i].setWeight(redistributeWeight);
             }
         }
-        map.loadBalancing(cluster);
+        map.onNodeAddition(cluster);
 
         SimpleLog.i("Physical node added...");
     }

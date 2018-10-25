@@ -45,6 +45,11 @@ public class BucketNode implements Indexable {
     }
 
     @Override
+    public String getDisplayId() {
+        return String.valueOf(getHash());
+    }
+
+    @Override
     public int compareTo(Indexable o) {
         return Integer.compare(this.hash, o.getHash());
     }

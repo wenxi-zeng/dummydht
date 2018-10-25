@@ -36,6 +36,11 @@ public class PlacementGroup implements Indexable {
         this.index = index;
     }
 
+    @Override
+    public String getDisplayId() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }

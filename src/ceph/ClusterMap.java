@@ -96,17 +96,18 @@ public class ClusterMap {
         while (!frontier.isEmpty()) {
             Clusterable cluster = frontier.poll();
 
-            for (int i = 0; i < cluster.getSubClusters().length - 1; i++) {
+            for (int i = 0; i < cluster.getSubClusters().length; i++) {
                 Clusterable subCluster = cluster.getSubClusters()[i];
                 if (subCluster == null) continue;
 
                 double rushHash = MathX.rushHash(pgid, r, subCluster.getId());
-                if (rushHash < subtotalWeightRatio(i, cluster.getSubClusters())) {
+                double ratio = subtotalWeightRatio(i, cluster.getSubClusters());
+                if (rushHash < ratio) {
                     if (subCluster instanceof PhysicalNode) {
                         return subCluster;
                     }
                     else {
-                        frontier.add(cluster);
+                        frontier.add(subCluster);
                         break;
                     }
                 }
@@ -141,6 +142,10 @@ public class ClusterMap {
 
     public void onNodeFailureOrRemoval(Clusterable failedNode) {
         loadBalanceAlgorithm.failureRecovery(this, failedNode);
+    }
+
+    public void onNodeAddition(Clusterable clusterable) {
+        loadBalanceAlgorithm.loadBalancingForNewMember(this, clusterable);
     }
 
     public void loadBalancing(Clusterable clusterable) {
