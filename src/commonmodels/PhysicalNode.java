@@ -3,7 +3,9 @@ package commonmodels;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PhysicalNode {
+import static util.Config.STATUS_ACTIVE;
+
+public class PhysicalNode implements Clusterable{
 
     private String address;
 
@@ -13,9 +15,7 @@ public class PhysicalNode {
 
     private List<Indexable> virtualNodes;
 
-    public final static String STATUS_ACTIVE = "active";
-
-    public final static String STATUS_INACTIVE = "inactive";
+    private float weight; // for ceph only
 
     public PhysicalNode() {
         virtualNodes = new ArrayList<>();
@@ -30,6 +30,43 @@ public class PhysicalNode {
 
     public String getId() {
         return "P" + getAddress() + ":" + getPort();
+    }
+
+    @Override
+    public void setId(String id) {
+
+    }
+
+
+    @Override
+    public float getWeight() {
+        return weight;
+    }
+
+    public void setWeight(float weight) {
+        this.weight = weight;
+    }
+
+    @Override
+    public Clusterable[] getSubClusters() {
+        return null;
+    }
+
+    @Override
+    public void setSubClusters(Clusterable[] subClusters) {
+
+    }
+
+    /**
+     * For Ceph scheme only
+     *
+     * @return all leave nodes, which are the physical nodes.
+     */
+    @Override
+    public List<Clusterable> getLeaves() {
+        List<Clusterable> leaves = new ArrayList<>();
+        leaves.add(this);
+        return leaves;
     }
 
     public String getAddress() {
@@ -67,16 +104,22 @@ public class PhysicalNode {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append("PhysicalNode{" +
-                "address='" + address + '\'' +
-                ", port=" + port +
-                ", status='" + status + '\'' +
-                ", virtualNodes=");
+        result.append("PhysicalNode{" + "address='").append(address).append('\'').append(", port=").append(port).append(", status='").append(status).append('\'').append(", virtualNodes=");
 
         for (Indexable indexable : virtualNodes) {
-            result.append(indexable.getHash()).append(" ");
+            result.append(indexable.getDisplayId()).append(" ");
         }
         result.append('}');
         return result.toString();
+    }
+
+    /**
+     * For Ceph only
+     * @param prefix
+     * @param isTail
+     */
+    @Override
+    public String toTreeString(String prefix, boolean isTail) {
+        return prefix + (isTail ? "└── " : "├── ") + getId() + "\n";
     }
 }

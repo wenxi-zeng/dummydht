@@ -1,5 +1,6 @@
 package entries;
 
+import ceph.CephTerminal;
 import commonmodels.Terminal;
 import elastic.ElasticTerminal;
 import ring.RingTerminal;
@@ -24,7 +25,7 @@ public class SingleNodeClient {
             terminal = new ElasticTerminal();
         }
         else if (type == 3) {
-            terminal = new RingTerminal();
+            terminal = new CephTerminal();
         }
         else {
             System.out.println("Unknown type\n");

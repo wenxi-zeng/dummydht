@@ -14,8 +14,17 @@ public class Config {
     public final static String PROPERTY_NUMBER_OF_REPLICAS = "number_of_replicas";
     public final static String PROPERTY_NUMBER_OF_PHYSICAL_NODES = "number_of_physical_nodes";
     public final static String PROPERTY_VIRTUAL_PHYSICAL_RATIO = "virtual_physical_ratio";
+    public final static String PROPERTY_NUMBER_OF_PLACEMENT_GROUPS = "number_of_placement_groups";
+    public final static String PROPERTY_INITIAL_WEIGHT = "initial_weight";
+    public final static String PROPERTY_NUMBER_OF_RUSH_LEVEL = "number_of_rush_level";
+    public final static String PROPERTY_CLUSTER_CAPACITY = "cluster_capacity";
+    public final static String PROPERTY_RUSH_LEVEL_NAMES = "rush_level_names";
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
     public static int VIRTUAL_PHYSICAL_RATIO = 1;
+    public static int NUMBER_OF_PLACEMENT_GROUPS = 120;
+
+    public final static String STATUS_ACTIVE = "active";
+    public final static String STATUS_INACTIVE = "inactive";
 }
