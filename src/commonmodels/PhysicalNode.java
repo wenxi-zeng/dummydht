@@ -3,6 +3,8 @@ package commonmodels;
 import java.util.ArrayList;
 import java.util.List;
 
+import static util.Config.STATUS_ACTIVE;
+
 public class PhysicalNode implements Clusterable{
 
     private String address;
@@ -14,10 +16,6 @@ public class PhysicalNode implements Clusterable{
     private List<Indexable> virtualNodes;
 
     private float weight; // for ceph only
-
-    public final static String STATUS_ACTIVE = "active";
-
-    public final static String STATUS_INACTIVE = "inactive";
 
     public PhysicalNode() {
         virtualNodes = new ArrayList<>();
@@ -35,6 +33,12 @@ public class PhysicalNode implements Clusterable{
     }
 
     @Override
+    public void setId(String id) {
+
+    }
+
+
+    @Override
     public float getWeight() {
         return weight;
     }
@@ -46,6 +50,11 @@ public class PhysicalNode implements Clusterable{
     @Override
     public Clusterable[] getSubClusters() {
         return null;
+    }
+
+    @Override
+    public void setSubClusters(Clusterable[] subClusters) {
+
     }
 
     public String getAddress() {

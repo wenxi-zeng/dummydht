@@ -2,9 +2,11 @@ package ceph;
 
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
+import util.MathX;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static util.Config.NUMBER_OF_PLACEMENT_GROUPS;
 
 public class ClusterMap {
 
@@ -41,6 +43,7 @@ public class ClusterMap {
     public void initialize() {
         physicalNodeMap = new HashMap<>();
         epoch = System.currentTimeMillis();
+        root = new Cluster();
 
         membershipAlgorithm = new CephMembershipAlgorithm();
         loadBalanceAlgorithm = new CephLoadBalanceAlgorithm();
@@ -69,12 +72,84 @@ public class ClusterMap {
         this.physicalNodeMap = physicalNodeMap;
     }
 
+    public Clusterable findCluster(String id) {
+        Queue<Clusterable> frontier = new LinkedList<>();
+        frontier.add(root);
+
+        while (!frontier.isEmpty()) {
+            Clusterable cluster = frontier.poll();
+            if (cluster.getId().equals(id)) return cluster;
+
+            for (Clusterable child : cluster.getSubClusters()) {
+                if (child != null)
+                    frontier.add(child);
+            }
+        }
+
+        return null;
+    }
+
+    public Clusterable rush(String pgid, int r) {
+        Queue<Clusterable> frontier = new LinkedList<>();
+        frontier.add(root);
+
+        while (!frontier.isEmpty()) {
+            Clusterable cluster = frontier.poll();
+
+            for (int i = 0; i < cluster.getSubClusters().length - 1; i++) {
+                Clusterable subCluster = cluster.getSubClusters()[i];
+                if (subCluster == null) continue;
+
+                double rushHash = MathX.rushHash(pgid, r, subCluster.getId());
+                if (rushHash < subtotalWeightRatio(i, cluster.getSubClusters())) {
+                    if (subCluster instanceof PhysicalNode) {
+                        return subCluster;
+                    }
+                    else {
+                        frontier.add(cluster);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public String getPlacementGroupId(String name) {
+        int pgid = MathX.positiveHash(name.hashCode()) % NUMBER_OF_PLACEMENT_GROUPS;
+        return "PG" + pgid;
+    }
+
+    public String getPlacementGroupId(int pgid) {
+        return "PG" + pgid;
+    }
+
+    private float subtotalWeightRatio(int index, Clusterable[] clusters) {
+        float subtotal = 0;
+
+        for (int i = index; i < clusters.length; i++) {
+            subtotal += clusters[i].getWeight();
+        }
+
+        return subtotal == 0 ? 1 : clusters[index].getWeight() / subtotal;
+    }
+
     public void update() {
         epoch = System.currentTimeMillis();
     }
 
-    public void addNode(PhysicalNode node) {
-        membershipAlgorithm.addPhysicalNode(this, node);
+    public void loadBalancing() {
+        loadBalancing(root);
+    }
+
+    public void loadBalancing(Clusterable clusterable) {
+        loadBalanceAlgorithm.loadBalancing(this, clusterable);
+        update();
+    }
+
+    public void addNode(String clusterId, PhysicalNode node) {
+        membershipAlgorithm.addPhysicalNode(this, clusterId, node);
         update(); // commit the change, gossip to other nodes
     }
 
@@ -93,7 +168,7 @@ public class ClusterMap {
         update(); // commit the change, gossip to other nodes
     }
 
-    public Clusterable write(String filename) {
+    public List<Clusterable> write(String filename) {
         return readWriteAlgorithm.write(this, filename);
     }
 
