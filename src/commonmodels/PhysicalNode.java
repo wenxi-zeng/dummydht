@@ -57,6 +57,18 @@ public class PhysicalNode implements Clusterable{
 
     }
 
+    /**
+     * For Ceph scheme only
+     *
+     * @return all leave nodes, which are the physical nodes.
+     */
+    @Override
+    public List<Clusterable> getLeaves() {
+        List<Clusterable> leaves = new ArrayList<>();
+        leaves.add(this);
+        return leaves;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -99,5 +111,15 @@ public class PhysicalNode implements Clusterable{
         }
         result.append('}');
         return result.toString();
+    }
+
+    /**
+     * For Ceph only
+     * @param prefix
+     * @param isTail
+     */
+    @Override
+    public String toTreeString(String prefix, boolean isTail) {
+        return prefix + (isTail ? "└── " : "├── ") + getId() + "\n";
     }
 }

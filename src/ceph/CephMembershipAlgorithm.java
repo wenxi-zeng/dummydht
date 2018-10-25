@@ -187,7 +187,7 @@ public class CephMembershipAlgorithm {
         }
 
         cluster.setStatus(STATUS_INACTIVE);
-        map.loadBalancing();
+        map.onNodeFailureOrRemoval(node);
         SimpleLog.i("Physical node removed...");
     }
 }

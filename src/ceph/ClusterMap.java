@@ -139,8 +139,8 @@ public class ClusterMap {
         epoch = System.currentTimeMillis();
     }
 
-    public void loadBalancing() {
-        loadBalancing(root);
+    public void onNodeFailureOrRemoval(Clusterable failedNode) {
+        loadBalanceAlgorithm.failureRecovery(this, failedNode);
     }
 
     public void loadBalancing(Clusterable clusterable) {
@@ -158,13 +158,8 @@ public class ClusterMap {
         update(); // commit the change, gossip to other nodes
     }
 
-    public void increaseWeight(PhysicalNode node) {
-        loadBalanceAlgorithm.increaseLoad(this, node);
-        update(); // commit the change, gossip to other nodes
-    }
-
-    public void decreaseWeight(PhysicalNode node) {
-        loadBalanceAlgorithm.decreaseLoad(this, node);
+    public void changeWeight(PhysicalNode node, float deltaWeight) {
+        loadBalanceAlgorithm.changeWeight(this, node, deltaWeight);
         update(); // commit the change, gossip to other nodes
     }
 
@@ -188,6 +183,6 @@ public class ClusterMap {
 
     @Override
     public String toString() {
-        return "Epoch: " + epoch + "\n" + Arrays.toString(table);
+        return "Epoch: " + epoch + "\n" + root.toTreeString("", true);
     }
 }

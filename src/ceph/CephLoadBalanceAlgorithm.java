@@ -17,7 +17,47 @@ import static util.Config.STATUS_INACTIVE;
 public class CephLoadBalanceAlgorithm {
 
     public void loadBalancing(ClusterMap map, Clusterable clusterable) {
+        List<Clusterable> leaves = clusterable.getLeaves();
 
+        // This is for single node test, thus we have to iterate every physical node.
+        // In realistic solution, iteration is not needed, since the content of the
+        // the loop will run in each individual data node.
+        for (Clusterable leaf : leaves) {
+            if (leaf.getStatus().equals(STATUS_INACTIVE)) continue;
+            PhysicalNode pnode = (PhysicalNode) leaf;
+
+            // The content from here is actual load balancing
+            // that will be run in each data node.
+
+            // Create a transfer list for batch processing.
+            Map<String, List<Indexable>> transferList = new HashMap<>();
+
+            // Iterate each placement group
+            for (Indexable placementGroup : pnode.getVirtualNodes()) {
+                int count = 0;
+                int r = placementGroup.getIndex();
+                PlacementGroup pg = (PlacementGroup) placementGroup;
+                Clusterable replica = map.rush(pg.getId(), r++);
+
+                // if a placement group is determined that it is not
+                // in the current node, we need to transfer it to the replica.
+                if (!replica.getId().equals(pnode.getId())) {
+                    while (!replica.getStatus().equals(STATUS_ACTIVE)) {
+                        r++;
+                        replica = map.rush(pg.getId(), r++);
+                    }
+
+                    transferList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
+                    transferList.get(replica.getId()).add(pg);
+                }
+            }
+
+            // batch processing transfer.
+            for (Map.Entry<String, List<Indexable>> replica : transferList.entrySet()) {
+                pnode.getVirtualNodes().removeAll(replica.getValue());
+                transfer(replica.getValue(), pnode, map.getPhysicalNodeMap().get(replica.getKey()));
+            }
+        }
     }
 
     public void failureRecovery(ClusterMap map, Clusterable failedNode) {
@@ -41,20 +81,20 @@ public class CephLoadBalanceAlgorithm {
                 PlacementGroup pg = (PlacementGroup) placementGroup;
 
                 while (count < NUMBER_OF_REPLICAS) {
-                    Clusterable repilica = map.rush(pg.getId(), r++);
+                    Clusterable replica = map.rush(pg.getId(), r++);
 
                     // if a placement group is determined that it is located
                     // in the failure node, we need to find a new replica for it.
-                    if (repilica.getId().equals(failedNode.getId())) {
+                    if (replica.getId().equals(failedNode.getId())) {
                         do {
-                            repilica = map.rush(pg.getId(), r++);
+                            replica = map.rush(pg.getId(), r++);
                         }
-                        while (!repilica.getStatus().equals(STATUS_ACTIVE));
+                        while (!replica.getStatus().equals(STATUS_ACTIVE));
 
                         // add the replica to replication list, we will copy the
                         // placement group to it later.
-                        replicationList.computeIfAbsent(repilica.getId(), k -> new ArrayList<>());
-                        replicationList.get(repilica.getId()).add(pg);
+                        replicationList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
+                        replicationList.get(replica.getId()).add(pg);
                         break;
                     }
 
@@ -67,6 +107,24 @@ public class CephLoadBalanceAlgorithm {
                 requestReplication(replica.getValue(), pnode, map.getPhysicalNodeMap().get(replica.getKey()));
             }
         }
+    }
+
+    public void changeWeight(ClusterMap map, PhysicalNode node, float deltaWeight) {
+        SimpleLog.i("Changing weight for physical node " + node.toString());
+
+        PhysicalNode pnode = map.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        pnode.setWeight(pnode.getWeight() + deltaWeight);
+        loadBalancing(map, map.getRoot());
+        SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
+    }
+
+    private void transfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
+        SimpleLog.i("Transfer placement groups:\n" + placementGroups.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
     }
 
     private void requestReplication(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
