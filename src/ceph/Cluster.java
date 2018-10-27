@@ -64,9 +64,23 @@ public class Cluster implements Clusterable {
     }
 
     @Override
+    public void updateWeight() {
+        float newWeight = 0;
+
+        for (Clusterable subCluster : getSubClusters()) {
+            if (subCluster != null) {
+                subCluster.updateWeight();
+                newWeight += subCluster.getWeight();
+            }
+        }
+
+        this.weight = newWeight;
+    }
+
+    @Override
     public String toTreeString(String prefix, boolean isTail) {
         StringBuilder result = new StringBuilder();
-        result.append(prefix).append(isTail ? "└── " : "├── ").append(getId()).append('\n');
+        result.append(prefix).append(isTail ? "└── " : "├── ").append(getId()).append(", weight: ").append(weight).append('\n');
         for (int i = 0; i < subCluster.length - 1; i++) {
             if (subCluster[i] == null) continue;
             result.append(subCluster[i].toTreeString(prefix + (isTail ? "    " : "│   "), false));

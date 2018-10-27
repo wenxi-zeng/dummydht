@@ -123,7 +123,7 @@ public class CephMembershipAlgorithm {
             String pgid = map.getPlacementGroupId(i);
 
             while (count < NUMBER_OF_REPLICAS) {
-                Clusterable node = map.rush(pgid, r++);
+                Clusterable node = map.rush(pgid, r);
 
                 if (node != null &&
                         node.getStatus().equals(STATUS_ACTIVE) &&
@@ -132,6 +132,8 @@ public class CephMembershipAlgorithm {
                     pnode.getVirtualNodes().add(new PlacementGroup(pgid, r));
                     count++;
                 }
+
+                r += 1;
             }
         }
     }
@@ -182,15 +184,13 @@ public class CephMembershipAlgorithm {
             SimpleLog.i(node.getId() + " does not exist.");
             return;
         }
-
-        Clusterable cluster = map.findCluster(node.getId());
-        if (cluster == null) {
-            SimpleLog.i("Physical node list is outdated, " + node.getId() + " does not exist.");
+        else if (pnode.getStatus().equals(STATUS_INACTIVE)) {
+            SimpleLog.i(node.getId() + " has already been removed or marked as failure");
             return;
         }
 
-        cluster.setStatus(STATUS_INACTIVE);
-        map.onNodeFailureOrRemoval(node);
+        pnode.setStatus(STATUS_INACTIVE);
+        map.onNodeFailureOrRemoval(pnode);
         SimpleLog.i("Physical node removed...");
     }
 }

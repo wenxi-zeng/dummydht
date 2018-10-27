@@ -93,6 +93,11 @@ public class PhysicalNode implements Clusterable{
         this.status = status;
     }
 
+    @Override
+    public void updateWeight() {
+        // stub method, for ceph only
+    }
+
     public List<Indexable> getVirtualNodes() {
         return virtualNodes;
     }
@@ -120,6 +125,6 @@ public class PhysicalNode implements Clusterable{
      */
     @Override
     public String toTreeString(String prefix, boolean isTail) {
-        return prefix + (isTail ? "└── " : "├── ") + getId() + "\n";
+        return prefix + (isTail ? "└── " : "├── ") + getId() + ": " + getStatus() + ", weight: " + weight + "\n";
     }
 }

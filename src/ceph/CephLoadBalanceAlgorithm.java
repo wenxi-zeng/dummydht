@@ -119,27 +119,40 @@ public class CephLoadBalanceAlgorithm {
             for (Indexable placementGroup : pnode.getVirtualNodes()) {
                 int count = 0;
                 int r = 0;
+                boolean replicatePG = false;
                 PlacementGroup pg = (PlacementGroup) placementGroup;
 
                 while (count < NUMBER_OF_REPLICAS) {
                     Clusterable replica = map.rush(pg.getId(), r++);
 
-                    // if a placement group is determined that it is located
-                    // in the failure node, we need to find a new replica for it.
-                    if (replica.getId().equals(failedNode.getId())) {
-                        do {
-                            replica = map.rush(pg.getId(), r++);
-                        }
-                        while (!replica.getStatus().equals(STATUS_ACTIVE));
-
-                        // add the replica to replication list, we will copy the
-                        // placement group to it later.
-                        replicationList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
-                        replicationList.get(replica.getId()).add(pg);
-                        break;
+                    // if replicatePG = false, we need to keep checking if the replica
+                    // is the failure node.
+                    // otherwise, we keep to loop running to exhaust all the replicas
+                    // of PG. then we got the maximum value of r, which will be used
+                    // for finding a new replica of the PG.
+                    if (!replicatePG && replica.getId().equals(failedNode.getId())) {
+                        replicatePG = true;
                     }
 
                     count++;
+                }
+
+                // if this PG has been determined that it has replica in the failure node,
+                // find a new replica for it.
+                if (replicatePG) {
+                    // we need this do-while loop to make sure the new replica node is active.
+                    Clusterable replica;
+                    do {
+                        replica = map.rush(pg.getId(), r++);
+                    }
+                    while (!replica.getStatus().equals(STATUS_ACTIVE));
+
+                    // add the replica to replication list, we will copy the
+                    // placement group to it later.
+                    pg.setIndex(r - 1);
+                    replicationList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
+                    replicationList.get(replica.getId()).add(pg);
+                    break;
                 }
             }
 
@@ -160,8 +173,13 @@ public class CephLoadBalanceAlgorithm {
             SimpleLog.i(node.getId() + " does not exist.");
             return;
         }
+        else if (pnode.getStatus().equals(STATUS_INACTIVE)) {
+            SimpleLog.i(node.getId() + " has been removed or marked as failure");
+            return;
+        }
 
         pnode.setWeight(pnode.getWeight() + deltaWeight);
+        map.getRoot().updateWeight();
         loadBalancing(map, map.getRoot());
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
     }

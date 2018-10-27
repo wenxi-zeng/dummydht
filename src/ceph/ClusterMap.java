@@ -3,6 +3,7 @@ package ceph;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import util.MathX;
+import util.SimpleLog;
 
 import java.util.*;
 
@@ -79,6 +80,7 @@ public class ClusterMap {
         while (!frontier.isEmpty()) {
             Clusterable cluster = frontier.poll();
             if (cluster.getId().equals(id)) return cluster;
+            if (cluster.getSubClusters() == null) continue;
 
             for (Clusterable child : cluster.getSubClusters()) {
                 if (child != null)
@@ -104,6 +106,7 @@ public class ClusterMap {
                 double ratio = subtotalWeightRatio(i, cluster.getSubClusters());
                 if (rushHash < ratio) {
                     if (subCluster instanceof PhysicalNode) {
+                        // SimpleLog.i(pgid + ", r=" + r + ", rush: " + rushHash + ", ratio: " + ratio + ", node: " + subCluster.getId());
                         return subCluster;
                     }
                     else {

@@ -22,5 +22,7 @@ public interface Clusterable {
 
     void setStatus(String status);
 
+    void updateWeight();
+
     String toTreeString(String prefix, boolean isTail);
 }

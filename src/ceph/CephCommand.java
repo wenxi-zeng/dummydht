@@ -83,7 +83,7 @@ public enum CephCommand {
 
     CHANGEWEIGHT{
         public void execute(String[] args) {
-            if (args.length != 4) {
+            if (args.length != 3) {
                 SimpleLog.i("Wrong arguments. Try: changeWeight <delta weight> <ip>:<port>");
                 return;
             }
