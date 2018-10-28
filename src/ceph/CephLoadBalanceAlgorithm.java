@@ -36,51 +36,6 @@ public class CephLoadBalanceAlgorithm {
             for (Indexable placementGroup : pnode.getVirtualNodes()) {
                 int r = placementGroup.getIndex();
                 PlacementGroup pg = (PlacementGroup) placementGroup;
-                Clusterable replica = map.rush(pg.getId(), r++);
-
-                // if a placement group is determined that it is not
-                // in the current node, we need to transfer it to the replica.
-                if (!replica.getId().equals(pnode.getId())) {
-                    while (!replica.getStatus().equals(STATUS_ACTIVE)) {
-                        r++;
-                        replica = map.rush(pg.getId(), r++);
-                    }
-
-                    transferList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
-                    transferList.get(replica.getId()).add(pg);
-                }
-            }
-
-            // batch processing transfer.
-            for (Map.Entry<String, List<Indexable>> replica : transferList.entrySet()) {
-                pnode.getVirtualNodes().removeAll(replica.getValue());
-                PhysicalNode to = map.getPhysicalNodeMap().get(replica.getKey());
-                to.getVirtualNodes().addAll(replica.getValue());
-                transfer(replica.getValue(), pnode, to);
-            }
-        }
-    }
-
-    public void loadBalancingForNewMember(ClusterMap map, Clusterable clusterable) {
-        List<Clusterable> leaves = clusterable.getLeaves();
-
-        // This is for single node test, thus we have to iterate every physical node.
-        // In realistic solution, iteration is not needed, since the content of the
-        // the loop will run in each individual data node.
-        for (Clusterable leaf : leaves) {
-            if (leaf.getStatus().equals(STATUS_INACTIVE)) continue;
-            PhysicalNode pnode = (PhysicalNode) leaf;
-
-            // The content from here is actual load balancing
-            // that will be run in each data node.
-
-            // Create a transfer list for batch processing.
-            Map<String, List<Indexable>> transferList = new HashMap<>();
-
-            // Iterate each placement group
-            for (Indexable placementGroup : pnode.getVirtualNodes()) {
-                int r = placementGroup.getIndex();
-                PlacementGroup pg = (PlacementGroup) placementGroup;
                 Clusterable replica = map.rush(pg.getId(), r);
 
                 // if a placement group is determined that it is not

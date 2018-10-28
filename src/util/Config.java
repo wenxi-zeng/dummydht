@@ -19,11 +19,13 @@ public class Config {
     public final static String PROPERTY_NUMBER_OF_RUSH_LEVEL = "number_of_rush_level";
     public final static String PROPERTY_CLUSTER_CAPACITY = "cluster_capacity";
     public final static String PROPERTY_RUSH_LEVEL_NAMES = "rush_level_names";
+    public final static String PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING = "enable_cross_clusters_load_balancing";
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
     public static int VIRTUAL_PHYSICAL_RATIO = 1;
     public static int NUMBER_OF_PLACEMENT_GROUPS = 120;
+    public static boolean ENABLE_CROSS_CLUSTER_LOAD_BALANCING = false;
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";

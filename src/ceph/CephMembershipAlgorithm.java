@@ -28,6 +28,7 @@ public class CephMembershipAlgorithm {
         int numberOfRushLevel = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_RUSH_LEVEL));
         int clusterCapacity = Integer.valueOf(rb.getString(PROPERTY_CLUSTER_CAPACITY));
         String[] rushLevelNames = rb.getString(PROPERTY_RUSH_LEVEL_NAMES).split(",");
+        ENABLE_CROSS_CLUSTER_LOAD_BALANCING = Boolean.valueOf(rb.getString(PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING));
 
         int totalCapacity = (int)Math.pow(clusterCapacity, numberOfRushLevel - 1);
         if (numberOfPhysicalNodes > totalCapacity) {
@@ -171,7 +172,7 @@ public class CephMembershipAlgorithm {
                 cluster.getSubClusters()[i].setWeight(redistributeWeight);
             }
         }
-        map.onNodeAddition(cluster);
+        map.loadBalancing(cluster);
 
         SimpleLog.i("Physical node added...");
     }

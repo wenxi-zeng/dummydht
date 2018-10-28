@@ -147,10 +147,6 @@ public class ClusterMap {
         loadBalanceAlgorithm.failureRecovery(this, failedNode);
     }
 
-    public void onNodeAddition(Clusterable clusterable) {
-        loadBalanceAlgorithm.loadBalancingForNewMember(this, clusterable);
-    }
-
     public void loadBalancing(Clusterable clusterable) {
         loadBalanceAlgorithm.loadBalancing(this, clusterable);
         update();
