@@ -46,6 +46,9 @@ public class LocalFileManager {
         int fileSize = MathX.NextInt(Integer.MAX_VALUE);
 
         FileBucket fileBucket = localBuckets.get(bucket);
+
+        if (fileBucket == null) return;
+
         fileBucket.setNumberOfFiles(fileBucket.getNumberOfFiles() + 1);
         fileBucket.setSize(fileBucket.getSize() + fileSize);
 

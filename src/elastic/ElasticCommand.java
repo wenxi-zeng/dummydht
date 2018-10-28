@@ -86,6 +86,28 @@ public enum ElasticCommand {
         }
     },
 
+    EXPAND {
+        public void execute(String[] args) {
+            if (args.length != 1) {
+                SimpleLog.i("Wrong arguments. Try: expand");
+                return;
+            }
+
+            LookupTable.getInstance().expand();
+        }
+    },
+
+    SHRINK {
+        public void execute(String[] args) {
+            if (args.length != 1) {
+                SimpleLog.i("Wrong arguments. Try: shrink");
+                return;
+            }
+
+            LookupTable.getInstance().shrink();
+        }
+    },
+
     LISTPHYSICALNODES {
         public void execute(String[] args) {
             if (args.length != 1) {

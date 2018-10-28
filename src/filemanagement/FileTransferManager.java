@@ -35,11 +35,15 @@ public class FileTransferManager {
         if (hf < hi) {
             for (int bucket = hi + 1; bucket <= NUMBER_OF_HASH_SLOTS; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesTransferred += fileBucket.getNumberOfFiles();
                 sizeOfFilesTransferred += fileBucket.getSize();
             }
             for (int bucket = 0; bucket <= hf; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesTransferred += fileBucket.getNumberOfFiles();
                 sizeOfFilesTransferred += fileBucket.getSize();
             }
@@ -47,6 +51,8 @@ public class FileTransferManager {
         else {
             for (int bucket = hi + 1; bucket <= hf; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesTransferred += fileBucket.getNumberOfFiles();
                 sizeOfFilesTransferred += fileBucket.getSize();
             }
@@ -61,6 +67,8 @@ public class FileTransferManager {
 
         for (int bucket : buckets ){
             FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+            if (fileBucket == null) continue;
+
             numberOfFilesTransferred += fileBucket.getNumberOfFiles();
             sizeOfFilesTransferred += fileBucket.getSize();
         }
@@ -73,6 +81,8 @@ public class FileTransferManager {
         long sizeOfFilesTransferred = 0;
 
         FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+        if (fileBucket == null) return;
+
         numberOfFilesTransferred += fileBucket.getNumberOfFiles();
         sizeOfFilesTransferred += fileBucket.getSize();
 
@@ -85,11 +95,15 @@ public class FileTransferManager {
         if (hf < hi) {
             for (int bucket = hi + 1; bucket <= NUMBER_OF_HASH_SLOTS; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesReplicated += fileBucket.getNumberOfFiles();
                 sizeOfFilesRelicated += fileBucket.getSize();
             }
             for (int bucket = 0; bucket <= hf; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesReplicated += fileBucket.getNumberOfFiles();
                 sizeOfFilesRelicated += fileBucket.getSize();
             }
@@ -97,6 +111,8 @@ public class FileTransferManager {
         else {
             for (int bucket = hi + 1; bucket <= hf; bucket++) {
                 FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+                if (fileBucket == null) continue;
+
                 numberOfFilesReplicated += fileBucket.getNumberOfFiles();
                 sizeOfFilesRelicated += fileBucket.getSize();
             }
@@ -111,6 +127,8 @@ public class FileTransferManager {
 
         for (int bucket : buckets ){
             FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+            if (fileBucket == null) continue;
+
             numberOfFilesReplicted += fileBucket.getNumberOfFiles();
             sizeOfFilesReplicated += fileBucket.getSize();
         }
@@ -123,6 +141,8 @@ public class FileTransferManager {
         long sizeOfFilesReplicated = 0;
 
         FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+        if (fileBucket == null) return;
+
         numberOfFilesReplicted += fileBucket.getNumberOfFiles();
         sizeOfFilesReplicated += fileBucket.getSize();
 

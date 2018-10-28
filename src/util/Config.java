@@ -23,6 +23,7 @@ public class Config {
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
+    public static int DEFAULT_NUMBER_OF_HASH_SLOTS = 100;
     public static int VIRTUAL_PHYSICAL_RATIO = 1;
     public static int NUMBER_OF_PLACEMENT_GROUPS = 120;
     public static boolean ENABLE_CROSS_CLUSTER_LOAD_BALANCING = false;
