@@ -2,6 +2,7 @@ package ring;
 
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
+import filemanagement.LocalFileManager;
 import util.MathX;
 import util.SimpleLog;
 
@@ -56,6 +57,10 @@ public class RingMembershipAlgorithm {
                 table.getTable().add(vnode);
             }
         }
+
+        SimpleLog.i("Allocating files...");
+        LocalFileManager.getInstance().generateFileBuckets(NUMBER_OF_HASH_SLOTS);
+        SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Table initialized...");
     }

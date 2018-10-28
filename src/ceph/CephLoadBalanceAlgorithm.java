@@ -3,12 +3,14 @@ package ceph;
 import commonmodels.Clusterable;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
+import filemanagement.FileTransferManager;
 import util.SimpleLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static util.Config.NUMBER_OF_REPLICAS;
 import static util.Config.STATUS_ACTIVE;
@@ -145,6 +147,10 @@ public class CephLoadBalanceAlgorithm {
             result.append(pg.getDisplayId()).append(' ');
 
         SimpleLog.i("Transfer placement groups: " + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().transfer(
+                placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
+                fromNode,
+                toNode);
     }
 
     private void requestReplication(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
@@ -154,5 +160,9 @@ public class CephLoadBalanceAlgorithm {
             result.append(pg.getDisplayId()).append(' ');
 
         SimpleLog.i("Copy placement groups:" + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().copy(
+                placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
+                fromNode,
+                toNode);
     }
 }

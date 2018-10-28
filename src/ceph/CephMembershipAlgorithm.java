@@ -4,6 +4,7 @@ import ceph.strategies.CrossClustersStrategy;
 import ceph.strategies.InClusterStrategy;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
+import filemanagement.LocalFileManager;
 import util.MathX;
 import util.SimpleLog;
 
@@ -69,8 +70,12 @@ public class CephMembershipAlgorithm {
 
         SimpleLog.i("Allocating placement groups...");
         allocatePlacementGroups(map);
-
         SimpleLog.i("Placement groups allocated...");
+
+        SimpleLog.i("Allocating files...");
+        LocalFileManager.getInstance().generateFileBuckets(NUMBER_OF_PLACEMENT_GROUPS);
+        SimpleLog.i("Files allocated...");
+
         SimpleLog.i("Map initialized...");
     }
 

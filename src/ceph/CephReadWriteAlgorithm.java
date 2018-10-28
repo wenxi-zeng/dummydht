@@ -1,10 +1,13 @@
 package ceph;
 
 import commonmodels.Clusterable;
+import filemanagement.LocalFileManager;
+import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static util.Config.NUMBER_OF_PLACEMENT_GROUPS;
 import static util.Config.NUMBER_OF_REPLICAS;
 import static util.Config.STATUS_ACTIVE;
 
@@ -34,6 +37,7 @@ public class CephReadWriteAlgorithm {
             }
         }
 
+        LocalFileManager.getInstance().write(MathX.positiveHash(filename.hashCode()) % NUMBER_OF_PLACEMENT_GROUPS);
         return replicas;
     }
 }

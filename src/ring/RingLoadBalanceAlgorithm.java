@@ -2,6 +2,7 @@ package ring;
 
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
+import filemanagement.FileTransferManager;
 import util.MathX;
 import util.SimpleLog;
 
@@ -59,7 +60,7 @@ public class RingLoadBalanceAlgorithm {
         }
 
         Indexable toNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
-        transfer(hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
+        transfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
         SimpleLog.i("Decreased load for virtual node " + hi + " to " + hf);
@@ -76,7 +77,7 @@ public class RingLoadBalanceAlgorithm {
         }
 
         Indexable fromNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
-        requestTransfer(hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
+        requestTransfer(table, hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
         SimpleLog.i("Increased load for virtual node " + hi + " to " + hf);
@@ -94,7 +95,7 @@ public class RingLoadBalanceAlgorithm {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 
-            requestTransfer(hi, hf, successor, node); // requestTransfer(start, end, from, to). (start, end]
+            requestTransfer(table, hi, hf, successor, node); // requestTransfer(start, end, from, to). (start, end]
 
             startNode = endNode;
             endNode = table.getTable().next(startNode);
@@ -116,7 +117,7 @@ public class RingLoadBalanceAlgorithm {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 
-            requestReplication(hi, hf, predecessor, successor); // requestTransfer(start, end, from, to). (start, end]
+            requestReplication(table, hi, hf, predecessor, successor); // requestTransfer(start, end, from, to). (start, end]
 
             startNode = endNode;
             endNode = table.getTable().next(startNode);
@@ -127,15 +128,24 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
     }
 
-    private void transfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
+    private void transfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
         SimpleLog.i("Transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
+        String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
+        String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
+        FileTransferManager.getInstance().transfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 
-    private void requestTransfer(int hi, int hf, Indexable fromNode, Indexable toNode) {
+    private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
         SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
+        String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
+        String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
+        FileTransferManager.getInstance().transfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 
-    private void requestReplication(int hi, int hf, Indexable fromNode, Indexable toNode) {
+    private void requestReplication(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
         SimpleLog.i("Copy hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
+        String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
+        String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
+        FileTransferManager.getInstance().copy(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 }

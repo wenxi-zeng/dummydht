@@ -1,6 +1,7 @@
 package elastic;
 
 import commonmodels.PhysicalNode;
+import filemanagement.FileTransferManager;
 import util.SimpleLog;
 
 import java.util.Random;
@@ -54,14 +55,17 @@ public class ElasticLoadBalanceAlgorithm {
 
     private void transfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Transfer hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().transfer(node.getHash(), fromNode, toNode);
     }
 
     private void requestTransfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Request to transfer hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().transfer(node.getHash(), fromNode, toNode);
     }
 
     private void requestReplication(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Copy hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().copy(node.getHash(), fromNode, toNode);
     }
 
 }

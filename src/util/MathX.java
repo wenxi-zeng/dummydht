@@ -6,14 +6,15 @@ public class MathX {
     private static final long MAX_VALUE = 0xFFFFFFFFL;
     private static final double MAX_NODE = 15359.0;
 
+    private static Random random = new Random();
+
     public static Queue<Integer> nonrepeatRandom(int bound, int size, List<Integer> exclude) {
-        Random r = new Random();
         Set<Integer> s = new HashSet<>(exclude);
         Queue<Integer> result = new LinkedList<>();
 
         for(int i = 0; i < size; i++){
             while(true) {
-                int num = r.nextInt(bound);
+                int num = random.nextInt(bound);
                 if (!s.contains(num)) {
                     s.add(num);
                     result.add(num);
@@ -30,11 +31,14 @@ public class MathX {
     }
 
     public static int NextInt(int bound) {
-        return (int)(Math.random() * (bound));
+        return (int)(random.nextDouble() * (bound));
+    }
+
+    public static int NextInt(int min, int max) {
+        return min + (int)(random.nextDouble() * ((max - min) + 1));
     }
 
     public static void shuffle(int[] array) {
-        Random random = new Random();
         int count = array.length;
         for (int i = count; i > 1; i--) {
             swap(array, i - 1, random.nextInt(i));
