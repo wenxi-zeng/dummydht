@@ -133,8 +133,7 @@ public class CephLoadBalanceAlgorithm {
             return;
         }
 
-        pnode.setWeight(pnode.getWeight() + deltaWeight);
-        map.getRoot().updateWeight();
+        map.getWeightDistributeStrategy().onWeightChanged(map, pnode, deltaWeight);
         loadBalancing(map, map.getRoot());
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
     }

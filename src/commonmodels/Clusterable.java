@@ -24,5 +24,7 @@ public interface Clusterable {
 
     void updateWeight();
 
+    int getNumberOfSubClusters();
+
     String toTreeString(String prefix, boolean isTail);
 }

@@ -78,6 +78,19 @@ public class Cluster implements Clusterable {
     }
 
     @Override
+    public int getNumberOfSubClusters() {
+        int count = 0;
+
+        for (Clusterable subCluster : getSubClusters()) {
+            if (subCluster != null) {
+                count ++;
+            }
+        }
+
+        return count;
+    }
+
+    @Override
     public String toTreeString(String prefix, boolean isTail) {
         StringBuilder result = new StringBuilder();
         result.append(prefix).append(isTail ? "└── " : "├── ").append(getId()).append(", weight: ").append(weight).append('\n');

@@ -1,5 +1,7 @@
 package ceph;
 
+import ceph.strategies.CrossClustersStrategy;
+import ceph.strategies.InClusterStrategy;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import util.MathX;
@@ -24,11 +26,16 @@ public class CephMembershipAlgorithm {
         int portRange = Integer.valueOf(rb.getString(PROPERTY_PORT_RANGE));
         NUMBER_OF_REPLICAS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
         int numberOfPhysicalNodes = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
-        float initialWeight = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
+        INITIAL_WEIGHT = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
         int numberOfRushLevel = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_RUSH_LEVEL));
         int clusterCapacity = Integer.valueOf(rb.getString(PROPERTY_CLUSTER_CAPACITY));
         String[] rushLevelNames = rb.getString(PROPERTY_RUSH_LEVEL_NAMES).split(",");
         ENABLE_CROSS_CLUSTER_LOAD_BALANCING = Boolean.valueOf(rb.getString(PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING));
+
+        if (ENABLE_CROSS_CLUSTER_LOAD_BALANCING)
+            map.setWeightDistributeStrategy(new CrossClustersStrategy());
+        else
+            map.setWeightDistributeStrategy(new InClusterStrategy());
 
         int totalCapacity = (int)Math.pow(clusterCapacity, numberOfRushLevel - 1);
         if (numberOfPhysicalNodes > totalCapacity) {
@@ -52,7 +59,7 @@ public class CephMembershipAlgorithm {
                 portPool,
                 rushLevelNames,
                 numberOfRushLevel,
-                initialWeight,
+                INITIAL_WEIGHT,
                 clusterCapacity,
                 ipPrefix,
                 intStartIp,
@@ -166,12 +173,7 @@ public class CephMembershipAlgorithm {
         }
 
         map.getPhysicalNodeMap().put(node.getId(), node);
-        float redistributeWeight = cluster.getWeight() / (cluster.getSubClusters().length - i);
-        for (i = cluster.getSubClusters().length - 1; i >= 0; i--) {
-            if (cluster.getSubClusters()[i] != null) {
-                cluster.getSubClusters()[i].setWeight(redistributeWeight);
-            }
-        }
+        map.getWeightDistributeStrategy().onNodeAddition(map, cluster, node);
         map.loadBalancing(cluster);
 
         SimpleLog.i("Physical node added...");

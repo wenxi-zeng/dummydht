@@ -98,6 +98,12 @@ public class PhysicalNode implements Clusterable{
         // stub method, for ceph only
     }
 
+    @Override
+    public int getNumberOfSubClusters() {
+        // stub method, for ceph only
+        return 0;
+    }
+
     public List<Indexable> getVirtualNodes() {
         return virtualNodes;
     }

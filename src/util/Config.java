@@ -26,6 +26,7 @@ public class Config {
     public static int VIRTUAL_PHYSICAL_RATIO = 1;
     public static int NUMBER_OF_PLACEMENT_GROUPS = 120;
     public static boolean ENABLE_CROSS_CLUSTER_LOAD_BALANCING = false;
+    public static float INITIAL_WEIGHT = 1024;
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";

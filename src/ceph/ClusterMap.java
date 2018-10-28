@@ -1,9 +1,9 @@
 package ceph;
 
+import ceph.strategies.WeightDistributeStrategy;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import util.MathX;
-import util.SimpleLog;
 
 import java.util.*;
 
@@ -22,6 +22,8 @@ public class ClusterMap {
     private CephMembershipAlgorithm membershipAlgorithm;
 
     private CephReadWriteAlgorithm readWriteAlgorithm;
+
+    private WeightDistributeStrategy weightDistributeStrategy;
 
     private static volatile ClusterMap instance = null;
 
@@ -73,6 +75,14 @@ public class ClusterMap {
         this.physicalNodeMap = physicalNodeMap;
     }
 
+    public WeightDistributeStrategy getWeightDistributeStrategy() {
+        return weightDistributeStrategy;
+    }
+
+    public void setWeightDistributeStrategy(WeightDistributeStrategy weightDistributeStrategy) {
+        this.weightDistributeStrategy = weightDistributeStrategy;
+    }
+
     public Clusterable findCluster(String id) {
         Queue<Clusterable> frontier = new LinkedList<>();
         frontier.add(root);
@@ -85,6 +95,25 @@ public class ClusterMap {
             for (Clusterable child : cluster.getSubClusters()) {
                 if (child != null)
                     frontier.add(child);
+            }
+        }
+
+        return null;
+    }
+
+    public Clusterable findParentOf(Clusterable clusterable) {
+        Stack<Clusterable> frontier = new Stack<>();
+        frontier.push(root);
+
+        while (!frontier.isEmpty()) {
+            Clusterable cluster = frontier.pop();
+            if (cluster.getSubClusters() == null) continue;
+
+            for (Clusterable child : cluster.getSubClusters()) {
+                if (child != null) {
+                    if (child.getId().equals(clusterable.getId())) return cluster;
+                    else frontier.push(child);
+                }
             }
         }
 
