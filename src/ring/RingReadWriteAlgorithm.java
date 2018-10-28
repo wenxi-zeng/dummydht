@@ -1,6 +1,7 @@
 package ring;
 
 import commonmodels.Indexable;
+import filemanagement.LocalFileManager;
 import util.MathX;
 
 import static util.Config.NUMBER_OF_HASH_SLOTS;
@@ -16,6 +17,9 @@ public class RingReadWriteAlgorithm {
     public Indexable write(LookupTable table, String filename) {
         int hash = MathX.positiveHash(filename.hashCode()) % NUMBER_OF_HASH_SLOTS;
         Indexable node = table.getTable().find(new VirtualNode(hash));
+
+        LocalFileManager.getInstance().write(hash);
+
         return table.getTable().get(node.getIndex());
     }
 }

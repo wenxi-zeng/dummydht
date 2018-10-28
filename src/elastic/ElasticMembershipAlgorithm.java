@@ -1,6 +1,7 @@
 package elastic;
 
 import commonmodels.PhysicalNode;
+import filemanagement.LocalFileManager;
 import util.MathX;
 import util.SimpleLog;
 
@@ -65,6 +66,10 @@ public class ElasticMembershipAlgorithm {
                 physicalNode.getVirtualNodes().add(bucketNode);
             }
         }
+
+        SimpleLog.i("Allocating files...");
+        LocalFileManager.getInstance().generateFileBuckets(NUMBER_OF_HASH_SLOTS);
+        SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Table initialized...");
     }
