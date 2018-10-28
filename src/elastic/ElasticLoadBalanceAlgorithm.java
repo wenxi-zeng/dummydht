@@ -2,6 +2,7 @@ package elastic;
 
 import commonmodels.PhysicalNode;
 import filemanagement.FileTransferManager;
+import util.Config;
 import util.SimpleLog;
 
 import java.util.Random;
@@ -51,6 +52,44 @@ public class ElasticLoadBalanceAlgorithm {
         requestReplication(node,
                 lookupTable.getPhysicalNodeMap().get(node.getPhysicalNodes().get(index)),
                 to);
+    }
+
+    public void onTableExpand(LookupTable table) {
+        SimpleLog.i("Expanding table...");
+
+        int originalSize = table.getTable().length;
+        table.expandTable();
+
+        for (int i = 0; i< originalSize; i++) {
+            table.getTable()[originalSize + i].getPhysicalNodes().addAll(table.getTable()[i].getPhysicalNodes());
+        }
+
+        SimpleLog.i("Table expanded. No file transfer needed");
+    }
+
+    public void onTableShrink(LookupTable table) {
+        SimpleLog.i("Shrinking table...");
+
+        if (table.getTable().length  / 2 < Config.DEFAULT_NUMBER_OF_HASH_SLOTS) {
+            SimpleLog.i("Table cannot be shrunk anymore");
+            return;
+        }
+        int newSize = table.getTable().length / 2;
+
+        for (int i = 0; i< newSize; i++) {
+            for (String nodeId : table.getTable()[newSize + i].getPhysicalNodes()) {
+                if (table.getTable()[i].getPhysicalNodes().contains(nodeId)) continue;
+
+                for (String targetId : table.getTable()[i].getPhysicalNodes()) {
+                    transfer(table.getTable()[newSize + i],
+                            table.getPhysicalNodeMap().get(nodeId),
+                            table.getPhysicalNodeMap().get(targetId));
+                }
+            }
+        }
+
+        table.shrinkTable();
+        SimpleLog.i("Table shrank.");
     }
 
     private void transfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {

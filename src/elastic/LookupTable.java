@@ -2,6 +2,8 @@ package elastic;
 
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
+import util.Config;
+import util.SimpleLog;
 
 import java.util.*;
 
@@ -54,6 +56,21 @@ public class LookupTable {
         for (int i = 0; i < size; i++) {
             table[i] = new BucketNode(i);
         }
+    }
+
+    protected void expandTable() {
+        Config.NUMBER_OF_HASH_SLOTS *= 2;
+        int i = table.length;
+        table = Arrays.copyOf(table, Config.NUMBER_OF_HASH_SLOTS);
+
+        for (; i < table.length; i++) {
+            table[i] = new BucketNode(i);
+        }
+    }
+
+    protected void shrinkTable() {
+        Config.NUMBER_OF_HASH_SLOTS /= 2;
+        table = Arrays.copyOf(table, Config.NUMBER_OF_HASH_SLOTS);
     }
 
     public long getEpoch() {
@@ -112,6 +129,14 @@ public class LookupTable {
 
     public Indexable read(String filename) {
         return readWriteAlgorithm.read(this, filename);
+    }
+
+    public void expand() {
+        loadBalanceAlgorithm.onTableExpand(this);
+    }
+
+    public void shrink() {
+        loadBalanceAlgorithm.onTableShrink(this);
     }
 
     public String listPhysicalNodes() {

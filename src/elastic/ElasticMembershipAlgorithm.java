@@ -20,6 +20,7 @@ public class ElasticMembershipAlgorithm {
         ResourceBundle rb = ResourceBundle.getBundle(CONFIG_ELASTIC);
 
         NUMBER_OF_HASH_SLOTS = Integer.valueOf(rb.getString(PROPERTY_HASH_SLOTS));
+        DEFAULT_NUMBER_OF_HASH_SLOTS = NUMBER_OF_HASH_SLOTS;
         String startIp = rb.getString(PROPERTY_START_IP);
         int ipRange = Integer.valueOf(rb.getString(PROPERTY_IP_RANGE));
         int startPort = Integer.valueOf(rb.getString(PROPERTY_START_PORT));
