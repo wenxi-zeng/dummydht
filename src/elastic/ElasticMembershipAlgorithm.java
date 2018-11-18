@@ -3,6 +3,7 @@ package elastic;
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
 import util.MathX;
+import util.ResourcesLoader;
 import util.SimpleLog;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class ElasticMembershipAlgorithm {
     public void initialize(LookupTable table) {
         SimpleLog.i("Initializing table...");
 
-        ResourceBundle rb = ResourceBundle.getBundle(CONFIG_ELASTIC);
+        ResourceBundle rb = ResourcesLoader.getBundle(CONFIG_ELASTIC);
 
         NUMBER_OF_HASH_SLOTS = Integer.valueOf(rb.getString(PROPERTY_HASH_SLOTS));
         DEFAULT_NUMBER_OF_HASH_SLOTS = NUMBER_OF_HASH_SLOTS;

@@ -6,6 +6,7 @@ import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
 import util.MathX;
+import util.ResourcesLoader;
 import util.SimpleLog;
 
 import java.util.Queue;
@@ -18,7 +19,7 @@ public class CephMembershipAlgorithm {
     public void initialize(ClusterMap map) {
         SimpleLog.i("Initializing map...");
 
-        ResourceBundle rb = ResourceBundle.getBundle(CONFIG_CEPH);
+        ResourceBundle rb = ResourcesLoader.getBundle(CONFIG_CEPH);
 
         NUMBER_OF_PLACEMENT_GROUPS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PLACEMENT_GROUPS));
         String startIp = rb.getString(PROPERTY_START_IP);

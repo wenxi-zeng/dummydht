@@ -4,6 +4,7 @@ import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
 import util.MathX;
+import util.ResourcesLoader;
 import util.SimpleLog;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class RingMembershipAlgorithm {
     public void initialize(LookupTable table) {
         SimpleLog.i("Initializing table...");
 
-        ResourceBundle rb = ResourceBundle.getBundle(CONFIG_RING);
+        ResourceBundle rb = ResourcesLoader.getBundle(CONFIG_RING);
 
         NUMBER_OF_HASH_SLOTS = Integer.valueOf(rb.getString(PROPERTY_HASH_SLOTS));
         String startIp = rb.getString(PROPERTY_START_IP);
