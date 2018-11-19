@@ -58,7 +58,7 @@ public enum CephCommand {
             String clusterId = args[1];
             String[] address1 = args[2].split(":");
             if (address1.length != 2) {
-                SimpleLog.i("Invalid address format. Try: addNode <cluster id> <ip>:<port>");
+                SimpleLog.i("Invalid ip format. Try: addNode <cluster id> <ip>:<port>");
                 return;
             }
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
@@ -91,7 +91,7 @@ public enum CephCommand {
             float deltaWeight = Float.valueOf(args[1]);
             String[] address1 = args[2].split(":");
             if (address1.length != 2) {
-                SimpleLog.i("Invalid address format. Try: changeWeight <delta weight> <ip>:<port>");
+                SimpleLog.i("Invalid ip format. Try: changeWeight <delta weight> <ip>:<port>");
                 return;
             }
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));

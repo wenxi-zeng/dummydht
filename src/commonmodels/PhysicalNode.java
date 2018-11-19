@@ -115,7 +115,7 @@ public class PhysicalNode implements Clusterable{
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append("PhysicalNode{" + "address='").append(address).append('\'').append(", port=").append(port).append(", status='").append(status).append('\'').append(", virtualNodes=");
+        result.append("PhysicalNode{" + "ip='").append(address).append('\'').append(", port=").append(port).append(", status='").append(status).append('\'').append(", virtualNodes=");
 
         for (Indexable indexable : virtualNodes) {
             result.append(indexable.getDisplayId()).append(" ");

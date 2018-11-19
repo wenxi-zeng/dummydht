@@ -76,7 +76,7 @@ public enum ElasticCommand {
             String[] address2 = args[3].split(":");
 
             if (address1.length != 2 || address2.length != 2) {
-                SimpleLog.i("Invalid address format. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
+                SimpleLog.i("Invalid ip format. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
                 return;
             }
 

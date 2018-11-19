@@ -20,6 +20,10 @@ public class Config {
     public final static String PROPERTY_CLUSTER_CAPACITY = "cluster_capacity";
     public final static String PROPERTY_RUSH_LEVEL_NAMES = "rush_level_names";
     public final static String PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING = "enable_cross_clusters_load_balancing";
+    public final static String PROPERTY_SEEDS = "seeds";
+    public final static String PROPERTY_LISTEN_ADDRESS = "listen_address";
+    public final static String PROPERTY_LISTEN_PORT = "listen_port";
+    public final static String PROPERTY_CLUSTER_NAME = "cluster_name";
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
