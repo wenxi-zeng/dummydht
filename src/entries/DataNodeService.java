@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class DataNodeClient {
+public class DataNodeService {
 
     private GossipService gossipService = null;
 
@@ -30,7 +30,7 @@ public class DataNodeClient {
         }
         else {
             try {
-                DataNodeClient client = new DataNodeClient(args);
+                DataNodeService client = new DataNodeService(args);
                 client.exec();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -38,7 +38,7 @@ public class DataNodeClient {
         }
     }
 
-    private DataNodeClient(String[] args) throws Exception {
+    private DataNodeService(String[] args) throws Exception {
         initGossipManager(args);
         initDataNode(args);
     }
