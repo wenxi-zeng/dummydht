@@ -9,6 +9,7 @@ import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.RemoteGossipMember;
 import ring.RingDataNode;
+import socket.DataNodeServer;
 import util.URIHelper;
 
 import java.net.URI;
@@ -20,9 +21,11 @@ import java.util.List;
 
 public class DataNodeService {
 
-    private GossipService gossipService = null;
+    private GossipService gossipService;
 
     private DataNode dataNode;
+
+    private DataNodeServer dataNodeServer;
 
     public static void main(String[] args){
         if (args.length < 2) {
@@ -39,8 +42,9 @@ public class DataNodeService {
     }
 
     private DataNodeService(String[] args) throws Exception {
-        initGossipManager(args);
         initDataNode(args);
+        initDataNodeServer(dataNode);
+        initGossipManager(dataNode);
     }
 
     private void initDataNode(String[] args) throws Exception {
@@ -61,7 +65,11 @@ public class DataNodeService {
         }
     }
 
-    private void initGossipManager(String[] args) throws URISyntaxException, UnknownHostException, InterruptedException {
+    private void initDataNodeServer(DataNode dataNode) {
+        dataNodeServer = new DataNodeServer(dataNode);
+    }
+
+    private void initGossipManager(DataNode dataNode) throws URISyntaxException, UnknownHostException, InterruptedException {
         GossipSettings settings = new GossipSettings();
         List<GossipMember> startupMembers = new ArrayList<>();
 
@@ -81,7 +89,8 @@ public class DataNodeService {
                 (a, b) -> {}, new MetricRegistry());
     }
 
-    private void exec() {
+    private void exec() throws Exception {
+        dataNodeServer.start();
         gossipService.start();
     }
 }
