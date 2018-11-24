@@ -39,6 +39,10 @@ public class LookupTable {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public void initialize() {
         physicalNodeMap = new HashMap<>();
         epoch = System.currentTimeMillis();

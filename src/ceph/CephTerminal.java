@@ -9,6 +9,11 @@ public class CephTerminal implements Terminal {
     }
 
     @Override
+    public void destroy() {
+        CephCommand.DESTROY.execute(null);
+    }
+
+    @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
                 "read <filename>\n" +

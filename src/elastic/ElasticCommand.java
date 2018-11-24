@@ -11,6 +11,12 @@ public enum ElasticCommand {
         }
     },
 
+    DESTROY {
+        public void execute(String[] args) {
+            LookupTable.deleteInstance();
+        }
+    },
+
     READ {
         public void execute(String[] args) {
             if (args.length != 2) {

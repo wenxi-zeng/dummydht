@@ -10,6 +10,11 @@ public class RingTerminal implements Terminal {
     }
 
     @Override
+    public void destroy() {
+        RingCommand.DESTROY.execute(null);
+    }
+
+    @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
                 "read <filename>\n" +

@@ -10,6 +10,11 @@ public class ElasticTerminal implements Terminal {
     }
 
     @Override
+    public void destroy() {
+        ElasticCommand.DESTROY.execute(null);
+    }
+
+    @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
                 "read <filename>\n" +

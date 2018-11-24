@@ -13,6 +13,12 @@ public enum CephCommand {
         }
     },
 
+    DESTROY {
+        public void execute(String[] args) {
+            ClusterMap.deleteInstance();
+        }
+    },
+
     READ {
         public void execute(String[] args) {
             if (args.length != 2) {

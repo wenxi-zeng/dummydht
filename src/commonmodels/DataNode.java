@@ -26,11 +26,13 @@ public abstract class DataNode {
 
     public DataNode() {
         useDynamicAddress = false;
+        initialize();
     }
 
     public DataNode(int port) {
         this.port = port;
         useDynamicAddress = true;
+        initialize();
     }
 
     public void initialize() {
@@ -43,6 +45,10 @@ public abstract class DataNode {
             loadAddress(config);
 
         initTerminal();
+    }
+
+    public void destroy() {
+
     }
 
     private void initAddress() {
