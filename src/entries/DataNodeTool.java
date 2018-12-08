@@ -19,7 +19,7 @@ public class DataNodeTool {
             }
         };
 
-        args = "start 6000 ring".split(" ");
+        //args = "status 6000".split(" ");
         if (args.length < 2 || args.length > 4) {
             SimpleLog.i("Wrong arguments. Available commands:\n" +
                     "start [address] <port> <dht-type>\n" +

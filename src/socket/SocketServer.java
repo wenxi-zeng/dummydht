@@ -34,6 +34,8 @@ public class SocketServer {
         AsynchronousChannelGroup group = AsynchronousChannelGroup.withCachedThreadPool(connectPool, 1);
 
         try (AsynchronousServerSocketChannel channel = AsynchronousServerSocketChannel.open(group)) {
+            registerShutdownHook(channel);
+
             if (channel.isOpen()) {
                 channel.setOption(StandardSocketOptions.SO_RCVBUF, 4 * 1024);
                 channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
@@ -53,7 +55,6 @@ public class SocketServer {
                                     Object o = ObjectConverter.getObject(buffer);
                                     if (o != null) {
                                         eventHandler.onReceived(result, o.toString().trim());
-                                        result.write(ObjectConverter.getByteBuffer("OK")).get();
                                     }
 
                                     if (buffer.hasRemaining()) {
@@ -86,6 +87,17 @@ public class SocketServer {
                 throw new Exception("The asynchronous server-socket channel cannot be opened!");
             }
         }
+    }
+
+    private void registerShutdownHook(AsynchronousServerSocketChannel channel) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (channel != null && channel.isOpen())
+                    channel.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
     private void await() throws InterruptedException {

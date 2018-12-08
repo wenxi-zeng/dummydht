@@ -4,7 +4,6 @@ import datanode.DataNodeServer;
 import socket.SocketServer;
 import util.ObjectConverter;
 
-import java.io.IOException;
 import java.nio.channels.AsynchronousSocketChannel;
 
 public class DataNodeDaemon implements SocketServer.EventHandler {
@@ -63,17 +62,19 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
             if (dataNodeServer == null) {
                 dataNodeServer = new DataNodeServer(cmdLine[2], Integer.valueOf(cmdLine[1]));
                 dataNodeServer.start();
+                out.write(ObjectConverter.getByteBuffer("Node started")).get();
             }
         }
         else if (cmdLine[0].equals("stop")){
             if (dataNodeServer != null) {
                 dataNodeServer.stop();
                 dataNodeServer = null;
+                out.write(ObjectConverter.getByteBuffer("Node stopped")).get();
             }
         }
         else if (cmdLine[0].equals("status")) {
             if (dataNodeServer != null) {
-                out.write(ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus()));
+                out.write(ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus())).get();
             }
         }
     }

@@ -57,7 +57,7 @@ public class DataNodeServer {
                 URIHelper.getGossipURI(dataNode.getAddress()),
                 dataNode.getAddress(), new HashMap<>(),
                 startupMembers, settings,
-                (a, b) -> {}, new MetricRegistry());
+                (member, state) -> {}, new MetricRegistry());
     }
 
     public void start() throws Exception {
