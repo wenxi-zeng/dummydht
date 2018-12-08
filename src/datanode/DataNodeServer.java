@@ -70,37 +70,37 @@ public class DataNodeServer {
     }
 
     public String getMembersStatus() {
-        return printLiveMembers() + "\n" + printDeadMambers();
+        return printLiveMembers() + printDeadMembers();
     }
 
     private String printLiveMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getLiveMembers();
         StringBuilder result = new StringBuilder();
+        result.append("Live: ");
 
         if (members.isEmpty()) {
-            result.append("Live: (none)");
+            result.append("None").append('\n');
             return result.toString();
         }
-        result.append("Live: ").append(members.get(0));
-        for (int i = 1; i < members.size(); i++) {
-            result.append("    : ").append(members.get(i));
-        }
+
+        for (LocalGossipMember member : members)
+            result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
 
         return result.toString();
     }
 
-    private String printDeadMambers() {
+    private String printDeadMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getDeadMembers();
         StringBuilder result = new StringBuilder();
+        result.append("Dead: ");
 
         if (members.isEmpty()) {
-            result.append("Dead: (none)");
+            result.append("None").append('\n');
             return result.toString();
         }
-        result.append("Dead: ").append(members.get(0));
-        for (int i = 1; i < members.size(); i++) {
-            result.append("    : ").append(members.get(i));
-        }
+
+        for (LocalGossipMember member : members)
+            result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
 
         return result.toString();
     }
