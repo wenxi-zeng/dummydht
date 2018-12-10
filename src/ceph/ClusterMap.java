@@ -28,7 +28,13 @@ public class ClusterMap {
     private static volatile ClusterMap instance = null;
 
     private ClusterMap() {
-        initialize();
+        physicalNodeMap = new HashMap<>();
+        epoch = System.currentTimeMillis();
+        root = new Cluster();
+
+        membershipAlgorithm = new CephMembershipAlgorithm();
+        loadBalanceAlgorithm = new CephLoadBalanceAlgorithm();
+        readWriteAlgorithm = new CephReadWriteAlgorithm();
     }
 
     public static ClusterMap getInstance() {
@@ -48,15 +54,11 @@ public class ClusterMap {
     }
 
     public void initialize() {
-        physicalNodeMap = new HashMap<>();
-        epoch = System.currentTimeMillis();
-        root = new Cluster();
-
-        membershipAlgorithm = new CephMembershipAlgorithm();
-        loadBalanceAlgorithm = new CephLoadBalanceAlgorithm();
-        readWriteAlgorithm = new CephReadWriteAlgorithm();
-
         membershipAlgorithm.initialize(this);
+    }
+
+    public void bootstrap() {
+        membershipAlgorithm.bootstrap(this);
     }
 
     public long getEpoch() {

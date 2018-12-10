@@ -80,6 +80,10 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Map initialized...");
     }
 
+    public void bootstrap(ClusterMap map) {
+
+    }
+
     private void generateMap(ClusterMap map, Clusterable cluster, int currentLevel,
                             Queue<Integer> ipPool, Queue<Integer> portPool,
                             String[] rushLevelNames, int numberOfRushLevel,

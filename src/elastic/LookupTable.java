@@ -24,7 +24,12 @@ public class LookupTable {
     private static volatile LookupTable instance = null;
 
     private LookupTable() {
-        initialize();
+        physicalNodeMap = new HashMap<>();
+        epoch = System.currentTimeMillis();
+
+        membershipAlgorithm = new ElasticMembershipAlgorithm();
+        loadBalanceAlgorithm = new ElasticLoadBalanceAlgorithm();
+        readWriteAlgorithm = new ElasticReadWriteAlgorithm();
     }
 
     public static LookupTable getInstance() {
@@ -44,14 +49,11 @@ public class LookupTable {
     }
 
     public void initialize() {
-        physicalNodeMap = new HashMap<>();
-        epoch = System.currentTimeMillis();
-
-        membershipAlgorithm = new ElasticMembershipAlgorithm();
-        loadBalanceAlgorithm = new ElasticLoadBalanceAlgorithm();
-        readWriteAlgorithm = new ElasticReadWriteAlgorithm();
-
         membershipAlgorithm.initialize(this);
+    }
+
+    public void bootstrap() {
+        membershipAlgorithm.bootstrap(this);
     }
 
     public void createTable(int size) {

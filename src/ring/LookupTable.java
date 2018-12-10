@@ -24,7 +24,13 @@ public class LookupTable {
     private static volatile LookupTable instance = null;
 
     private LookupTable() {
-        initialize();
+        physicalNodeMap = new HashMap<>();
+        table = new BinarySearchList();
+        epoch = System.currentTimeMillis();
+
+        membershipAlgorithm = new RingMembershipAlgorithm();
+        loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();
+        readWriteAlgorithm = new RingReadWriteAlgorithm();
     }
 
     public static LookupTable getInstance() {
@@ -44,15 +50,11 @@ public class LookupTable {
     }
 
     public void initialize() {
-        physicalNodeMap = new HashMap<>();
-        table = new BinarySearchList();
-        epoch = System.currentTimeMillis();
-
-        membershipAlgorithm = new RingMembershipAlgorithm();
-        loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();
-        readWriteAlgorithm = new RingReadWriteAlgorithm();
-
         membershipAlgorithm.initialize(this);
+    }
+
+    public void bootstrap() {
+        membershipAlgorithm.bootstrap(this);
     }
 
     public long getEpoch() {

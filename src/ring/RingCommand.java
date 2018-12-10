@@ -5,9 +5,26 @@ import commonmodels.PhysicalNode;
 import util.SimpleLog;
 
 public enum RingCommand {
+
+    BOOTSTRAP {
+        public void execute(String[] args) {
+            LookupTable.getInstance().bootstrap();
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return "BOOTSTRAP";
+        }
+
+        @Override
+        public String getHelpString() {
+            return "BOOTSTRAP";
+        }
+    },
+
     INITIALIZE {
         public void execute(String[] args) {
-            LookupTable.getInstance();
+            LookupTable.getInstance().initialize();
         }
 
         @Override

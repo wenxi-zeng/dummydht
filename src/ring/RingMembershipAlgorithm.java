@@ -66,6 +66,10 @@ public class RingMembershipAlgorithm {
         SimpleLog.i("Table initialized...");
     }
 
+    public void bootstrap(LookupTable table) {
+
+    }
+
     public void addPhysicalNode(LookupTable table, PhysicalNode node) {
         if (table.getPhysicalNodeMap().containsKey(node.getId())) {
             SimpleLog.i(node.getId() + " already exists. Try a different ip:port");

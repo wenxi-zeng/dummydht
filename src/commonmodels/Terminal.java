@@ -5,4 +5,5 @@ public interface Terminal {
     void destroy();
     void printInfo();
     void execute(String[] args);
+    void bootstrap();
 }

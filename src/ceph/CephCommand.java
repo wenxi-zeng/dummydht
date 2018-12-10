@@ -7,9 +7,25 @@ import util.SimpleLog;
 import java.util.List;
 
 public enum CephCommand {
+    BOOTSTRAP {
+        public void execute(String[] args) {
+            ClusterMap.getInstance().bootstrap();
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return "BOOTSTRAP";
+        }
+
+        @Override
+        public String getHelpString() {
+            return "BOOTSTRAP";
+        }
+    },
+
     INITIALIZE {
         public void execute(String[] args) {
-            ClusterMap.getInstance();
+            ClusterMap.getInstance().initialize();
         }
 
         @Override

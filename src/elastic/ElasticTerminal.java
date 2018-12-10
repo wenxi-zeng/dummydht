@@ -32,5 +32,10 @@ public class ElasticTerminal implements Terminal {
         cmd.execute(args);
     }
 
+    @Override
+    public void bootstrap() {
+        ElasticCommand.BOOTSTRAP.execute(null);
+    }
+
 }
 
