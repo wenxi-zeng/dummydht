@@ -9,42 +9,82 @@ public enum ElasticCommand {
         public void execute(String[] args) {
             LookupTable.getInstance();
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "INITIALIZE";
+        }
+
+        @Override
+        public String getHelpString() {
+            return "INITIALIZE";
+        }
     },
 
     DESTROY {
         public void execute(String[] args) {
             LookupTable.deleteInstance();
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "DESTROY";
+        }
+
+        @Override
+        public String getHelpString() {
+            return "DESTROY";
+        }
     },
 
     READ {
         public void execute(String[] args) {
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: read <filename>");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
             Indexable node = LookupTable.getInstance().read(args[1]);
             SimpleLog.i("Found " + args[1] + " on:\n" + node.toString());
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "read %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<filename>");
+        }
     },
 
     WRITE{
         public void execute(String[] args) {
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: write <filename>");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
             Indexable node = LookupTable.getInstance().write(args[1]);
             SimpleLog.i("Write " + args[1] + " to:\n" + node.toString());
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "write %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<filename>");
+        }
     },
 
     ADDNODE{
         public void execute(String[] args) {
-            if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: addNode <ip>:<port>");
+            if (args.length != 2) {
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
@@ -54,12 +94,22 @@ public enum ElasticCommand {
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().addNode(pnode);
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "addNode %s:%s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<ip>", "<port>");
+        }
     },
 
     REMOVENODE{
         public void execute(String[] args) {
-            if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: removeNode <ip>:<port>");
+            if (args.length != 2) {
+                SimpleLog.i("Wrong arguments. Try: removeNode " + getHelpString());
                 return;
             }
 
@@ -69,12 +119,22 @@ public enum ElasticCommand {
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().removeNode(pnode);
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "removeNode %s:%s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<ip>", "<port>");
+        }
     },
 
     MOVEBUCKET{
         public void execute(String[] args) {
             if (args.length != 4) {
-                SimpleLog.i("Wrong arguments. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
@@ -84,7 +144,7 @@ public enum ElasticCommand {
             String[] address2 = args[3].split(":");
 
             if (address1.length != 2 || address2.length != 2) {
-                SimpleLog.i("Invalid ip format. Try: moveBucket <bucket> <from ip>:<port> <to ip>:<port>");
+                SimpleLog.i("Invalid ip format. Try: " + getHelpString());
                 return;
             }
 
@@ -92,51 +152,103 @@ public enum ElasticCommand {
             PhysicalNode to = new PhysicalNode(address2[0], Integer.valueOf(address2[1]));
             LookupTable.getInstance().moveBucket(bucketNode, from , to);
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "moveBucket %s %s:%s %s:%s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<bucket>", "<from ip>", "<port>", "<to ip>", "<port>");
+        }
     },
 
     EXPAND {
         public void execute(String[] args) {
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: expand");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
             LookupTable.getInstance().expand();
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return "expand";
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
         }
     },
 
     SHRINK {
         public void execute(String[] args) {
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: shrink");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
             LookupTable.getInstance().shrink();
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return "shrink";
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
         }
     },
 
     LISTPHYSICALNODES {
         public void execute(String[] args) {
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: listPhysicalNodes");
+                SimpleLog.i("Wrong arguments. Try: " +getHelpString());
                 return;
             }
 
             SimpleLog.i(LookupTable.getInstance().listPhysicalNodes());
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return "listPhysicalNodes";
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
         }
     },
 
     PRINTLOOKUPTABLE {
         public void execute(String[] args) {
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: printLookupTable");
+                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
                 return;
             }
 
             SimpleLog.i(LookupTable.getInstance().toString());
         }
+
+        @Override
+        public String getParameterizedString() {
+            return "printLookupTable";
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
     };
 
     public abstract void execute(String[] args);
+    public abstract String getParameterizedString();
+    public abstract String getHelpString();
 }

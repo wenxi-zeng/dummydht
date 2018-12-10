@@ -105,4 +105,6 @@ public abstract class DataNode {
 
     public abstract void initTerminal();
     public abstract ResourceBundle loadConfig();
+    public abstract void onNodeUp(String cluster, String ip, int port);
+    public abstract void onNodeDown(String ip, int port);
 }

@@ -17,13 +17,13 @@ public class ElasticTerminal implements Terminal {
     @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
-                "read <filename>\n" +
-                "write <filename>\n" +
-                "addNode <ip>:<port>\n" +
-                "removeNode <ip>:<port>\n" +
-                "moveBucket <bucket> <from ip>:<port> <to ip>:<port>\n" +
-                "listPhysicalNodes\n" +
-                "printLookupTable\n");
+                ElasticCommand.READ.getHelpString() + "\n" +
+                ElasticCommand.WRITE.getHelpString() + "\n" +
+                ElasticCommand.ADDNODE.getHelpString() + "\n" +
+                ElasticCommand.REMOVENODE.getHelpString() + "\n" +
+                ElasticCommand.MOVEBUCKET.getHelpString() + "\n" +
+                ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
     }
 
     @Override

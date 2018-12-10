@@ -16,13 +16,13 @@ public class CephTerminal implements Terminal {
     @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
-                "read <filename>\n" +
-                "write <filename>\n" +
-                "addNode <cluster id> <ip>:<port>\n" +
-                "removeNode <ip>:<port>\n" +
-                "changeWeight <delta weight> <ip>:<port>\n" +
-                "listPhysicalNodes\n" +
-                "printClusterMap\n");
+                CephCommand.READ.getHelpString() + "\n" +
+                CephCommand.WRITE.getHelpString() + "\n" +
+                CephCommand.ADDNODE.getHelpString() + "\n" +
+                CephCommand.REMOVENODE.getHelpString() + "\n" +
+                CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
+                CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n");
     }
 
     @Override

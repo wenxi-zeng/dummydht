@@ -20,4 +20,15 @@ public class RingDataNode extends DataNode {
         return ResourcesLoader.getBundle(CONFIG_RING);
     }
 
+    @Override
+    public void onNodeUp(String cluster, String ip, int port) {
+        String command = String.format(RingCommand.ADDNODE.getParameterizedString(), cluster, ip, port);
+        terminal.execute(command.split("\\s+"));
+    }
+
+    @Override
+    public void onNodeDown(String ip, int port) {
+        String command = String.format(RingCommand.REMOVENODE.getParameterizedString(), ip, port);
+        terminal.execute(command.split("\\s+"));
+    }
 }

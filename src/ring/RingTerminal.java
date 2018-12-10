@@ -17,14 +17,14 @@ public class RingTerminal implements Terminal {
     @Override
     public void printInfo() {
         System.out.println("\nAvailable commands:\n" +
-                "read <filename>\n" +
-                "write <filename>\n" +
-                "addNode <ip>:<port>\n" +
-                "removeNode <ip>:<port>\n" +
-                "increaseLoad <ip>:<port>\n" +
-                "decreaseLoad <ip>:<port>\n" +
-                "listPhysicalNodes\n" +
-                "printLookupTable\n");
+                RingCommand.READ.getHelpString() + "\n" +
+                RingCommand.WRITE.getHelpString() + "\n" +
+                RingCommand.ADDNODE.getHelpString() + "\n" +
+                RingCommand.REMOVENODE.getHelpString() + "\n" +
+                RingCommand.INCREASELOAD.getHelpString() + "\n" +
+                RingCommand.DECREASELOAD.getHelpString() + "\n" +
+                RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
     }
 
     @Override

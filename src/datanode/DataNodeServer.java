@@ -91,7 +91,14 @@ public class DataNodeServer implements GossipListener {
 
     @Override
     public void gossipEvent(GossipMember gossipMember, GossipState gossipState) {
-
+        switch (gossipState) {
+            case UP:
+                dataNode.onNodeUp(gossipMember.getClusterName(), gossipMember.getUri().getHost(), gossipMember.getUri().getPort());
+                break;
+            case DOWN:
+                dataNode.onNodeDown(gossipMember.getUri().getHost(), gossipMember.getUri().getPort());
+                break;
+        }
     }
 
     private String getMemberStatus(String valueIfNone, List<LocalGossipMember> members) {
