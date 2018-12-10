@@ -5,6 +5,8 @@ import com.codahale.metrics.MetricRegistry;
 import commonmodels.DataNode;
 import elastic.ElasticDataNode;
 import org.apache.gossip.*;
+import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.event.GossipState;
 import ring.RingDataNode;
 import util.URIHelper;
 
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class DataNodeServer {
+public class DataNodeServer implements GossipListener {
 
     private GossipService gossipService;
 
@@ -57,7 +59,7 @@ public class DataNodeServer {
                 URIHelper.getGossipURI(dataNode.getAddress()),
                 dataNode.getAddress(), new HashMap<>(),
                 startupMembers, settings,
-                (member, state) -> {}, new MetricRegistry());
+                this, new MetricRegistry());
     }
 
     public void start() throws Exception {
@@ -75,27 +77,28 @@ public class DataNodeServer {
 
     private String printLiveMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getLiveMembers();
-        StringBuilder result = new StringBuilder();
-        result.append("Live: ");
-
-        if (members.isEmpty()) {
-            result.append("None").append('\n');
-            return result.toString();
-        }
-
-        for (LocalGossipMember member : members)
-            result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
-
-        return result.toString();
+        return getMemberStatus("Live: None\n", members);
     }
 
     private String printDeadMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getDeadMembers();
+        return getMemberStatus("Dead: None\n", members);
+    }
+
+    public void processCommand(String[] args) {
+        dataNode.getTerminal().execute(args);
+    }
+
+    @Override
+    public void gossipEvent(GossipMember gossipMember, GossipState gossipState) {
+
+    }
+
+    private String getMemberStatus(String valueIfNone, List<LocalGossipMember> members) {
         StringBuilder result = new StringBuilder();
-        result.append("Dead: ");
+        result.append(valueIfNone);
 
         if (members.isEmpty()) {
-            result.append("None").append('\n');
             return result.toString();
         }
 
@@ -103,9 +106,5 @@ public class DataNodeServer {
             result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
 
         return result.toString();
-    }
-
-    public void processCommand(String[] args) {
-        dataNode.getTerminal().execute(args);
     }
 }

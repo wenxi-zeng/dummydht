@@ -19,8 +19,8 @@ public class ElasticTerminal implements Terminal {
         System.out.println("\nAvailable commands:\n" +
                 "read <filename>\n" +
                 "write <filename>\n" +
-                "addNode <ip> <port>\n" +
-                "removeNode <ip> <port>\n" +
+                "addNode <ip>:<port>\n" +
+                "removeNode <ip>:<port>\n" +
                 "moveBucket <bucket> <from ip>:<port> <to ip>:<port>\n" +
                 "listPhysicalNodes\n" +
                 "printLookupTable\n");

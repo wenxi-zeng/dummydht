@@ -48,7 +48,8 @@ public abstract class DataNode {
     }
 
     public void destroy() {
-
+        if (terminal != null)
+            terminal.destroy();
     }
 
     private void initAddress() {

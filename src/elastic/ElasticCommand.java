@@ -44,13 +44,14 @@ public enum ElasticCommand {
     ADDNODE{
         public void execute(String[] args) {
             if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: addNode <ip> <port>");
+                SimpleLog.i("Wrong arguments. Try: addNode <ip>:<port>");
                 return;
             }
 
+            String[] address = args[1].split(":");
             PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(args[1]);
-            pnode.setPort(Integer.valueOf(args[2]));
+            pnode.setAddress(address[1]);
+            pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().addNode(pnode);
         }
     },
@@ -58,13 +59,14 @@ public enum ElasticCommand {
     REMOVENODE{
         public void execute(String[] args) {
             if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: removeNode <ip> <port>");
+                SimpleLog.i("Wrong arguments. Try: removeNode <ip>:<port>");
                 return;
             }
 
+            String[] address = args[1].split(":");
             PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(args[1]);
-            pnode.setPort(Integer.valueOf(args[2]));
+            pnode.setAddress(address[1]);
+            pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().removeNode(pnode);
         }
     },

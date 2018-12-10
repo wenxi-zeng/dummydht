@@ -19,7 +19,7 @@ public class CephTerminal implements Terminal {
                 "read <filename>\n" +
                 "write <filename>\n" +
                 "addNode <cluster id> <ip>:<port>\n" +
-                "removeNode <ip> <port>\n" +
+                "removeNode <ip>:<port>\n" +
                 "changeWeight <delta weight> <ip>:<port>\n" +
                 "listPhysicalNodes\n" +
                 "printClusterMap\n");
