@@ -85,8 +85,8 @@ public class DataNodeServer implements GossipListener {
         return getMemberStatus("Dead: None\n", members);
     }
 
-    public void processCommand(String[] args) {
-        dataNode.getTerminal().execute(args);
+    public String processCommand(String[] args) {
+        return dataNode.getTerminal().execute(args);
     }
 
     @Override

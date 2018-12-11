@@ -4,6 +4,7 @@ import datanode.DataNodeServer;
 import socket.SocketServer;
 import util.ObjectConverter;
 
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 
 public class DataNodeDaemon implements SocketServer.EventHandler {
@@ -57,25 +58,30 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
     @Override
     public void onReceived(AsynchronousSocketChannel out, String message) throws Exception {
         String cmdLine[] = message.split("\\s+");
+        ByteBuffer buffer;
 
-        if (cmdLine[0].equals("start")) {
-            if (dataNodeServer == null) {
+        if (dataNodeServer == null) {
+            if (cmdLine[0].equals("start")) {
                 dataNodeServer = new DataNodeServer(cmdLine[2], Integer.valueOf(cmdLine[1]));
                 dataNodeServer.start();
-                out.write(ObjectConverter.getByteBuffer("Node started")).get();
+                buffer = ObjectConverter.getByteBuffer("Node started");
+            }
+            else {
+                buffer = ObjectConverter.getByteBuffer("Datanode server is not started");
             }
         }
         else if (cmdLine[0].equals("stop")){
-            if (dataNodeServer != null) {
-                dataNodeServer.stop();
-                dataNodeServer = null;
-                out.write(ObjectConverter.getByteBuffer("Node stopped")).get();
-            }
+            dataNodeServer.stop();
+            dataNodeServer = null;
+            buffer = ObjectConverter.getByteBuffer("Node stopped");
         }
         else if (cmdLine[0].equals("status")) {
-            if (dataNodeServer != null) {
-                out.write(ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus())).get();
-            }
+            buffer = ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus());
         }
+        else {
+            buffer = ObjectConverter.getByteBuffer(dataNodeServer.processCommand(cmdLine));
+        }
+
+        out.write(buffer).get();
     }
 }

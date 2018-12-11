@@ -8,8 +8,9 @@ import java.util.List;
 
 public enum CephCommand {
     BOOTSTRAP {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             ClusterMap.getInstance().bootstrap();
+            return "Finished bootstrap";
         }
 
         @Override
@@ -24,8 +25,9 @@ public enum CephCommand {
     },
 
     INITIALIZE {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             ClusterMap.getInstance().initialize();
+            return "Finished initialization";
         }
 
         @Override
@@ -40,8 +42,9 @@ public enum CephCommand {
     },
 
     DESTROY {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             ClusterMap.deleteInstance();
+            return "Finished deconstruction";
         }
 
         @Override
@@ -56,14 +59,20 @@ public enum CephCommand {
     },
 
     READ {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             Clusterable node = ClusterMap.getInstance().read(args[1]);
-            SimpleLog.i("Found " + args[1] + " on:\n" + node.toString());
+            result = "Found " + args[1] + " on:\n" + node.toString();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -79,10 +88,13 @@ public enum CephCommand {
     },
 
     WRITE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String execResult;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                execResult = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(execResult);
+                return execResult;
             }
 
             List<Clusterable> nodes = ClusterMap.getInstance().write(args[1]);
@@ -93,11 +105,15 @@ public enum CephCommand {
                     result.append(node.toString()).append('\n');
                 }
 
-                SimpleLog.i("Write " + args[1] + " to:\n" + result.toString());
+                execResult = "Write " + args[1] + " to:\n" + result.toString();
+                SimpleLog.i(execResult);
             }
             else {
-                SimpleLog.i("Failed to write " + args[1]);
+                execResult = "Failed to write " + args[1];
+                SimpleLog.i(execResult);
             }
+
+            return execResult;
         }
 
         @Override
@@ -113,21 +129,27 @@ public enum CephCommand {
     },
 
     ADDNODE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String clusterId = args[1];
             String[] address1 = args[2].split(":");
             if (address1.length != 2) {
-                SimpleLog.i("Invalid ip format. Try: " + getHelpString());
-                return;
+                result = "Invalid ip format. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
-
             ClusterMap.getInstance().addNode(clusterId, pnode);
+            result = "Node added";
+
+            return result;
         }
 
         @Override
@@ -143,10 +165,13 @@ public enum CephCommand {
     },
 
     REMOVENODE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String[] address = args[1].split(":");
@@ -154,6 +179,9 @@ public enum CephCommand {
             pnode.setAddress(address[1]);
             pnode.setPort(Integer.valueOf(address[2]));
             ClusterMap.getInstance().removeNode(pnode);
+
+            result = "Node removed";
+            return result;
         }
 
         @Override
@@ -169,21 +197,28 @@ public enum CephCommand {
     },
 
     CHANGEWEIGHT{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 3) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             float deltaWeight = Float.valueOf(args[1]);
             String[] address1 = args[2].split(":");
             if (address1.length != 2) {
-                SimpleLog.i("Invalid ip format. Try: " + getHelpString());
-                return;
+                result = "Invalid ip format. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
 
             ClusterMap.getInstance().changeWeight(pnode, deltaWeight);
+
+            result = "Weight changed";
+            return result;
         }
 
         @Override
@@ -198,13 +233,19 @@ public enum CephCommand {
     },
 
     LISTPHYSICALNODES {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
-            SimpleLog.i(ClusterMap.getInstance().listPhysicalNodes());
+            result = ClusterMap.getInstance().listPhysicalNodes();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -219,13 +260,19 @@ public enum CephCommand {
     },
 
     PRINTCLUSTERMAP {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
-            SimpleLog.i(ClusterMap.getInstance().toString());
+            result = ClusterMap.getInstance().toString();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -239,7 +286,7 @@ public enum CephCommand {
         }
     };
 
-    public abstract void execute(String[] args);
+    public abstract String execute(String[] args);
     public abstract String getParameterizedString();
     public abstract String getHelpString();
 }

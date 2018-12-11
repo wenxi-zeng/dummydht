@@ -4,6 +4,6 @@ public interface Terminal {
     void initialize();
     void destroy();
     void printInfo();
-    void execute(String[] args);
+    String execute(String[] args);
     void bootstrap();
 }

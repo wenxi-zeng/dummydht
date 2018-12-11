@@ -7,8 +7,9 @@ import util.SimpleLog;
 public enum RingCommand {
 
     BOOTSTRAP {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             LookupTable.getInstance().bootstrap();
+            return "Finished bootstrap";
         }
 
         @Override
@@ -23,8 +24,9 @@ public enum RingCommand {
     },
 
     INITIALIZE {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             LookupTable.getInstance().initialize();
+            return "Finished initialization";
         }
 
         @Override
@@ -39,8 +41,9 @@ public enum RingCommand {
     },
 
     DESTROY {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
             LookupTable.deleteInstance();
+            return "Finished deconstruction";
         }
 
         @Override
@@ -55,14 +58,21 @@ public enum RingCommand {
     },
 
     READ {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             Indexable node = LookupTable.getInstance().read(args[1]);
-            SimpleLog.i("Found " + args[1] + " on:\n" + node.toString());
+
+            result = "Found " + args[1] + " on:\n" + node.toString();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -78,14 +88,20 @@ public enum RingCommand {
     },
 
     WRITE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             Indexable node = LookupTable.getInstance().write(args[1]);
-            SimpleLog.i("Write " + args[1] + " to:\n" + node.toString());
+            result = "Write " + args[1] + " to:\n" + node.toString();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -101,10 +117,13 @@ public enum RingCommand {
     },
 
     ADDNODE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String[] address = args[1].split(":");
@@ -112,6 +131,9 @@ public enum RingCommand {
             pnode.setAddress(address[1]);
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().addNode(pnode);
+
+            result = "Node added";
+            return result;
         }
 
         @Override
@@ -127,10 +149,13 @@ public enum RingCommand {
     },
 
     REMOVENODE{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String[] address = args[1].split(":");
@@ -138,6 +163,9 @@ public enum RingCommand {
             pnode.setAddress(address[1]);
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().removeNode(pnode);
+
+            result = "Node removed";
+            return result;
         }
 
         @Override
@@ -153,10 +181,13 @@ public enum RingCommand {
     },
 
     INCREASELOAD{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String[] address = args[1].split(":");
@@ -164,6 +195,9 @@ public enum RingCommand {
             pnode.setAddress(address[1]);
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().increaseLoad(pnode);
+
+            result = "Load increased";
+            return result;
         }
 
         @Override
@@ -179,10 +213,13 @@ public enum RingCommand {
     },
 
     DECREASELOAD{
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 2) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
             String[] address = args[1].split(":");
@@ -190,6 +227,9 @@ public enum RingCommand {
             pnode.setAddress(address[1]);
             pnode.setPort(Integer.valueOf(address[2]));
             LookupTable.getInstance().decreaseLoad(pnode);
+
+            result = "Load decreased";
+            return result;
         }
 
         @Override
@@ -205,13 +245,19 @@ public enum RingCommand {
     },
 
     LISTPHYSICALNODES {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
-            SimpleLog.i(LookupTable.getInstance().listPhysicalNodes());
+            result = LookupTable.getInstance().listPhysicalNodes();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -227,13 +273,19 @@ public enum RingCommand {
     },
 
     PRINTLOOKUPTABLE {
-        public void execute(String[] args) {
+        public String execute(String[] args) {
+            String result;
+
             if (args.length != 1) {
-                SimpleLog.i("Wrong arguments. Try: " + getHelpString());
-                return;
+                result = "Wrong arguments. Try: " + getHelpString();
+                SimpleLog.i(result);
+                return result;
             }
 
-            SimpleLog.i(LookupTable.getInstance().toString());
+            result = LookupTable.getInstance().toString();
+            SimpleLog.i(result);
+
+            return result;
         }
 
         @Override
@@ -248,7 +300,7 @@ public enum RingCommand {
 
     };
 
-    public abstract void execute(String[] args);
+    public abstract String execute(String[] args);
     public abstract String getParameterizedString();
     public abstract String getHelpString();
 }
