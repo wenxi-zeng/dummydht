@@ -21,7 +21,7 @@ public class RingDataNode extends DataNode {
 
     @Override
     public void onNodeUp(String cluster, String ip, int port) {
-        String command = String.format(RingCommand.ADDNODE.getParameterizedString(), cluster, ip, port);
+        String command = String.format(RingCommand.ADDNODE.getParameterizedString(), ip, port);
         terminal.execute(command.split("\\s+"));
     }
 

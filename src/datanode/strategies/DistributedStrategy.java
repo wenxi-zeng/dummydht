@@ -39,7 +39,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException {
-        bootstrap();
+        super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.start();
     }
@@ -96,37 +96,5 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
             result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
 
         return result.toString();
-    }
-
-    private void bootstrap() {
-        Iterator<String> iterator = dataNode.getSeeds().iterator();
-        SocketClient socketClient = new SocketClient();
-        SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
-            @Override
-            public void onResponse(Object o) {
-                SimpleLog.i(String.valueOf(o));
-                dataNode.updateTable(o);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                SimpleLog.i(error);
-                trySeed(iterator, socketClient, this);
-            }
-        };
-
-        trySeed(iterator, socketClient, callBack);
-    }
-
-    private void trySeed(Iterator<String> iterator, SocketClient socketClient, SocketClient.ServerCallBack callBack) {
-        if (iterator.hasNext()) {
-            String seed = iterator.next();
-            if (!seed.equals(dataNode.getAddress())) {
-                socketClient.send(seed, "fetch", callBack);
-            }
-        }
-        else {
-            dataNode.createTable();
-        }
     }
 }

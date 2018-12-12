@@ -21,7 +21,7 @@ public class ElasticDataNode extends DataNode {
 
     @Override
     public void onNodeUp(String cluster, String ip, int port) {
-        String command = String.format(ElasticCommand.ADDNODE.getParameterizedString(), cluster, ip, port);
+        String command = String.format(ElasticCommand.ADDNODE.getParameterizedString(), ip, port);
         terminal.execute(command.split("\\s+"));
     }
 

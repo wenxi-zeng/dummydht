@@ -9,16 +9,6 @@ public class CentralizedStrategy extends MembershipStrategy {
     }
 
     @Override
-    public void onNodeStarted() {
-
-    }
-
-    @Override
-    public void onNodeStopped() {
-
-    }
-
-    @Override
     public String getMembersStatus() {
         return null;
     }
