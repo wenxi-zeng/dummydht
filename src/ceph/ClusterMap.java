@@ -17,13 +17,13 @@ public class ClusterMap {
 
     private HashMap<String, PhysicalNode> physicalNodeMap;
 
-    private CephLoadBalanceAlgorithm loadBalanceAlgorithm;
+    private transient CephLoadBalanceAlgorithm loadBalanceAlgorithm;
 
-    private CephMembershipAlgorithm membershipAlgorithm;
+    private transient CephMembershipAlgorithm membershipAlgorithm;
 
-    private CephReadWriteAlgorithm readWriteAlgorithm;
+    private transient CephReadWriteAlgorithm readWriteAlgorithm;
 
-    private WeightDistributeStrategy weightDistributeStrategy;
+    private transient WeightDistributeStrategy weightDistributeStrategy;
 
     private static volatile ClusterMap instance = null;
 
@@ -57,10 +57,6 @@ public class ClusterMap {
         membershipAlgorithm.initialize(this);
     }
 
-    public void bootstrap() {
-        membershipAlgorithm.bootstrap(this);
-    }
-
     public long getEpoch() {
         return epoch;
     }
@@ -79,6 +75,10 @@ public class ClusterMap {
 
     public void setPhysicalNodeMap(HashMap<String, PhysicalNode> physicalNodeMap) {
         this.physicalNodeMap = physicalNodeMap;
+    }
+
+    public void setRoot(Clusterable root) {
+        this.root = root;
     }
 
     public WeightDistributeStrategy getWeightDistributeStrategy() {

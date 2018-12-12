@@ -24,6 +24,7 @@ public class Config {
     public final static String PROPERTY_LISTEN_ADDRESS = "listen_address";
     public final static String PROPERTY_LISTEN_PORT = "listen_port";
     public final static String PROPERTY_CLUSTER_NAME = "cluster_name";
+    public final static String PROPERTY_MODE = "mode";
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
@@ -35,4 +36,6 @@ public class Config {
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
+    public final static String MODE_DISTRIBUTED = "distributed";
+    public final static String MODE_CENTRIALIZED = "centralized";
 }

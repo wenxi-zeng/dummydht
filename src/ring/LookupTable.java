@@ -13,13 +13,13 @@ public class LookupTable {
 
     private BinarySearchList table;
 
-    private HashMap<String, PhysicalNode> physicalNodeMap;
+    private transient HashMap<String, PhysicalNode> physicalNodeMap;
 
-    private RingLoadBalanceAlgorithm loadBalanceAlgorithm;
+    private transient RingLoadBalanceAlgorithm loadBalanceAlgorithm;
 
-    private RingMembershipAlgorithm membershipAlgorithm;
+    private transient RingMembershipAlgorithm membershipAlgorithm;
 
-    private RingReadWriteAlgorithm readWriteAlgorithm;
+    private transient RingReadWriteAlgorithm readWriteAlgorithm;
 
     private static volatile LookupTable instance = null;
 
@@ -51,10 +51,6 @@ public class LookupTable {
 
     public void initialize() {
         membershipAlgorithm.initialize(this);
-    }
-
-    public void bootstrap() {
-        membershipAlgorithm.bootstrap(this);
     }
 
     public long getEpoch() {

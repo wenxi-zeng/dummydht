@@ -33,9 +33,4 @@ public class RingTerminal implements Terminal {
         return cmd.execute(args);
     }
 
-    @Override
-    public void bootstrap() {
-        RingCommand.BOOTSTRAP.execute(null);
-    }
-
 }

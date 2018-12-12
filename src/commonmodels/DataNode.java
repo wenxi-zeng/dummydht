@@ -24,18 +24,20 @@ public abstract class DataNode {
 
     protected String clusterName;
 
+    protected String mode;
+
     public DataNode() {
         useDynamicAddress = false;
-        initialize();
+        loadProperties();
     }
 
     public DataNode(int port) {
         this.port = port;
         useDynamicAddress = true;
-        initialize();
+        loadProperties();
     }
 
-    public void initialize() {
+    private void loadProperties() {
         ResourceBundle config = loadConfig();
         loadProperties(config);
 
@@ -44,7 +46,7 @@ public abstract class DataNode {
         else
             loadAddress(config);
 
-        initTerminal();
+        createTerminal();
     }
 
     public void destroy() {
@@ -81,6 +83,10 @@ public abstract class DataNode {
         return clusterName;
     }
 
+    public String getMode() {
+        return mode;
+    }
+
     public String getAddress() {
         return ip + ":" + port;
     }
@@ -101,10 +107,17 @@ public abstract class DataNode {
     private void loadProperties(ResourceBundle config) {
         seeds = Arrays.asList(config.getString(PROPERTY_SEEDS).split(","));
         clusterName = config.getString(PROPERTY_CLUSTER_NAME);
+        mode = config.getString(PROPERTY_MODE);
     }
 
-    public abstract void initTerminal();
+    public void createTable() {
+        terminal.initialize();
+    }
+
+    public abstract void createTerminal();
     public abstract ResourceBundle loadConfig();
     public abstract void onNodeUp(String cluster, String ip, int port);
     public abstract void onNodeDown(String ip, int port);
+    public abstract Object getTable();
+    public abstract void updateTable(Object o);
 }

@@ -6,23 +6,6 @@ import util.SimpleLog;
 
 public enum RingCommand {
 
-    BOOTSTRAP {
-        public String execute(String[] args) {
-            LookupTable.getInstance().bootstrap();
-            return "Finished bootstrap";
-        }
-
-        @Override
-        public String getParameterizedString() {
-            return "BOOTSTRAP";
-        }
-
-        @Override
-        public String getHelpString() {
-            return "BOOTSTRAP";
-        }
-    },
-
     INITIALIZE {
         public String execute(String[] args) {
             LookupTable.getInstance().initialize();

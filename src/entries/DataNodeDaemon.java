@@ -78,6 +78,9 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
         else if (cmdLine[0].equals("status")) {
             buffer = ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus());
         }
+        else if (cmdLine[0].equals("fetch")) {
+            buffer = ObjectConverter.getByteBuffer(dataNodeServer.getDataNodeTable());
+        }
         else {
             buffer = ObjectConverter.getByteBuffer(dataNodeServer.processCommand(cmdLine));
         }

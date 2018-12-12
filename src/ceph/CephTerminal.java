@@ -30,9 +30,4 @@ public class CephTerminal implements Terminal {
         CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
         return cmd.execute(args);
     }
-
-    @Override
-    public void bootstrap() {
-        CephCommand.BOOTSTRAP.execute(null);
-    }
 }

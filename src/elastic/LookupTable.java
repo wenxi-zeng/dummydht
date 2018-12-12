@@ -3,7 +3,6 @@ package elastic;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import util.Config;
-import util.SimpleLog;
 
 import java.util.*;
 
@@ -13,13 +12,13 @@ public class LookupTable {
 
     private BucketNode[] table;
 
-    private HashMap<String, PhysicalNode> physicalNodeMap;
+    private transient HashMap<String, PhysicalNode> physicalNodeMap;
 
-    private ElasticLoadBalanceAlgorithm loadBalanceAlgorithm;
+    private transient ElasticLoadBalanceAlgorithm loadBalanceAlgorithm;
 
-    private ElasticMembershipAlgorithm membershipAlgorithm;
+    private transient ElasticMembershipAlgorithm membershipAlgorithm;
 
-    private ElasticReadWriteAlgorithm readWriteAlgorithm;
+    private transient ElasticReadWriteAlgorithm readWriteAlgorithm;
 
     private static volatile LookupTable instance = null;
 
@@ -50,10 +49,6 @@ public class LookupTable {
 
     public void initialize() {
         membershipAlgorithm.initialize(this);
-    }
-
-    public void bootstrap() {
-        membershipAlgorithm.bootstrap(this);
     }
 
     public void createTable(int size) {
@@ -89,6 +84,10 @@ public class LookupTable {
 
     public BucketNode[] getTable() {
         return table;
+    }
+
+    public void setTable(BucketNode[] table) {
+        this.table = table;
     }
 
     public HashMap<String, PhysicalNode> getPhysicalNodeMap() {

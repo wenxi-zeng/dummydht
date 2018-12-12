@@ -56,6 +56,11 @@ public class SocketClient {
         send(new InetSocketAddress(address, port), data, callBack);
     }
 
+    public void send(String address, Object data, ServerCallBack callBack) {
+        String[] address1 = address.split(":");
+        send(new InetSocketAddress(address1[0], Integer.valueOf(address1[1])), data, callBack);
+    }
+
     private void send(InetSocketAddress inetSocketAddress, Object data, ServerCallBack callBack) {
         try(AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
             if (asynchronousSocketChannel != null) {
@@ -89,6 +94,10 @@ public class SocketClient {
     }
 
     private void onServerConnected(AsynchronousSocketChannel asynchronousSocketChannel, Object data, ServerCallBack callBack) {
+        boolean success = false;
+        Object o = null;
+        String message = "Unknown server connection error";
+
         try {
             System.out.println("Successfully connected at: " + asynchronousSocketChannel.getRemoteAddress());
 
@@ -100,13 +109,21 @@ public class SocketClient {
             // read response
             asynchronousSocketChannel.read(buffer).get();
             buffer.flip();
-            Object o = ObjectConverter.getObject(buffer);
+            o = ObjectConverter.getObject(buffer);
             callBack.onResponse(o);
+            success = true;
         } catch (IOException | InterruptedException | ExecutionException ex) {
             System.err.println(ex);
+            message = ex.getMessage();
         } finally {
             try {
                 asynchronousSocketChannel.close();
+
+                if (success)
+                    callBack.onResponse(o);
+                else
+                    callBack.onFailure(message);
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
