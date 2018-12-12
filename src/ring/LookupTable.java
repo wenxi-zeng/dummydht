@@ -4,10 +4,11 @@ import commonmodels.BinarySearchList;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LookupTable {
+public class LookupTable implements Serializable {
 
     private long epoch;
 

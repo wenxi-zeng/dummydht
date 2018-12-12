@@ -1,6 +1,8 @@
 package commonmodels;
 
-public interface Indexable extends Comparable<Indexable>{
+import java.io.Serializable;
+
+public interface Indexable extends Comparable<Indexable>, Serializable {
     int getHash();
 
     void setHash(int hash);

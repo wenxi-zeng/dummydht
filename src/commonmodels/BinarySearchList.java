@@ -1,9 +1,10 @@
 package commonmodels;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class BinarySearchList extends ArrayList<Indexable> {
+public class BinarySearchList extends ArrayList<Indexable> implements Serializable {
 
     /**
      * @param t Node to be added

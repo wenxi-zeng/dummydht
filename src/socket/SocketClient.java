@@ -110,7 +110,6 @@ public class SocketClient {
             asynchronousSocketChannel.read(buffer).get();
             buffer.flip();
             o = ObjectConverter.getObject(buffer);
-            callBack.onResponse(o);
             success = true;
         } catch (IOException | InterruptedException | ExecutionException ex) {
             System.err.println(ex);

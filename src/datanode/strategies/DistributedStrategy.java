@@ -76,24 +76,26 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private String printLiveMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getLiveMembers();
-        return getMemberStatus("Live: None\n", members);
+        return getMemberStatus("Live: ", members);
     }
 
     private String printDeadMembers() {
         List<LocalGossipMember> members = gossipService.getGossipManager().getDeadMembers();
-        return getMemberStatus("Dead: None\n", members);
+        return getMemberStatus("Dead: ", members);
     }
 
-    private String getMemberStatus(String valueIfNone, List<LocalGossipMember> members) {
+    private String getMemberStatus(String title, List<LocalGossipMember> members) {
         StringBuilder result = new StringBuilder();
-        result.append(valueIfNone);
+        result.append(title).append('\n');
 
         if (members.isEmpty()) {
-            return result.toString();
+            result.append("None\n");
         }
-
-        for (LocalGossipMember member : members)
-            result.append(member.getId()).append(" ").append(member.getHeartbeat()).append('\n');
+        else {
+            for (LocalGossipMember member : members)
+                result.append("Node: ").append(member.getId()).append(" ")
+                        .append("Heartbeat: ").append(member.getHeartbeat()).append('\n');
+        }
 
         return result.toString();
     }

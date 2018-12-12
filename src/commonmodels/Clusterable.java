@@ -1,8 +1,9 @@
 package commonmodels;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface Clusterable {
+public interface Clusterable extends Serializable {
 
     String getId();
 

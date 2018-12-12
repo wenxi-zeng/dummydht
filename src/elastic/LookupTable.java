@@ -4,9 +4,10 @@ import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import util.Config;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class LookupTable {
+public class LookupTable implements Serializable {
 
     private long epoch;
 

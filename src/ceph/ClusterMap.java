@@ -5,11 +5,12 @@ import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import util.MathX;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static util.Config.NUMBER_OF_PLACEMENT_GROUPS;
 
-public class ClusterMap {
+public class ClusterMap implements Serializable {
 
     private Clusterable root;
 
