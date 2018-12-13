@@ -160,8 +160,8 @@ public enum CephCommand {
 
             String[] address = args[1].split(":");
             PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(address[1]);
-            pnode.setPort(Integer.valueOf(address[2]));
+            pnode.setAddress(address[0]);
+            pnode.setPort(Integer.valueOf(address[1]));
             ClusterMap.getInstance().removeNode(pnode);
 
             result = "Node removed";

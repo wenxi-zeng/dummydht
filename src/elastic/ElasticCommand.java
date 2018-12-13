@@ -108,8 +108,8 @@ public enum ElasticCommand {
 
             String[] address = args[1].split(":");
             PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(address[1]);
-            pnode.setPort(Integer.valueOf(address[2]));
+            pnode.setAddress(address[0]);
+            pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().addNode(pnode);
 
             result = "Node added";
@@ -139,8 +139,8 @@ public enum ElasticCommand {
 
             String[] address = args[1].split(":");
             PhysicalNode pnode = new PhysicalNode();
-            pnode.setAddress(address[1]);
-            pnode.setPort(Integer.valueOf(address[2]));
+            pnode.setAddress(address[0]);
+            pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().removeNode(pnode);
 
             result = "Node removed";

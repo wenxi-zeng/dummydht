@@ -25,6 +25,8 @@ public class Config {
     public final static String PROPERTY_LISTEN_PORT = "listen_port";
     public final static String PROPERTY_CLUSTER_NAME = "cluster_name";
     public final static String PROPERTY_MODE = "mode";
+    public final static String PROPERTY_LOG_SERVER = "log_server";
+    public final static String PROPERTY_LOG_MODE = "log_mode";
 
     public static int NUMBER_OF_REPLICAS = 3;
     public static int NUMBER_OF_HASH_SLOTS = 100;
@@ -33,9 +35,15 @@ public class Config {
     public static int NUMBER_OF_PLACEMENT_GROUPS = 120;
     public static boolean ENABLE_CROSS_CLUSTER_LOAD_BALANCING = false;
     public static float INITIAL_WEIGHT = 1024;
+    public static String LOG_SERVER = "localhost:5999";
+    public static String LOG_MODE = "screen"; // [server|file|screen|off]
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
     public final static String MODE_DISTRIBUTED = "distributed";
     public final static String MODE_CENTRIALIZED = "centralized";
+    public final static String LOG_MODE_SCREEN = "screen";
+    public final static String LOG_MODE_SERVER = "server";
+    public final static String LOG_MODE_FILE = "file";
+    public final static String LOG_MODE_OFF = "off";
 }

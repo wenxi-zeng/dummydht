@@ -1,5 +1,8 @@
 package commonmodels;
 
+import util.Config;
+import util.SimpleLog;
+
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -46,6 +49,7 @@ public abstract class DataNode {
         else
             loadAddress(config);
 
+        SimpleLog.with(ip, port);
         createTerminal();
     }
 
@@ -108,6 +112,8 @@ public abstract class DataNode {
         seeds = Arrays.asList(config.getString(PROPERTY_SEEDS).split(","));
         clusterName = config.getString(PROPERTY_CLUSTER_NAME);
         mode = config.getString(PROPERTY_MODE);
+        Config.LOG_SERVER = config.getString(PROPERTY_LOG_SERVER);
+        Config.LOG_MODE = config.getString(PROPERTY_LOG_MODE);
     }
 
     public void createTable() {

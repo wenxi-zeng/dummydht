@@ -1,11 +1,12 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="dummydht-daemon:jar">
+  <artifact type="jar" name="dummydht-logserver">
     <output-path>$PROJECT_DIR$/out/artifacts/</output-path>
-    <root id="archive" name="dummydht-daemon.jar">
+    <root id="archive" name="dummydht-logserver.jar">
       <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/META_INF/daemon/META-INF/MANIFEST.MF" />
+        <element id="file-copy" path="$PROJECT_DIR$/META_INF/logserver/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="dummydht" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-pool2/2.6.0/commons-pool2-2.6.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/gossip/gossip/0.1.2-incubating/gossip-0.1.2-incubating.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.8.5/jackson-core-2.8.5.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/commons-math/commons-math/1.2/commons-math-1.2.jar" path-in-jar="/" />
@@ -14,7 +15,6 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/io/dropwizard/metrics/metrics-core/3.1.2/metrics-core-3.1.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.7/slf4j-api-1.7.7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/log4j/log4j/1.2.17/log4j-1.2.17.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-pool2/2.6.0/commons-pool2-2.6.0.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

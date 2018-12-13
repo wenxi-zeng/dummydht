@@ -52,8 +52,12 @@ public abstract class MembershipStrategy {
             if (!seed.equals(dataNode.getAddress())) {
                 socketClient.send(seed, "fetch", callBack);
             }
+            else {
+                trySeed(iterator, socketClient, callBack);
+            }
         }
         else {
+            SimpleLog.i("Creating table");
             dataNode.createTable();
         }
     }
