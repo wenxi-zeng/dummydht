@@ -29,7 +29,15 @@ public class RingTerminal implements Terminal {
 
     @Override
     public String execute(String[] args) {
-        RingCommand cmd = RingCommand.valueOf(args[0].toUpperCase());
+        RingCommand cmd;
+
+        try {
+            cmd = RingCommand.valueOf(args[0].toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+            return "Command " + args[0] + " not found";
+        }
+
         return cmd.execute(args);
     }
 

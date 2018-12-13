@@ -27,7 +27,15 @@ public class CephTerminal implements Terminal {
 
     @Override
     public String execute(String[] args) {
-        CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
+        CephCommand cmd;
+
+        try {
+            cmd = CephCommand.valueOf(args[0].toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+            return "Command " + args[0] + " not found";
+        }
+
         return cmd.execute(args);
     }
 }

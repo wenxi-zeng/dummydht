@@ -28,7 +28,15 @@ public class ElasticTerminal implements Terminal {
 
     @Override
     public String execute(String[] args) {
-        ElasticCommand cmd = ElasticCommand.valueOf(args[0].toUpperCase());
+        ElasticCommand cmd;
+
+        try {
+            cmd = ElasticCommand.valueOf(args[0].toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+            return "Command " + args[0] + " not found";
+        }
+
         return cmd.execute(args);
     }
 
