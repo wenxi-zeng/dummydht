@@ -78,6 +78,10 @@ public abstract class DataNode {
         return ip + ":" + port;
     }
 
+    public String getLocalAddress() {
+        return "127.0.0.1:" + port;
+    }
+
     public void setUseDynamicAddress(boolean useDynamicAddress) {
         this.useDynamicAddress = useDynamicAddress;
     }

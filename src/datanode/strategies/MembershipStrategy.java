@@ -44,7 +44,7 @@ public abstract class MembershipStrategy {
         };
 
         for (String seed : dataNode.getSeeds()) {
-            if (!seed.equals(dataNode.getAddress())) {
+            if (!seed.equals(dataNode.getAddress()) && !seed.equals(dataNode.getLocalAddress())) {
                 socketClient.send(seed, "fetch", callBack);
             }
             if (fetched[0]) break;
