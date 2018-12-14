@@ -106,7 +106,7 @@ public class SocketClient {
             System.out.println("Successfully connected at: " + asynchronousSocketChannel.getRemoteAddress());
 
             final ByteBuffer sendBuffer = ObjectConverter.getByteBuffer(data);
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(32 * 1024);
             // transmitting data
             asynchronousSocketChannel.write(sendBuffer).get();
 
