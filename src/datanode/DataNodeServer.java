@@ -15,12 +15,12 @@ public class DataNodeServer {
 
     private MembershipStrategy membershipStrategy;
 
-    public DataNodeServer(String type, int port) throws Exception {
-        initDataNode(type, port);
+    public DataNodeServer(String type, String ip, int port) throws Exception {
+        initDataNode(type, ip, port);
         initStrategy();
     }
 
-    private void initDataNode(String type, int port) throws Exception {
+    private void initDataNode(String type, String ip, int port) throws Exception {
         if (type.equalsIgnoreCase("ring"))
             dataNode = new RingDataNode();
         else if (type.equalsIgnoreCase("elastic"))
@@ -31,6 +31,7 @@ public class DataNodeServer {
             throw new Exception("Invalid DHT type");
 
         dataNode.setPort(port);
+        dataNode.setIp(ip);
         dataNode.setUseDynamicAddress(true);
     }
 

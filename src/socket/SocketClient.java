@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SocketClient {
 
@@ -64,7 +66,7 @@ public class SocketClient {
     public void send(InetSocketAddress inetSocketAddress, Object data, ServerCallBack callBack) {
         try(AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
             if (asynchronousSocketChannel != null) {
-                Void connect = asynchronousSocketChannel.connect(inetSocketAddress).get();
+                Void connect = asynchronousSocketChannel.connect(inetSocketAddress).get(3, TimeUnit.SECONDS);
 
                 if (connect == null)
                     onServerConnected(asynchronousSocketChannel, data, callBack);
@@ -77,6 +79,8 @@ public class SocketClient {
         } catch (IOException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             callBack.onFailure("An error occurred");
+        } catch (TimeoutException e) {
+            callBack.onFailure("Remote time out");
         }
     }
 

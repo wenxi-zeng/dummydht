@@ -3,28 +3,21 @@ package util;
 import socket.UDPClient;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SimpleLog {
-
     private static volatile SimpleLog instance = null;
-    private static String identity;
+    private String identity;
     private UDPClient socketClient;
     private SimpleDateFormat dateFormatter;
 
     private SimpleLog() {
-        try {
-            dateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
-            socketClient = new UDPClient(Config.LOG_SERVER);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
+        dateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
     }
 
     public static void with(String address, int port) {
-        SimpleLog.identity = address + ":" + port;
+        SimpleLog.getInstance().identity = address + ":" + port;
     }
 
     public static SimpleLog getInstance() {
@@ -63,12 +56,14 @@ public class SimpleLog {
     }
 
     public synchronized void send(String message) {
-        if (socketClient != null) {
-            try {
-                socketClient.send(String.format("[%s %s]: %s", identity, dateFormatter.format(new Date()), message));
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (socketClient == null) {
+                socketClient = new UDPClient(Config.LOG_SERVER);
             }
+
+            socketClient.send(String.format("[%s %s]: %s", identity, dateFormatter.format(new Date()), message));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

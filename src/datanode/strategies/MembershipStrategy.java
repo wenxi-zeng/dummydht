@@ -27,36 +27,30 @@ public abstract class MembershipStrategy {
     }
 
     private void bootstrap() {
-        Iterator<String> iterator = dataNode.getSeeds().iterator();
+        final boolean[] fetched = {false};
         SocketClient socketClient = new SocketClient();
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Object o) {
                 SimpleLog.i(String.valueOf(o));
                 dataNode.updateTable(o);
+                fetched[0] = true;
             }
 
             @Override
             public void onFailure(String error) {
                 SimpleLog.i(error);
-                trySeed(iterator, socketClient, this);
             }
         };
 
-        trySeed(iterator, socketClient, callBack);
-    }
-
-    private void trySeed(Iterator<String> iterator, SocketClient socketClient, SocketClient.ServerCallBack callBack) {
-        if (iterator.hasNext()) {
-            String seed = iterator.next();
+        for (String seed : dataNode.getSeeds()) {
             if (!seed.equals(dataNode.getAddress())) {
                 socketClient.send(seed, "fetch", callBack);
             }
-            else {
-                trySeed(iterator, socketClient, callBack);
-            }
+            if (fetched[0]) break;
         }
-        else {
+
+        if (!fetched[0]) {
             SimpleLog.i("Creating table");
             dataNode.createTable();
         }

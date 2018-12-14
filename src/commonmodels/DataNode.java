@@ -1,12 +1,7 @@
 package commonmodels;
 
 import util.Config;
-import util.SimpleLog;
 
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -44,27 +39,15 @@ public abstract class DataNode {
         ResourceBundle config = loadConfig();
         loadProperties(config);
 
-        if (useDynamicAddress)
-            initAddress();
-        else
+        if (!useDynamicAddress)
             loadAddress(config);
 
-        SimpleLog.with(ip, port);
         createTerminal();
     }
 
     public void destroy() {
         if (terminal != null)
             terminal.destroy();
-    }
-
-    private void initAddress() {
-        try(final DatagramSocket socket = new DatagramSocket()){
-            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-            ip = socket.getLocalAddress().getHostAddress();
-        } catch (UnknownHostException | SocketException e) {
-            e.printStackTrace();
-        }
     }
 
     public String getIp() {
@@ -101,6 +84,10 @@ public abstract class DataNode {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
     private void loadAddress(ResourceBundle config) {

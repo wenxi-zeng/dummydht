@@ -3,7 +3,12 @@ package entries;
 import datanode.DataNodeServer;
 import socket.SocketServer;
 import util.ObjectConverter;
+import util.SimpleLog;
 
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 
@@ -12,6 +17,10 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
     private SocketServer socketServer;
 
     private DataNodeServer dataNodeServer;
+
+    private String ip;
+
+    private int port;
 
     public static void main(String[] args){
         if (args.length > 1)
@@ -40,15 +49,19 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
         }
 
         try {
-            DataNodeDaemon demon = new DataNodeDaemon(daemonPort);
-            demon.exec();
+            DataNodeDaemon daemon = new DataNodeDaemon(getAddress(), daemonPort);
+            SimpleLog.with(daemon.ip, daemon.port);
+            SimpleLog.i("Daemon: " + daemonPort + " started");
+            daemon.exec();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public DataNodeDaemon(int port) {
-        socketServer = new SocketServer(port, this);
+    public DataNodeDaemon(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+        this.socketServer = new SocketServer(this.port, this);
     }
 
     private void exec() throws Exception {
@@ -62,7 +75,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
 
         if (dataNodeServer == null) {
             if (cmdLine[0].equals("start")) {
-                dataNodeServer = new DataNodeServer(cmdLine[2], Integer.valueOf(cmdLine[1]));
+                dataNodeServer = new DataNodeServer(cmdLine[2], getAddress(), Integer.valueOf(cmdLine[1]));
                 dataNodeServer.start();
                 buffer = ObjectConverter.getByteBuffer("Node started");
             }
@@ -86,5 +99,16 @@ public class DataNodeDaemon implements SocketServer.EventHandler {
         }
 
         out.write(buffer).get();
+    }
+
+    private static String getAddress() {
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+            return socket.getLocalAddress().getHostAddress();
+        } catch (UnknownHostException | SocketException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
