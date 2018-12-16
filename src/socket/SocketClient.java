@@ -2,6 +2,7 @@ package socket;
 
 import util.ObjectConverter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -106,14 +107,25 @@ public class SocketClient {
             System.out.println("Successfully connected at: " + asynchronousSocketChannel.getRemoteAddress());
 
             final ByteBuffer sendBuffer = ObjectConverter.getByteBuffer(data);
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(32 * 1024);
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
             // transmitting data
             asynchronousSocketChannel.write(sendBuffer).get();
 
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
             // read response
-            asynchronousSocketChannel.read(buffer).get();
-            buffer.flip();
-            o = ObjectConverter.getObject(buffer);
+            while(asynchronousSocketChannel.read(buffer).get() != -1) {
+                buffer.flip();
+                bos.write(ObjectConverter.getBytes(buffer));
+
+                if (buffer.hasRemaining()) {
+                    buffer.compact();
+                } else {
+                    buffer.clear();
+                    break;
+                }
+            }
+
+            o = ObjectConverter.getObject(bos.toByteArray());
             success = true;
         } catch (IOException | InterruptedException | ExecutionException ex) {
             System.err.println(ex);

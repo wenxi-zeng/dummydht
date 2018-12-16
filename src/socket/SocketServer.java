@@ -40,7 +40,7 @@ public class SocketServer {
                 channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                 channel.bind(new InetSocketAddress(port));
                 channel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
-                    ByteBuffer buffer = ByteBuffer.allocateDirect(32 * 1024);
+                    ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024);
 
                     @Override
                     public void completed(AsynchronousSocketChannel result, Void attachment) {

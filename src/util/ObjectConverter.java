@@ -37,4 +37,10 @@ public class ObjectConverter {
         buffer.get(bytes);
         return getObject(bytes);
     }
+
+    public static byte[] getBytes(ByteBuffer buffer) {
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+        return bytes;
+    }
 }
