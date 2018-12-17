@@ -1,11 +1,12 @@
 package commonmodels;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import static util.Config.STATUS_ACTIVE;
 
-public class PhysicalNode implements Clusterable{
+public class PhysicalNode implements Clusterable, Serializable {
 
     private String address;
 

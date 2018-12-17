@@ -33,8 +33,14 @@ public abstract class MembershipStrategy {
             @Override
             public void onResponse(Object o) {
                 SimpleLog.i(String.valueOf(o));
-                dataNode.updateTable(o);
-                fetched[0] = true;
+
+                if ("Datanode server is not started".equals(o)) {
+                    onFailure("Datanode server is not started");
+                }
+                else {
+                    dataNode.updateTable(o);
+                    fetched[0] = true;
+                }
             }
 
             @Override

@@ -13,7 +13,7 @@ public class LookupTable implements Serializable {
 
     private BucketNode[] table;
 
-    private transient HashMap<String, PhysicalNode> physicalNodeMap;
+    private HashMap<String, PhysicalNode> physicalNodeMap;
 
     private transient ElasticLoadBalanceAlgorithm loadBalanceAlgorithm;
 

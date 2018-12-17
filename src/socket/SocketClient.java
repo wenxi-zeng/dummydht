@@ -78,8 +78,7 @@ public class SocketClient {
                 callBack.onFailure("The asynchronous socket channel cannot be opened!");
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            callBack.onFailure("An error occurred");
+            callBack.onFailure(e.getMessage());
         } catch (TimeoutException e) {
             callBack.onFailure("Remote time out");
         }
@@ -121,7 +120,6 @@ public class SocketClient {
                     buffer.compact();
                 } else {
                     buffer.clear();
-                    break;
                 }
             }
 

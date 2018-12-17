@@ -14,7 +14,7 @@ public class LookupTable implements Serializable {
 
     private BinarySearchList table;
 
-    private transient HashMap<String, PhysicalNode> physicalNodeMap;
+    private HashMap<String, PhysicalNode> physicalNodeMap;
 
     private transient RingLoadBalanceAlgorithm loadBalanceAlgorithm;
 

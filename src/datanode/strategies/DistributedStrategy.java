@@ -56,6 +56,8 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private void initGossipManager(DataNode dataNode) throws URISyntaxException, UnknownHostException, InterruptedException {
         GossipSettings settings = new GossipSettings();
+        settings.setConvictThreshold(.6);
+        settings.setGossipInterval(1000);
         List<GossipMember> startupMembers = new ArrayList<>();
 
         for (String seed : dataNode.getSeeds()) {

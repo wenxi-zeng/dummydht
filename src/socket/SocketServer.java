@@ -60,6 +60,7 @@ public class SocketServer {
                                         buffer.compact();
                                     } else {
                                         buffer.clear();
+                                        break;
                                     }
                                 }
                             } catch (Exception e) {
