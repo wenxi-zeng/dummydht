@@ -5,8 +5,6 @@ import commonmodels.DataNode;
 import org.apache.gossip.*;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
-import socket.SocketClient;
-import util.SimpleLog;
 import util.URIHelper;
 
 import java.net.URI;
@@ -14,7 +12,6 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 public class DistributedStrategy extends MembershipStrategy implements GossipListener {
@@ -56,7 +53,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private void initGossipManager(DataNode dataNode) throws URISyntaxException, UnknownHostException, InterruptedException {
         GossipSettings settings = new GossipSettings();
-        settings.setConvictThreshold(.6);
+        settings.setWindowSize(1000);
         settings.setGossipInterval(1000);
         List<GossipMember> startupMembers = new ArrayList<>();
 
@@ -65,13 +62,13 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
             startupMembers.add(new RemoteGossipMember(
                     dataNode.getClusterName(),
                     uri,
-                    dataNode.getAddress()));
+                    uri.getHost() + "." + uri.getPort()));
         }
 
         this.gossipService = new GossipService(
                 dataNode.getClusterName(),
                 URIHelper.getGossipURI(dataNode.getAddress()),
-                dataNode.getAddress(), new HashMap<>(),
+                dataNode.getGossipId(), new HashMap<>(),
                 startupMembers, settings,
                 this, new MetricRegistry());
     }
