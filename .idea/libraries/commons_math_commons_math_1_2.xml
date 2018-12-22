@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="commons-math:commons-math:1.2" type="repository">
+    <properties maven-id="commons-math:commons-math:1.2" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/commons-math/commons-math/1.2/commons-math-1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
