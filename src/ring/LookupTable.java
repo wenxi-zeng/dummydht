@@ -99,6 +99,11 @@ public class LookupTable implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
+    public void addNode(PhysicalNode node, int[] buckets) {
+        membershipAlgorithm.addPhysicalNode(this, node, buckets);
+        update(); // commit the change, gossip to other nodes
+    }
+
     public void removeNode(PhysicalNode node) {
         membershipAlgorithm.removePhysicalNode(this, node);
         update(); // commit the change, gossip to other nodes
@@ -130,6 +135,10 @@ public class LookupTable implements Serializable {
         }
 
         return result.toString();
+    }
+
+    public int[] getSpareBuckets() {
+        return membershipAlgorithm.generateSpareBuckets(this);
     }
 
     @Override

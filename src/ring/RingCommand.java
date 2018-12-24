@@ -4,6 +4,8 @@ import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import util.SimpleLog;
 
+import java.util.Arrays;
+
 public enum RingCommand {
 
     INITIALIZE {
@@ -103,7 +105,7 @@ public enum RingCommand {
         public String execute(String[] args) {
             String result;
 
-            if (args.length != 2) {
+            if (args.length != 2 && args.length != 3) {
                 result = "Wrong arguments. Try: " + getHelpString();
                 SimpleLog.i(result);
                 return result;
@@ -113,7 +115,14 @@ public enum RingCommand {
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
-            LookupTable.getInstance().addNode(pnode);
+
+            if (args.length == 2) {
+                LookupTable.getInstance().addNode(pnode);
+            }
+            else {
+                String[] hashVal = args[2].split(",");
+                LookupTable.getInstance().addNode(pnode, Arrays.stream(hashVal).mapToInt(Integer::parseInt).toArray());
+            }
 
             result = "Node added";
             return result;
@@ -121,12 +130,12 @@ public enum RingCommand {
 
         @Override
         public String getParameterizedString() {
-            return "addNode %s:%s";
+            return "addNode %s:%s %s";
         }
 
         @Override
         public String getHelpString() {
-            return String.format(getParameterizedString(), "<ip>", "<port>");
+            return String.format(getParameterizedString(), "<ip>", "<port>", "[bucket1,bucket2,...]");
         }
 
     },

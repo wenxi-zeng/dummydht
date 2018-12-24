@@ -20,18 +20,6 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
-    public void onNodeUp(String cluster, String ip, int port) {
-        String command = String.format(CephCommand.ADDNODE.getParameterizedString(), cluster, ip, port);
-        terminal.execute(command.split("\\s+"));
-    }
-
-    @Override
-    public void onNodeDown(String ip, int port) {
-        String command = String.format(CephCommand.REMOVENODE.getParameterizedString(), ip, port);
-        terminal.execute(command.split("\\s+"));
-    }
-
-    @Override
     public Object getTable() {
         return ClusterMap.getInstance();
     }
@@ -45,6 +33,16 @@ public class CephDataNode extends DataNode {
             localMap.setEpoch(remoteMap.getEpoch());
             localMap.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
         }
+    }
+
+    @Override
+    public String prepareAddNodeCommand() {
+        return null;
+    }
+
+    @Override
+    public String prepareRemoveNodeCommand() {
+        return String.format(CephCommand.REMOVENODE.getParameterizedString(), ip, port);
     }
 
 }

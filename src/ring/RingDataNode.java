@@ -2,6 +2,7 @@ package ring;
 
 import commonmodels.DataNode;
 import util.ResourcesLoader;
+import util.StringHelper;
 
 import java.util.ResourceBundle;
 
@@ -20,18 +21,6 @@ public class RingDataNode extends DataNode {
     }
 
     @Override
-    public void onNodeUp(String cluster, String ip, int port) {
-        String command = String.format(RingCommand.ADDNODE.getParameterizedString(), ip, port);
-        terminal.execute(command.split("\\s+"));
-    }
-
-    @Override
-    public void onNodeDown(String ip, int port) {
-        String command = String.format(RingCommand.REMOVENODE.getParameterizedString(), ip, port);
-        terminal.execute(command.split("\\s+"));
-    }
-
-    @Override
     public Object getTable() {
         return LookupTable.getInstance();
     }
@@ -45,5 +34,16 @@ public class RingDataNode extends DataNode {
             localTable.setEpoch(remoteTable.getEpoch());
             localTable.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
         }
+    }
+
+    @Override
+    public String prepareAddNodeCommand() {
+        String buckets = StringHelper.join(LookupTable.getInstance().getSpareBuckets());
+        return String.format(RingCommand.ADDNODE.getParameterizedString(), ip, port, buckets);
+    }
+
+    @Override
+    public String prepareRemoveNodeCommand() {
+        return String.format(RingCommand.REMOVENODE.getParameterizedString(), ip, port);
     }
 }

@@ -96,7 +96,7 @@ public class GrowOnlyCounter implements CrdtCounter<Long, GrowOnlyCounter> {
     return "GrowOnlyCounter [counters= " + counters + ", Value=" + value() + "]";
   }
   
-  Map<String, Long> getCounters() {
+  public Map<String, Long> getCounters() {
     return counters;
   }
   

@@ -85,11 +85,8 @@ public class ElasticMembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
-        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_HASH_SLOTS / table.getPhysicalNodeMap().size());
-
-        while (!bucketPool.isEmpty()) {
-            int bucket = bucketPool.poll();
-
+        int[] bucketPool = generateSpareBuckets(table);
+        for (int bucket : bucketPool) {
             BucketNode bucketNode = table.getTable()[bucket];
             bucketNode.getPhysicalNodes().add(node.getId());
             node.getVirtualNodes().add(bucketNode);
@@ -98,6 +95,37 @@ public class ElasticMembershipAlgorithm {
         }
 
         SimpleLog.i("Physical node added...");
+    }
+
+    public void addPhysicalNode(LookupTable table, PhysicalNode node, int[] buckets) {
+        if (buckets == null || buckets.length == 0) {
+            addPhysicalNode(table, node);
+            return;
+        }
+
+        if (table.getPhysicalNodeMap().containsKey(node.getId())) {
+            SimpleLog.i(node.getId() + " already exists. Try a different ip:port");
+            return;
+        }
+
+        SimpleLog.i("Adding new physical node: " + node.toString() + "...");
+        table.getPhysicalNodeMap().put(node.getId(), node);
+
+        for (int bucket: buckets) {
+            BucketNode bucketNode = table.getTable()[bucket];
+            bucketNode.getPhysicalNodes().add(node.getId());
+            node.getVirtualNodes().add(bucketNode);
+
+            table.copyBucket(bucketNode, node);
+        }
+
+        SimpleLog.i("Physical node added...");
+    }
+
+    public int[] generateSpareBuckets(LookupTable table) {
+        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_HASH_SLOTS / table.getPhysicalNodeMap().size());
+
+        return bucketPool.stream().mapToInt(Integer::intValue).toArray();
     }
 
     public void removePhysicalNode(LookupTable table, PhysicalNode node) {

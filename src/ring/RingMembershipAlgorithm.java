@@ -75,21 +75,47 @@ public class RingMembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
-        List<Integer> usedSlots = new ArrayList<>();
-        for (int i = 0; i < table.getTable().size(); i++) {
-            usedSlots.add(table.getTable().get(i).getHash());
-        }
-        Queue<Integer> hashPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, VIRTUAL_PHYSICAL_RATIO, usedSlots);
-
-        while (!hashPool.isEmpty()) {
-            Integer hash = hashPool.poll();
-
+        int[] hashPool = generateSpareBuckets(table);
+        for (int hash : hashPool) {
             VirtualNode vnode = new VirtualNode(hash, node.getId());
             node.getVirtualNodes().add(vnode);
             table.addNode(vnode);
         }
 
         SimpleLog.i("Physical node added...");
+    }
+
+    public void addPhysicalNode(LookupTable table, PhysicalNode node, int[] buckets) {
+        if (buckets == null || buckets.length == 0) {
+            addPhysicalNode(table, node);
+            return;
+        }
+
+        if (table.getPhysicalNodeMap().containsKey(node.getId())) {
+            SimpleLog.i(node.getId() + " already exists. Try a different ip:port");
+            return;
+        }
+
+        SimpleLog.i("Adding new physical node: " + node.toString() + "...");
+        table.getPhysicalNodeMap().put(node.getId(), node);
+
+        for (Integer hash : buckets) {
+            VirtualNode vnode = new VirtualNode(hash, node.getId());
+            node.getVirtualNodes().add(vnode);
+            table.addNode(vnode);
+        }
+
+        SimpleLog.i("Physical node added...");
+    }
+
+    public int[] generateSpareBuckets(LookupTable table) {
+        List<Integer> usedSlots = new ArrayList<>();
+        for (int i = 0; i < table.getTable().size(); i++) {
+            usedSlots.add(table.getTable().get(i).getHash());
+        }
+        Queue<Integer> hashPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, VIRTUAL_PHYSICAL_RATIO, usedSlots);
+
+        return hashPool.stream().mapToInt(Integer::intValue).toArray();
     }
 
     public void removePhysicalNode(LookupTable table, PhysicalNode node) {

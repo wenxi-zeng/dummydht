@@ -17,11 +17,11 @@
  */
 package org.apache.gossip.crdt;
 
+import org.apache.gossip.crdt.OrSet.Builder.Operation;
+
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-
-import org.apache.gossip.crdt.OrSet.Builder.Operation;
 
 /*
  * A immutable set 
@@ -296,11 +296,11 @@ public class OrSet<E>  implements CrdtAddRemoveSet<E, Set<E>, OrSet<E>> {
     return true;
   }
 
-  Map<E, Set<UUID>> getElements() {
+  public Map<E, Set<UUID>> getElements() {
     return elements;
   }
 
-  Map<E, Set<UUID>> getTombstones() {
+  public Map<E, Set<UUID>> getTombstones() {
     return tombstones;
   }
 
