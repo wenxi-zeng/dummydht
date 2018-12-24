@@ -41,8 +41,8 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
-    public String prepareRemoveNodeCommand() {
-        return String.format(CephCommand.REMOVENODE.getParameterizedString(), ip, port);
+    public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
+        return String.format(CephCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
     }
 
 }

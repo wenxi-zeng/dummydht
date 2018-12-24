@@ -43,8 +43,8 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
-    public String prepareRemoveNodeCommand() {
-        return String.format(ElasticCommand.REMOVENODE.getParameterizedString(), ip, port);
+    public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
+        return String.format(ElasticCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
     }
 
 }

@@ -35,7 +35,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
         switch (gossipState) {
             case DOWN:
-                countMessage(dataNode.prepareRemoveNodeCommand());
+                countMessage(dataNode.prepareRemoveNodeCommand(gossipMember.getUri().getHost(), gossipMember.getUri().getPort()));
                 break;
         }
     }
@@ -88,13 +88,15 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                     "Event Handler fired for key = '" + key + "'! " + oldValue + " " + newValue);
             if (newValue instanceof GrowOnlyCounter){
                 GrowOnlyCounter counter = (GrowOnlyCounter) newValue;
-                if (key.contains("removeNode")) {
-                    if (counter.value() > gossipService.getLiveMembers().size() - 1)
+
+                if (counter.value() >= gossipService.getLiveMembers().size()) {
+                    if (counter.value() == gossipService.getLiveMembers().size() && key.contains("removeNode")) {
                         addMessage(key);
-                }
-                else if (counter.value() >= gossipService.getMembers().size()) {
-                    removeMessage(key);
-                    System.out.println("          message to remove: " + key);
+                    }
+                    else {
+                        removeMessage(key);
+                        System.out.println("          message to remove: " + key);
+                    }
                 }
             }
             else {
@@ -138,6 +140,8 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     private void removeMessage(String val) {
         @SuppressWarnings("unchecked")
         OrSet<String> s = (OrSet<String>) gossipService.findCrdt(INDEX_KEY_FOR_SET);
+        if (s == null) return;
+
         long now = System.currentTimeMillis();
         SharedDataMessage m = new SharedDataMessage();
         m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
@@ -180,7 +184,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
             c = new GrowOnlyCounter(new GrowOnlyCounter.Builder(gossipService).increment((1L)));
         } else if (c.getCounters().getOrDefault(key, 0L) < 1){
             c = new GrowOnlyCounter(c, new GrowOnlyCounter.Builder(gossipService).increment((1L)));
+        } else {
+            return;
         }
+
         long now = System.currentTimeMillis();
         SharedDataMessage m = new SharedDataMessage();
         m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
@@ -188,5 +195,13 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         m.setPayload(c);
         m.setTimestamp(System.currentTimeMillis());
         gossipService.merge(m);
+    }
+
+    private void resetCounter(String key) {
+        GrowOnlyCounter c = (GrowOnlyCounter) gossipService.findCrdt(key);
+
+        if (c != null) {
+            c.getCounters().clear();
+        }
     }
 }

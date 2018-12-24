@@ -124,5 +124,5 @@ public abstract class DataNode {
     public abstract Object getTable();
     public abstract void updateTable(Object o);
     public abstract String prepareAddNodeCommand();
-    public abstract String prepareRemoveNodeCommand();
+    public abstract String prepareRemoveNodeCommand(String nodeIp, int nodePort);
 }

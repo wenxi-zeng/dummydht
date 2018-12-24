@@ -43,7 +43,7 @@ public class RingDataNode extends DataNode {
     }
 
     @Override
-    public String prepareRemoveNodeCommand() {
-        return String.format(RingCommand.REMOVENODE.getParameterizedString(), ip, port);
+    public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
+        return String.format(RingCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
     }
 }
