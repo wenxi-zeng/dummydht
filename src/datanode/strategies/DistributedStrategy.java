@@ -29,13 +29,16 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private static final String INDEX_KEY_FOR_SET = "membership_update";
 
+    private static final String REMOVAL_HEADER = "remove@";
+
     private static final long MESSAGE_EXPIRE_TIME = 10 * 60 * 1000L;
 
     @Override
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
         switch (gossipState) {
             case DOWN:
-                countMessage(dataNode.prepareRemoveNodeCommand(gossipMember.getUri().getHost(), gossipMember.getUri().getPort()));
+                countMessage(REMOVAL_HEADER +
+                        dataNode.prepareRemoveNodeCommand(gossipMember.getUri().getHost(), gossipMember.getUri().getPort()));
                 break;
         }
     }
@@ -90,8 +93,9 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 GrowOnlyCounter counter = (GrowOnlyCounter) newValue;
 
                 if (counter.value() >= gossipService.getLiveMembers().size()) {
-                    if (counter.value() == gossipService.getLiveMembers().size() && key.contains("removeNode")) {
-                        addMessage(key);
+                    if (counter.value() == gossipService.getLiveMembers().size() && key.contains(REMOVAL_HEADER)) {
+                        countMessage(key);
+                        addMessage(key.substring(key.indexOf('@') + 1));
                     }
                     else {
                         removeMessage(key);
