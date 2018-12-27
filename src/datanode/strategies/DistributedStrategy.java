@@ -9,6 +9,7 @@ import org.apache.gossip.crdt.SharedMessage;
 import org.apache.gossip.crdt.SharedMessageOrSet;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
+import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.SharedDataMessage;
@@ -18,9 +19,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class DistributedStrategy extends MembershipStrategy implements GossipListener {
+public class DistributedStrategy extends MembershipStrategy implements GossipListener, UpdateSharedDataEventHandler {
 
     private GossipManager gossipService;
 
@@ -45,6 +48,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 if (pre != null) {
                     message.setContent(pre.getContent());
                     addMessage(message);
+                    dataNode.execute(message.getContent());
                 }
                 break;
             case DOWN:
@@ -52,6 +56,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 if (pre != null) {
                     message.setContent(pre.getContent());
                     removeMessage(message);
+                    dataNode.execute(
+                            dataNode.prepareRemoveNodeCommand(
+                                    gossipMember.getUri().getHost(),
+                                    gossipMember.getUri().getPort()));
                 }
                 break;
         }
@@ -67,6 +75,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 .withSubject(dataNode.getAddress())
                 .withContent(dataNode.prepareAddNodeCommand());
         addMessage(message);
+        dataNode.execute(message.getContent());
     }
 
     @Override
@@ -103,25 +112,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                                 .gossipSettings(settings)
                                 .listener(this)
                                 .build();
-        this.gossipService.registerSharedDataSubscriber((key, oldValue, newValue) -> {
-            if (newValue == null) return;
-
-            @SuppressWarnings("unchecked")
-            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
-            System.out.println("Elements:");
-            for (SharedMessage message : newSet.getElements().keySet()) {
-                System.out.println(message.toStringX());
-            }
-            System.out.println("Tombstones:");
-            for (SharedMessage message : newSet.getTombstones().keySet()) {
-                System.out.println(message.toStringX());
-            }
-            System.out.println("Result:");
-            for (SharedMessage message : newSet.value()) {
-                System.out.println(message.toStringX());
-            }
-            System.out.println("==========================================================================");
-        });
+        this.gossipService.registerSharedDataSubscriber(this);
     }
 
     private String printLiveMembers() {
@@ -196,5 +187,63 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         m.setPayload(new SharedMessageOrSet(message));
         m.setTimestamp(now);
         gossipService.merge(m);
+    }
+
+    private void processAddedValue(Set<SharedMessage> value) {
+        for (SharedMessage message : value) {
+            dataNode.execute(message.getContent());
+        }
+    }
+
+    private void processRemovedValue(Set<SharedMessage> value) {
+        for (SharedMessage message : value) {
+            String[] address = message.getSubject().split(":");
+            dataNode.execute(
+                    dataNode.prepareRemoveNodeCommand(address[0], Integer.valueOf(address[1]))
+            );
+        }
+    }
+
+    @Override
+    public void onUpdate(String key, Object oldValue, Object newValue) {
+
+        if (oldValue == null && newValue == null) {
+            return;
+        }
+        else if (oldValue == null) {
+            @SuppressWarnings("unchecked")
+            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
+            processAddedValue(newSet.value());
+        }
+        else if (newValue == null) {
+            @SuppressWarnings("unchecked")
+            SharedMessageOrSet newSet = (SharedMessageOrSet)oldValue;
+            processAddedValue(newSet.value());
+        }
+        else if (oldValue.equals(newValue)) {
+            return;
+        }
+        else {
+            @SuppressWarnings("unchecked")
+            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
+
+            @SuppressWarnings("unchecked")
+            SharedMessageOrSet oldSet = (SharedMessageOrSet)oldValue;
+
+            Set<SharedMessage> added = new HashSet<>(newSet.value());
+            Set<SharedMessage> removed = new HashSet<>(oldSet.value());
+            for (SharedMessage message : oldSet.value()) {
+                added.remove(message);
+            }
+            for (SharedMessage message : newSet.value()) {
+                removed.remove(message);
+            }
+
+            processAddedValue(added);
+            processRemovedValue(removed);
+        }
+
+        System.out.println(dataNode.getTable().toString());
+        System.out.println("==========================================================================");
     }
 }
