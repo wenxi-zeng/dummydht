@@ -37,6 +37,11 @@ public class RingDataNode extends DataNode {
     }
 
     @Override
+    public String prepareListPhysicalNodesCommand() {
+        return RingCommand.LISTPHYSICALNODES.getParameterizedString();
+    }
+
+    @Override
     public String prepareAddNodeCommand() {
         String buckets = StringHelper.join(LookupTable.getInstance().getSpareBuckets());
         return String.format(RingCommand.ADDNODE.getParameterizedString(), ip, port, buckets);

@@ -37,6 +37,11 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
+    public String prepareListPhysicalNodesCommand() {
+        return ElasticCommand.LISTPHYSICALNODES.getParameterizedString();
+    }
+
+    @Override
     public String prepareAddNodeCommand() {
         String buckets = StringHelper.join(LookupTable.getInstance().getSpareBuckets());
         return String.format(ElasticCommand.ADDNODE.getParameterizedString(), ip, port, buckets);

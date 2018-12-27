@@ -115,14 +115,15 @@ public abstract class DataNode {
         terminal.initialize();
     }
 
-    public void execute(String command) {
-        terminal.execute(command.split("\\s+"));
+    public String execute(String command) {
+        return terminal.execute(command.split("\\s+"));
     }
 
     public abstract void createTerminal();
     public abstract ResourceBundle loadConfig();
     public abstract Object getTable();
     public abstract void updateTable(Object o);
+    public abstract String prepareListPhysicalNodesCommand();
     public abstract String prepareAddNodeCommand();
     public abstract String prepareRemoveNodeCommand(String nodeIp, int nodePort);
 }

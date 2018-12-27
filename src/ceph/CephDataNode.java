@@ -36,6 +36,11 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
+    public String prepareListPhysicalNodesCommand() {
+        return CephCommand.LISTPHYSICALNODES.getParameterizedString();
+    }
+
+    @Override
     public String prepareAddNodeCommand() {
         return null;
     }

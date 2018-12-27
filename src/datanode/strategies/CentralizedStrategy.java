@@ -10,7 +10,7 @@ public class CentralizedStrategy extends MembershipStrategy {
 
     @Override
     public String getMembersStatus() {
-        return null;
+        return dataNode.execute(dataNode.prepareListPhysicalNodesCommand());
     }
 
 }
