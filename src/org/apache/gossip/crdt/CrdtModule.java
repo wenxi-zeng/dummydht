@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.gossip.LocalMember;
 import org.apache.gossip.lock.vote.MajorityVote;
@@ -135,11 +137,44 @@ abstract class MajorityVoteMixin<E>{
   MajorityVoteMixin(@JsonProperty("voteCandidates") Map<String, VoteCandidate> voteCandidateMap){ }
 }
 
+abstract class SharedMessageMixin {
+  @JsonCreator
+  SharedMessageMixin(@JsonProperty("sender") String sender, @JsonProperty("subject") String subject, @JsonProperty("content") String content) { }
+  @JsonProperty("sender") abstract String getSender();
+  @JsonProperty("subject") abstract String getSubject();
+  @JsonProperty("content") abstract String getContent();
+}
+
+abstract class SharedMessageOrSetMixin {
+  @JsonCreator
+  SharedMessageOrSetMixin(
+          @JsonProperty("elements")
+          @JsonSerialize(keyUsing = SharedMessage.SharedMessageSerializer.class)
+          @JsonDeserialize(keyUsing = SharedMessage.SharedMessageDeserializer.class)
+                  Map<SharedMessage, Set<UUID>> w,
+          @JsonProperty("tombstones")
+          @JsonSerialize(keyUsing = SharedMessage.SharedMessageSerializer.class)
+          @JsonDeserialize(keyUsing = SharedMessage.SharedMessageDeserializer.class)
+                  Map<SharedMessage, Set<UUID>> h) { }
+
+  @JsonProperty("elements")
+  @JsonSerialize(keyUsing = SharedMessage.SharedMessageSerializer.class)
+  @JsonDeserialize(keyUsing = SharedMessage.SharedMessageDeserializer.class)
+  abstract Map<SharedMessage, Set<UUID>> getElements();
+
+  @JsonProperty("tombstones")
+  @JsonSerialize(keyUsing = SharedMessage.SharedMessageSerializer.class)
+  @JsonDeserialize(keyUsing = SharedMessage.SharedMessageDeserializer.class)
+  abstract Map<SharedMessage, Set<UUID>> getTombstones();
+
+  @JsonIgnore abstract boolean isEmpty();
+}
+
 //If anyone wants to take a stab at this. please have at it
 //https://github.com/FasterXML/jackson-datatype-guava/blob/master/src/main/java/com/fasterxml/jackson/datatype/guava/ser/MultimapSerializer.java
 public class CrdtModule extends SimpleModule {
 
-  private static final long serialVersionUID = 6134836523275023418L;
+  private static final long serialVersionUID = 6134836523275023419L;
 
   public CrdtModule() {
     super("CrdtModule", new Version(0, 0, 0, "0.0.0", "org.apache.gossip", "gossip"));
@@ -161,6 +196,7 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(MajorityVote.class, MajorityVoteMixin.class);
     context.setMixInAnnotations(VoteCandidate.class, VoteCandidateMixin.class);
     context.setMixInAnnotations(Vote.class, VoteMixin.class);
+    context.setMixInAnnotations(SharedMessageOrSet.class, SharedMessageOrSetMixin.class);
   }
 
 }

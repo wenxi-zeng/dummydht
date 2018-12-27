@@ -5,8 +5,8 @@ import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
 import org.apache.gossip.Member;
 import org.apache.gossip.RemoteMember;
-import org.apache.gossip.crdt.GrowOnlyCounter;
-import org.apache.gossip.crdt.OrSet;
+import org.apache.gossip.crdt.SharedMessage;
+import org.apache.gossip.crdt.SharedMessageOrSet;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.GossipManager;
@@ -17,7 +17,8 @@ import util.URIHelper;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DistributedStrategy extends MembershipStrategy implements GossipListener {
 
@@ -29,16 +30,29 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private static final String INDEX_KEY_FOR_SET = "membership_update";
 
-    private static final String REMOVAL_HEADER = "remove@";
-
     private static final long MESSAGE_EXPIRE_TIME = 10 * 60 * 1000L;
 
     @Override
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
+        SharedMessage message = new SharedMessage()
+                .withSender(dataNode.getAddress())
+                .withSubject(gossipMember.getUri().getHost() + ":" + gossipMember.getUri().getPort());
+        SharedMessage pre;
+
         switch (gossipState) {
+            case UP:
+                pre = bringUpFromTombstone(message);
+                if (pre != null) {
+                    message.setContent(pre.getContent());
+                    addMessage(message);
+                }
+                break;
             case DOWN:
-                countMessage(REMOVAL_HEADER +
-                        dataNode.prepareRemoveNodeCommand(gossipMember.getUri().getHost(), gossipMember.getUri().getPort()));
+                pre = bringDownFromElements(message);
+                if (pre != null) {
+                    message.setContent(pre.getContent());
+                    removeMessage(message);
+                }
                 break;
         }
     }
@@ -48,7 +62,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.init();
-        String message = dataNode.prepareAddNodeCommand();
+        SharedMessage message = new SharedMessage()
+                .withSender(dataNode.getAddress())
+                .withSubject(dataNode.getAddress())
+                .withContent(dataNode.prepareAddNodeCommand());
         addMessage(message);
     }
 
@@ -66,6 +83,8 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         GossipSettings settings = new GossipSettings();
         settings.setWindowSize(1000);
         settings.setGossipInterval(1000);
+        settings.setPersistDataState(false);
+        settings.setPersistRingState(false);
         List<Member> startupMembers = new ArrayList<>();
 
         for (String seed : dataNode.getSeeds()) {
@@ -87,31 +106,21 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         this.gossipService.registerSharedDataSubscriber((key, oldValue, newValue) -> {
             if (newValue == null) return;
 
-            System.out.println(
-                    "Event Handler fired for key = '" + key + "'! " + oldValue + " " + newValue);
-            if (newValue instanceof GrowOnlyCounter){
-                GrowOnlyCounter counter = (GrowOnlyCounter) newValue;
-
-                if (counter.value() >= gossipService.getLiveMembers().size()) {
-                    if (counter.value() == gossipService.getLiveMembers().size() && key.contains(REMOVAL_HEADER)) {
-                        countMessage(key);
-                        addMessage(key.substring(key.indexOf('@') + 1));
-                    }
-                    else {
-                        removeMessage(key);
-                        System.out.println("          message to remove: " + key);
-                    }
-                }
+            @SuppressWarnings("unchecked")
+            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
+            System.out.println("Elements:");
+            for (SharedMessage message : newSet.getElements().keySet()) {
+                System.out.println(message.toStringX());
             }
-            else {
-                @SuppressWarnings("unchecked")
-                OrSet<String> orSet = (OrSet<String>) newValue;
-
-                for (String message : orSet.value()) {
-                    dataNode.execute(message);
-                    countMessage(message);
-                }
+            System.out.println("Tombstones:");
+            for (SharedMessage message : newSet.getTombstones().keySet()) {
+                System.out.println(message.toStringX());
             }
+            System.out.println("Result:");
+            for (SharedMessage message : newSet.value()) {
+                System.out.println(message.toStringX());
+            }
+            System.out.println("==========================================================================");
         });
     }
 
@@ -141,71 +150,51 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         return result.toString();
     }
 
-    private void removeMessage(String val) {
+    private SharedMessage bringUpFromTombstone(SharedMessage target) {
         @SuppressWarnings("unchecked")
-        OrSet<String> s = (OrSet<String>) gossipService.findCrdt(INDEX_KEY_FOR_SET);
+        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
+        if (s == null || s.value().contains(target)) return null;
+
+        for (SharedMessage message : s.getTombstones().keySet())
+            if (message.equals(target))
+                return message;
+
+       return null;
+    }
+
+    private SharedMessage bringDownFromElements(SharedMessage target) {
+        @SuppressWarnings("unchecked")
+        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
+        if (s == null || !s.value().contains(target)) return null;
+
+        for (SharedMessage message : s.value())
+            if (message.equals(target))
+                return message;
+
+        return null;
+    }
+
+    private void removeMessage(SharedMessage message) {
+        @SuppressWarnings("unchecked")
+        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
         if (s == null) return;
 
         long now = System.currentTimeMillis();
         SharedDataMessage m = new SharedDataMessage();
         m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
         m.setKey(INDEX_KEY_FOR_SET);
-        m.setPayload(new OrSet<>(s, new OrSet.Builder<String>().remove(val)));
+        m.setPayload(new SharedMessageOrSet(s, s.remove(message)));
         m.setTimestamp(System.currentTimeMillis());
         gossipService.merge(m);
     }
 
-    private void removeMessage(List<String> val) {
-        OrSet.Builder<String> builder = new OrSet.Builder<>();
-        for (String str : val) {
-            builder.remove(str);
-        }
-
-        @SuppressWarnings("unchecked")
-        OrSet<String> s = (OrSet<String>) gossipService.findCrdt(INDEX_KEY_FOR_SET);
+    private void addMessage(SharedMessage message) {
         long now = System.currentTimeMillis();
         SharedDataMessage m = new SharedDataMessage();
         m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
         m.setKey(INDEX_KEY_FOR_SET);
-        m.setPayload(new OrSet<>(s, builder));
-        m.setTimestamp(System.currentTimeMillis());
-        gossipService.merge(m);
-    }
-
-    private void addMessage(String val) {
-        long now = System.currentTimeMillis();
-        SharedDataMessage m = new SharedDataMessage();
-        m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-        m.setKey(INDEX_KEY_FOR_SET);
-        m.setPayload(new OrSet<>(val));
+        m.setPayload(new SharedMessageOrSet(message));
         m.setTimestamp(now);
         gossipService.merge(m);
-    }
-
-    private void countMessage(String key) {
-        GrowOnlyCounter c = (GrowOnlyCounter) gossipService.findCrdt(key);
-        if (c == null) {
-            c = new GrowOnlyCounter(new GrowOnlyCounter.Builder(gossipService).increment((1L)));
-        } else if (c.getCounters().getOrDefault(key, 0L) < 1){
-            c = new GrowOnlyCounter(c, new GrowOnlyCounter.Builder(gossipService).increment((1L)));
-        } else {
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        SharedDataMessage m = new SharedDataMessage();
-        m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-        m.setKey(key);
-        m.setPayload(c);
-        m.setTimestamp(System.currentTimeMillis());
-        gossipService.merge(m);
-    }
-
-    private void resetCounter(String key) {
-        GrowOnlyCounter c = (GrowOnlyCounter) gossipService.findCrdt(key);
-
-        if (c != null) {
-            c.getCounters().clear();
-        }
     }
 }

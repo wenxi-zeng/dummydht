@@ -70,11 +70,11 @@ public class TwoPhaseSet<ElementType> implements CrdtAddRemoveSet<ElementType, S
     this.removed = removed;
   }
 
-  Set<ElementType> getAdded(){
+  public Set<ElementType> getAdded(){
     return added;
   }
 
-  Set<ElementType> getRemoved(){
+  public Set<ElementType> getRemoved(){
     return removed;
   }
 

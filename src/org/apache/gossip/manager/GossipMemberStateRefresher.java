@@ -59,7 +59,7 @@ public class GossipMemberStateRefresher {
   }
 
   public void init() {
-    scheduledExecutor.scheduleAtFixedRate(() -> run(), 0, 100, TimeUnit.MILLISECONDS);
+    scheduledExecutor.scheduleAtFixedRate(() -> run(), 0, 1000, TimeUnit.MILLISECONDS);
   }
 
   public void run() {
