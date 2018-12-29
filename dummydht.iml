@@ -15,5 +15,6 @@
     <orderEntry type="library" name="io.dropwizard.metrics5:metrics-core:5.0.0" level="project" />
     <orderEntry type="library" name="org.mockito:mockito-core:2.2.7" level="project" />
     <orderEntry type="library" name="com.codahale.metrics:metrics-core:3.0.2" level="project" />
+    <orderEntry type="library" name="org.apache.commons:commons-lang3:3.8.1" level="project" />
   </component>
 </module>

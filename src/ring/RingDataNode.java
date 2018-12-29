@@ -1,8 +1,8 @@
 package ring;
 
 import commonmodels.DataNode;
+import org.apache.commons.lang3.StringUtils;
 import util.ResourcesLoader;
-import util.StringHelper;
 
 import java.util.ResourceBundle;
 
@@ -43,7 +43,7 @@ public class RingDataNode extends DataNode {
 
     @Override
     public String prepareAddNodeCommand() {
-        String buckets = StringHelper.join(LookupTable.getInstance().getSpareBuckets());
+        String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
         return String.format(RingCommand.ADDNODE.getParameterizedString(), ip, port, buckets);
     }
 
