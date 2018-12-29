@@ -53,7 +53,7 @@ public class CephLoadBalanceAlgorithm {
                 pnode.getVirtualNodes().removeAll(replica.getValue());
                 PhysicalNode to = map.getPhysicalNodeMap().get(replica.getKey());
                 to.getVirtualNodes().addAll(replica.getValue());
-                transfer(replica.getValue(), pnode, to);
+                requestTransfer(replica.getValue(), pnode, to);
             }
         }
     }
@@ -140,14 +140,14 @@ public class CephLoadBalanceAlgorithm {
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
     }
 
-    private void transfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
+    private void requestTransfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
         StringBuilder result = new StringBuilder();
 
         for (Indexable pg : placementGroups)
             result.append(pg.getDisplayId()).append(' ');
 
         SimpleLog.i("Transfer placement groups: " + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
-        FileTransferManager.getInstance().transfer(
+        FileTransferManager.getInstance().requestTransfer(
                 placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
                 fromNode,
                 toNode);
@@ -160,7 +160,7 @@ public class CephLoadBalanceAlgorithm {
             result.append(pg.getDisplayId()).append(' ');
 
         SimpleLog.i("Copy placement groups:" + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
-        FileTransferManager.getInstance().copy(
+        FileTransferManager.getInstance().requestCopy(
                 placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
                 fromNode,
                 toNode);

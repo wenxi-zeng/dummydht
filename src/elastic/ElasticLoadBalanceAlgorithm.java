@@ -81,7 +81,7 @@ public class ElasticLoadBalanceAlgorithm {
                 if (table.getTable()[i].getPhysicalNodes().contains(nodeId)) continue;
 
                 for (String targetId : table.getTable()[i].getPhysicalNodes()) {
-                    transfer(table.getTable()[newSize + i],
+                    requestTransfer(table.getTable()[newSize + i],
                             table.getPhysicalNodeMap().get(nodeId),
                             table.getPhysicalNodeMap().get(targetId));
                 }
@@ -92,19 +92,14 @@ public class ElasticLoadBalanceAlgorithm {
         SimpleLog.i("Table shrank.");
     }
 
-    private void transfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
-        SimpleLog.i("Transfer hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
-        FileTransferManager.getInstance().transfer(node.getHash(), fromNode, toNode);
-    }
-
     private void requestTransfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Request to transfer hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
-        FileTransferManager.getInstance().transfer(node.getHash(), fromNode, toNode);
+        FileTransferManager.getInstance().requestTransfer(node.getHash(), fromNode, toNode);
     }
 
     private void requestReplication(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Copy hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
-        FileTransferManager.getInstance().copy(node.getHash(), fromNode, toNode);
+        FileTransferManager.getInstance().requestCopy(node.getHash(), fromNode, toNode);
     }
 
 }

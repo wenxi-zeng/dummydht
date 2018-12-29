@@ -60,7 +60,7 @@ public class RingLoadBalanceAlgorithm {
         }
 
         Indexable toNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
-        transfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
+        requestTransfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
         SimpleLog.i("Decreased load for virtual node " + hi + " to " + hf);
@@ -128,24 +128,17 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
     }
 
-    private void transfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
-        SimpleLog.i("Transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
-        String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
-        String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
-        FileTransferManager.getInstance().transfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
-    }
-
     private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
         SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
         String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
         String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
-        FileTransferManager.getInstance().transfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
+        FileTransferManager.getInstance().requestTransfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 
     private void requestReplication(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
         SimpleLog.i("Copy hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
         String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
         String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
-        FileTransferManager.getInstance().copy(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
+        FileTransferManager.getInstance().requestCopy(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 }
