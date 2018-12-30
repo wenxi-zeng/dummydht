@@ -1,8 +1,11 @@
 package ceph;
 
 import commonmodels.DataNode;
+import commonmodels.PhysicalNode;
 import util.ResourcesLoader;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static util.Config.CONFIG_CEPH;
@@ -36,12 +39,24 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
+    public List<PhysicalNode> getPhysicalNodes() {
+        return new ArrayList<>(
+                ClusterMap.getInstance().getPhysicalNodeMap().values()
+        );
+    }
+
+    @Override
     public String prepareListPhysicalNodesCommand() {
         return CephCommand.LISTPHYSICALNODES.getParameterizedString();
     }
 
     @Override
     public String prepareAddNodeCommand() {
+        return prepareAddNodeCommand(ip, port);
+    }
+
+    @Override
+    public String prepareAddNodeCommand(String nodeIp, int nodePort) {
         return null;
     }
 

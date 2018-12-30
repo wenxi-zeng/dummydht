@@ -123,7 +123,9 @@ public abstract class DataNode {
     public abstract ResourceBundle loadConfig();
     public abstract Object getTable();
     public abstract void updateTable(Object o);
+    public abstract List<PhysicalNode> getPhysicalNodes();
     public abstract String prepareListPhysicalNodesCommand();
     public abstract String prepareAddNodeCommand();
+    public abstract String prepareAddNodeCommand(String nodeIp, int nodePort);
     public abstract String prepareRemoveNodeCommand(String nodeIp, int nodePort);
 }

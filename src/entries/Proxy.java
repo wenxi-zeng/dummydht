@@ -2,20 +2,42 @@ package entries;
 
 import ceph.CephDataNode;
 import commonmodels.DataNode;
+import commonmodels.PhysicalNode;
 import elastic.ElasticDataNode;
+import filemanagement.FileTransferManager;
+import org.apache.commons.lang3.StringUtils;
 import ring.RingDataNode;
+import socket.SocketClient;
 import socket.SocketServer;
+import util.ObjectConverter;
 import util.SimpleLog;
 import util.URIHelper;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.List;
 
-public class Proxy implements SocketServer.EventHandler  {
+public class Proxy implements SocketServer.EventHandler, FileTransferManager.FileTransferRequestCallBack {
 
     private SocketServer socketServer;
 
+    private SocketClient socketClient = new SocketClient();
+
     private DataNode dataNode;
+
+    SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
+        @Override
+        public void onResponse(Object o) {
+            SimpleLog.i(String.valueOf(o));
+        }
+
+        @Override
+        public void onFailure(String error) {
+            SimpleLog.i(error);
+        }
+    };
 
     public static void main(String[] args){
         if (args.length > 1)
@@ -66,6 +88,60 @@ public class Proxy implements SocketServer.EventHandler  {
 
     @Override
     public void onReceived(AsynchronousSocketChannel out, String message) throws Exception {
+        String cmdLine[] = message.split("\\s+");
+        ByteBuffer buffer;
 
+        if (cmdLine[0].equals("status")) {
+            buffer = ObjectConverter.getByteBuffer(
+                    dataNode.execute(dataNode.prepareListPhysicalNodesCommand()));
+            out.write(buffer).get();
+        }
+        else if (cmdLine[0].equals("fetch")) {
+            buffer = ObjectConverter.getByteBuffer(dataNode.getTable());
+            InetSocketAddress address = (InetSocketAddress)out.getRemoteAddress();
+            String host = address.getHostName();
+            int port = address.getPort();
+            out.write(buffer).get();
+            addNode(host, port);
+        }
+        else if (cmdLine[0].equals("propagate")) {
+            buffer = ObjectConverter.getByteBuffer("Received propagation request.");
+            out.write(buffer).get();
+            propagateTable();
+        }
+        else {
+            buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
+            out.write(buffer).get();
+        }
+    }
+
+    @Override
+    public void onFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        String request = formatRequest("transfer", buckets, toNode);
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    @Override
+    public void onFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        String request = formatRequest("copy", buckets, toNode);
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    private String formatRequest(String header, List<Integer> buckets, PhysicalNode dest) {
+        return String.format("%s %s:%s %s",
+                header,
+                dest.getAddress(),
+                dest.getPort(),
+                StringUtils.join(buckets, ','));
+    }
+
+    private void propagateTable() {
+        for (PhysicalNode node : dataNode.getPhysicalNodes()) {
+            socketClient.send(node.getAddress(), node.getPort(), dataNode.getTable(), callBack);
+        }
+    }
+
+    private void addNode(String address, int port) {
+        dataNode.execute(dataNode.prepareAddNodeCommand(address, port));
     }
 }
