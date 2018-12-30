@@ -29,6 +29,12 @@ public class PhysicalNode implements Clusterable, Serializable {
         this.port = port;
     }
 
+    public PhysicalNode(String address) {
+        String[] addressParams = address.split(":");
+        this.address = addressParams[0];
+        this.port = Integer.valueOf(addressParams[1]);
+    }
+
     public String getId() {
         return "P" + getAddress() + ":" + getPort();
     }

@@ -122,7 +122,7 @@ public abstract class DataNode {
     public abstract void createTerminal();
     public abstract ResourceBundle loadConfig();
     public abstract Object getTable();
-    public abstract void updateTable(Object o);
+    public abstract String updateTable(Object o);
     public abstract List<PhysicalNode> getPhysicalNodes();
     public abstract String prepareListPhysicalNodesCommand();
     public abstract String prepareAddNodeCommand();

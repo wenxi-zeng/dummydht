@@ -53,7 +53,10 @@ public class SocketServer {
                                     buffer.flip();
                                     Object o = ObjectConverter.getObject(buffer);
                                     if (o != null) {
-                                        eventHandler.onReceived(result, o.toString().trim());
+                                        if (o instanceof String)
+                                            eventHandler.onReceived(result, o.toString().trim());
+                                        else
+                                            eventHandler.onReceived(result, o);
                                     }
 
                                     if (buffer.hasRemaining()) {
@@ -108,5 +111,6 @@ public class SocketServer {
 
     public interface EventHandler {
         void onReceived(AsynchronousSocketChannel out, String message) throws Exception;
+        void onReceived(AsynchronousSocketChannel out, Object o) throws Exception;
     }
 }

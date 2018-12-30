@@ -29,13 +29,18 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
-    public void updateTable(Object o) {
+    public String updateTable(Object o) {
         if (o instanceof LookupTable) {
             LookupTable remoteTable = (LookupTable)o;
             LookupTable localTable = LookupTable.getInstance();
             localTable.setTable(remoteTable.getTable());
             localTable.setEpoch(remoteTable.getEpoch());
             localTable.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
+
+            return "Table updated.";
+        }
+        else {
+            return "Invalid table type.";
         }
     }
 

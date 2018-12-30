@@ -27,7 +27,7 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
 
     private DataNode dataNode;
 
-    SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
+    private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
         public void onResponse(Object o) {
             SimpleLog.i(String.valueOf(o));
@@ -80,6 +80,7 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
         dataNode.setIp(uri.getHost());
         dataNode.setUseDynamicAddress(true);
         this.socketServer = new SocketServer(dataNode.getPort(), this);
+        FileTransferManager.getInstance().subscribe(this);
     }
 
     private void exec() throws Exception {
@@ -113,6 +114,12 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
             buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
             out.write(buffer).get();
         }
+    }
+
+    @Override
+    public void onReceived(AsynchronousSocketChannel out, Object o) throws Exception {
+        ByteBuffer buffer = ObjectConverter.getByteBuffer("Proxy should not receive an object");
+        out.write(buffer).get();
     }
 
     @Override
