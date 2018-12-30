@@ -1,6 +1,7 @@
 package elastic;
 
 import commonmodels.Indexable;
+import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import util.Config;
 
@@ -20,6 +21,8 @@ public class LookupTable implements Serializable {
     private transient ElasticMembershipAlgorithm membershipAlgorithm;
 
     private transient ElasticReadWriteAlgorithm readWriteAlgorithm;
+
+    private transient LoadBalancingCallBack loadBalancingCallBack;
 
     private static volatile LookupTable instance = null;
 
@@ -97,6 +100,14 @@ public class LookupTable implements Serializable {
 
     public void setPhysicalNodeMap(HashMap<String, PhysicalNode> physicalNodeMap) {
         this.physicalNodeMap = physicalNodeMap;
+    }
+
+    public LoadBalancingCallBack getLoadBalancingCallBack() {
+        return loadBalancingCallBack;
+    }
+
+    public void setLoadBalancingCallBack(LoadBalancingCallBack loadBalancingCallBack) {
+        this.loadBalancingCallBack = loadBalancingCallBack;
     }
 
     public List<PhysicalNode> getOrderedPhysicalNodeList() {

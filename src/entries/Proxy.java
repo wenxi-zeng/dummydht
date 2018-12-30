@@ -2,6 +2,7 @@ package entries;
 
 import ceph.CephDataNode;
 import commonmodels.DataNode;
+import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import elastic.ElasticDataNode;
 import filemanagement.FileTransferManager;
@@ -19,13 +20,15 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements SocketServer.EventHandler, FileTransferManager.FileTransferRequestCallBack {
+public class Proxy implements SocketServer.EventHandler, FileTransferManager.FileTransferRequestCallBack, LoadBalancingCallBack {
 
     private SocketServer socketServer;
 
     private SocketClient socketClient = new SocketClient();
 
     private DataNode dataNode;
+
+    private String type;
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
@@ -79,7 +82,9 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
         dataNode.setPort(uri.getPort());
         dataNode.setIp(uri.getHost());
         dataNode.setUseDynamicAddress(true);
+        dataNode.setLoadBalancingCallBack(this);
         this.socketServer = new SocketServer(dataNode.getPort(), this);
+        this.type = type;
         FileTransferManager.getInstance().subscribe(this);
     }
 
@@ -109,6 +114,20 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
             buffer = ObjectConverter.getByteBuffer("Received propagation request.");
             out.write(buffer).get();
             propagateTable();
+        }
+        else if (cmdLine[0].equals("addNode")) {
+            buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
+            out.write(buffer).get();
+
+            String request = message.replace("addNode", "start").replace(':', ' ') + " " + type;
+            socketClient.send(cmdLine[1], Integer.valueOf(cmdLine[2]), request, callBack);
+        }
+        else if (cmdLine[0].equals("removeNode")) {
+            buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
+            out.write(buffer).get();
+
+            String request = message.replace("removeNode", "stop").replace(':', ' ');
+            socketClient.send(cmdLine[1], Integer.valueOf(cmdLine[2]), request, callBack);
         }
         else {
             buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
@@ -150,5 +169,10 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
 
     private void addNode(String address, int port) {
         dataNode.execute(dataNode.prepareAddNodeCommand(address, port));
+    }
+
+    @Override
+    public void onFinished() {
+        propagateTable();
     }
 }

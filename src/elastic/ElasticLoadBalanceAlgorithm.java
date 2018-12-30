@@ -44,6 +44,9 @@ public class ElasticLoadBalanceAlgorithm {
         SimpleLog.i("Updated bucket info: " + node.toString());
         SimpleLog.i("Updated " + fromNode.getId() + " info: " + fromNode.toString());
         SimpleLog.i("Updated " + toNode.getId() + " info: " + toNode.toString());
+
+        if (lookupTable.getLoadBalancingCallBack() != null)
+            lookupTable.getLoadBalancingCallBack().onFinished();
     }
 
     public void copyBucket(LookupTable lookupTable, BucketNode node, PhysicalNode to) {
@@ -52,6 +55,9 @@ public class ElasticLoadBalanceAlgorithm {
         requestReplication(node,
                 lookupTable.getPhysicalNodeMap().get(node.getPhysicalNodes().get(index)),
                 to);
+
+        if (lookupTable.getLoadBalancingCallBack() != null)
+            lookupTable.getLoadBalancingCallBack().onFinished();
     }
 
     public void onTableExpand(LookupTable table) {
@@ -65,6 +71,9 @@ public class ElasticLoadBalanceAlgorithm {
         }
 
         SimpleLog.i("Table expanded. No file transfer needed");
+
+        if (table.getLoadBalancingCallBack() != null)
+            table.getLoadBalancingCallBack().onFinished();
     }
 
     public void onTableShrink(LookupTable table) {
@@ -90,6 +99,9 @@ public class ElasticLoadBalanceAlgorithm {
 
         table.shrinkTable();
         SimpleLog.i("Table shrank.");
+
+        if (table.getLoadBalancingCallBack() != null)
+            table.getLoadBalancingCallBack().onFinished();
     }
 
     private void requestTransfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {

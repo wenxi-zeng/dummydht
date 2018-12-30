@@ -1,6 +1,7 @@
 package ceph;
 
 import commonmodels.DataNode;
+import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import util.ResourcesLoader;
 
@@ -68,6 +69,11 @@ public class CephDataNode extends DataNode {
     @Override
     public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
         return String.format(CephCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
+    }
+
+    @Override
+    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
+        ClusterMap.getInstance().setLoadBalancingCallBack(callBack);
     }
 
 }

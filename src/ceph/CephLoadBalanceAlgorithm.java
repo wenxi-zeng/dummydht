@@ -55,6 +55,9 @@ public class CephLoadBalanceAlgorithm {
                 to.getVirtualNodes().addAll(replica.getValue());
                 requestTransfer(replica.getValue(), pnode, to);
             }
+
+            if (map.getLoadBalancingCallBack() != null)
+                map.getLoadBalancingCallBack().onFinished();
         }
     }
 
@@ -119,6 +122,9 @@ public class CephLoadBalanceAlgorithm {
                 to.getVirtualNodes().addAll(replica.getValue());
                 requestReplication(replica.getValue(), pnode, map.getPhysicalNodeMap().get(replica.getKey()));
             }
+
+            if (map.getLoadBalancingCallBack() != null)
+                map.getLoadBalancingCallBack().onFinished();
         }
     }
 
@@ -138,6 +144,9 @@ public class CephLoadBalanceAlgorithm {
         map.getWeightDistributeStrategy().onWeightChanged(map, pnode, deltaWeight);
         loadBalancing(map, map.getRoot());
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
+
+        if (map.getLoadBalancingCallBack() != null)
+            map.getLoadBalancingCallBack().onFinished();
     }
 
     private void requestTransfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {

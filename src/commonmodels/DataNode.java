@@ -128,4 +128,5 @@ public abstract class DataNode {
     public abstract String prepareAddNodeCommand();
     public abstract String prepareAddNodeCommand(String nodeIp, int nodePort);
     public abstract String prepareRemoveNodeCommand(String nodeIp, int nodePort);
+    public abstract void setLoadBalancingCallBack(LoadBalancingCallBack callBack);
 }

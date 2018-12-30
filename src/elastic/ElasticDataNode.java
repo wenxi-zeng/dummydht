@@ -1,6 +1,7 @@
 package elastic;
 
 import commonmodels.DataNode;
+import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import org.apache.commons.lang3.StringUtils;
 import util.ResourcesLoader;
@@ -70,6 +71,11 @@ public class ElasticDataNode extends DataNode {
     @Override
     public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
         return String.format(ElasticCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
+    }
+
+    @Override
+    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
+        LookupTable.getInstance().setLoadBalancingCallBack(callBack);
     }
 
 }
