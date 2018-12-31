@@ -119,14 +119,14 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
             buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
             out.write(buffer).get();
 
-            String request = message.replace("addNode", "start").replace(':', ' ') + " " + type;
+            String request = "start " + type;
             socketClient.send(cmdLine[1], Integer.valueOf(cmdLine[2]), request, callBack);
         }
         else if (cmdLine[0].equals("removeNode")) {
             buffer = ObjectConverter.getByteBuffer(dataNode.execute(message));
             out.write(buffer).get();
 
-            String request = message.replace("removeNode", "stop").replace(':', ' ');
+            String request = "stop";
             socketClient.send(cmdLine[1], Integer.valueOf(cmdLine[2]), request, callBack);
         }
         else {

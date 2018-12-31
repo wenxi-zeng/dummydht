@@ -22,6 +22,8 @@ public class ElasticTerminal implements Terminal {
                 ElasticCommand.ADDNODE.getHelpString() + "\n" +
                 ElasticCommand.REMOVENODE.getHelpString() + "\n" +
                 ElasticCommand.MOVEBUCKET.getHelpString() + "\n" +
+                ElasticCommand.EXPAND.getHelpString() + "\n" +
+                ElasticCommand.SHRINK.getHelpString() + "\n" +
                 ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
     }
