@@ -2,8 +2,10 @@ package entries;
 
 import ceph.CephCommand;
 import elastic.ElasticCommand;
+import org.apache.commons.lang3.StringUtils;
 import ring.RingCommand;
 import socket.SocketClient;
+import util.Config;
 import util.SimpleLog;
 
 import java.util.Scanner;
@@ -47,39 +49,91 @@ public class DataNodeTool {
             return;
         }
 
-        if (args[0].contains(":")) {
-            String[] address = args[0].split(":");
-            socketClient.send(address[0], Integer.valueOf(address[1]), getCommand(args, args[0]), callBack);
+        Config config = Config.getInstance();
+        if (config.getMode().equals(Config.MODE_DISTRIBUTED)) {
+            if (args[1].contains(":")) {
+                String command = StringUtils.join(args,  ' ')
+                        .replace("addNode",  "start")
+                        .replace("removeNode", "stop");
+                socketClient.send(args[1], command, callBack);
+            }
+            else {
+                SimpleLog.v("Invalid command!");
+            }
         }
-        else {
-            socketClient.send(Integer.valueOf(args[0]), getCommand(args, null), callBack);
+        else if (config.getSeeds().size() > 0){
+            socketClient.send(config.getSeeds().get(0), StringUtils.join(args, ' '), callBack);
         }
     }
 
     private static String getHelp() {
-        return "Available commands:\n" +
-                "[address:]<port> start <dht-type>\n" +
-                "[address:]<port> stop\n" +
-                "[address:]<port> <status | printLookupTable | listPhysicalNodes>\n\n" +
-                "Ring commands:\n" +
-                "[address:]<port>" + RingCommand.INCREASELOAD.getHelpString() + "\n" +
-                "[address:]<port>" + RingCommand.DECREASELOAD.getHelpString() + "\n\n" +
-                "Elastic commands:\n" +
-                "[address:]<port>" + ElasticCommand.MOVEBUCKET.getHelpString() + "\n" +
-                "[address:]<port>" + ElasticCommand.EXPAND.getHelpString() + "\n" +
-                "[address:]<port>" + ElasticCommand.SHRINK.getHelpString() + "\n\n" +
-                "Ceph commands:\n" +
-                "[address:]<port>" + CephCommand.CHANGEWEIGHT.getHelpString() + "\n";
+        switch (Config.getInstance().getScheme()) {
+            case Config.SCHEME_RING:
+                return getRingHelp();
+            case Config.SCHEME_ELASTIC:
+                return getElasticHelp();
+            case Config.SCHEME_CEPH:
+                return getCephHelp();
+            default:
+                return "Invalid scheme";
+        }
     }
 
-    private static String getCommand(String[] args, String exclude) {
-        StringBuilder stringBuilder = new StringBuilder();
+    private static String getRingHelp() {
+        String help = RingCommand.ADDNODE.getHelpString() + "\n" +
+                RingCommand.REMOVENODE.getHelpString() + "\n" +
+                RingCommand.INCREASELOAD.getHelpString() + "\n" +
+                RingCommand.DECREASELOAD.getHelpString() + "\n";
 
-        for (String arg : args) {
-            if (arg.equals(exclude)) continue;
-            stringBuilder.append(arg).append(" ");
+        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
+            help += RingCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
+                    RingCommand.PRINTLOOKUPTABLE.getHelpString() + " <ip>:<port>\n";
+        }
+        else {
+            help += RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                    RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
         }
 
-        return stringBuilder.toString().trim();
+        return help;
+    }
+
+    private static String getElasticHelp() {
+        String help = ElasticCommand.ADDNODE.getHelpString() + "\n" +
+                        ElasticCommand.REMOVENODE.getHelpString() + "\n" +
+                        ElasticCommand.MOVEBUCKET.getHelpString() + "\n";
+
+        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
+            help += ElasticCommand.EXPAND.getHelpString() + " <ip>:<port>\n" +
+                    ElasticCommand.SHRINK.getHelpString() + " <ip>:<port>\n" +
+                    ElasticCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
+                    ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + " <ip>:<port>\n";
+        }
+        else {
+            help += ElasticCommand.EXPAND.getHelpString() + "\n" +
+                    ElasticCommand.SHRINK.getHelpString() + "\n" +
+                    ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                    ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
+        }
+
+        return help;
+    }
+
+    private static String getCephHelp() {
+        String help = CephCommand.ADDNODE.getHelpString() + "\n" +
+                        CephCommand.REMOVENODE.getHelpString() + "\n" +
+                        CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
+                        CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                        CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
+
+        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
+            help += CephCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
+                    CephCommand.PRINTCLUSTERMAP.getHelpString() + " <ip>:<port>\n";
+        }
+        else {
+            help += CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                    CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
+        }
+
+        return help;
     }
 }

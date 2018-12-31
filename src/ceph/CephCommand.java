@@ -138,12 +138,12 @@ public enum CephCommand {
 
         @Override
         public String getParameterizedString() {
-            return "addNode %s %s:%s";
+            return "addNode %s:%s %s";
         }
 
         @Override
         public String getHelpString() {
-            return String.format(getParameterizedString(), "<cluster id>", "<ip>", "<port>");
+            return String.format(getParameterizedString(), "<ip>", "<port>", "<cluster id>");
         }
 
     },
@@ -207,12 +207,12 @@ public enum CephCommand {
 
         @Override
         public String getParameterizedString() {
-            return "changeWeight %s %s:%s";
+            return "changeWeight %s:%s %s";
         }
 
         @Override
         public String getHelpString() {
-            return String.format(getParameterizedString(), "<delta weight>", "<ip>", "<port>");
+            return String.format(getParameterizedString(), "<ip>", "<port>", "<delta weight>");
         }
     },
 
@@ -261,7 +261,7 @@ public enum CephCommand {
 
         @Override
         public String getParameterizedString() {
-            return "printLookupTable";
+            return "printClusterMap";
         }
 
         @Override

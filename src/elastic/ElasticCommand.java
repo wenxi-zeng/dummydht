@@ -198,12 +198,12 @@ public enum ElasticCommand {
 
         @Override
         public String getParameterizedString() {
-            return "moveBucket %s %s:%s %s:%s";
+            return "moveBucket %s:%s %s:%s %s";
         }
 
         @Override
         public String getHelpString() {
-            return String.format(getParameterizedString(), "<bucket>", "<from ip>", "<port>", "<to ip>", "<port>");
+            return String.format(getParameterizedString(), "<from ip>", "<port>", "<to ip>", "<port>", "<bucket>");
         }
     },
 
