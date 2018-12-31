@@ -48,26 +48,55 @@ public class FileTransferManager {
             FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
             if (fileBucket == null) continue;
 
+            fileBucket.setLocked(true);
             numberOfFilesTransferred += fileBucket.getNumberOfFiles();
             sizeOfFilesTransferred += fileBucket.getSize();
+        }
+
+        float transferTime = (sizeOfFilesTransferred / Config.getInstance().getNetworkSpeed()) * 1000;
+
+        try {
+            Thread.sleep((long) transferTime);
+        } catch (InterruptedException ignored) {
+
+        }
+
+        for (int bucket : buckets ){
+            localFileManager.getLocalBuckets().remove(bucket);
         }
 
         SimpleLog.i("Message from : " + from.getId() + ": Transfer to " + toNode.getId() + " completed. Number of files transferred: " + numberOfFilesTransferred + ", Total size: " + sizeOfFilesTransferred);
     }
 
     public void copy(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        int numberOfFilesReplicted = 0;
+        int numberOfFilesReplicated = 0;
         long sizeOfFilesReplicated = 0;
 
         for (int bucket : buckets ){
             FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
             if (fileBucket == null) continue;
 
-            numberOfFilesReplicted += fileBucket.getNumberOfFiles();
+            fileBucket.setLocked(true);
+            numberOfFilesReplicated += fileBucket.getNumberOfFiles();
             sizeOfFilesReplicated += fileBucket.getSize();
         }
 
-        SimpleLog.i("Message from : " + from.getId() + ": Replicate files to " + toNode.getId() + "Transfer completed. Number of files transferred: " + numberOfFilesReplicted + ", Total size: " + sizeOfFilesReplicated);
+        float replciateTime = (sizeOfFilesReplicated / Config.getInstance().getNetworkSpeed()) * 1000;
+
+        try {
+            Thread.sleep((long) replciateTime);
+        } catch (InterruptedException ignored) {
+
+        }
+
+        for (int bucket : buckets ){
+            FileBucket fileBucket = localFileManager.getLocalBuckets().get(bucket);
+            if (fileBucket == null) continue;
+
+            fileBucket.setLocked(false);
+        }
+
+        SimpleLog.i("Message from : " + from.getId() + ": Replicate files to " + toNode.getId() + "Transfer completed. Number of files transferred: " + numberOfFilesReplicated + ", Total size: " + sizeOfFilesReplicated);
     }
 
     public void requestTransfer(int hi, int hf, PhysicalNode from, PhysicalNode toNode) {

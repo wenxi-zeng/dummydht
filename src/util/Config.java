@@ -27,6 +27,7 @@ public class Config {
     private final static String PROPERTY_LOG_SERVER = "log_server";
     private final static String PROPERTY_LOG_MODE = "log_mode";
     private final static String PROPERTY_SCHEME = "scheme";
+    private final static String PROPERTY_NETWORK_SPEED = "network_speed";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -56,6 +57,8 @@ public class Config {
 
     private float initialWeight;
 
+    private float networkSpeed;
+
     public Config() {
         rb = ResourcesLoader.getBundle(CONFIG_PATH);
         numberOfReplicas = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
@@ -63,7 +66,8 @@ public class Config {
         numberOfPlacementGroups = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PLACEMENT_GROUPS));
         defaultNumberOfHashSlots = numberOfHashSlots;
         scheme = rb.getString(PROPERTY_SCHEME);
-        initialWeight =  Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
+        initialWeight = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
+        networkSpeed = Float.valueOf(rb.getString(PROPERTY_NETWORK_SPEED));
     }
 
     public static Config getInstance() {
@@ -168,5 +172,9 @@ public class Config {
 
     public String getScheme() {
         return scheme;
+    }
+
+    public float getNetworkSpeed() {
+        return networkSpeed;
     }
 }
