@@ -95,7 +95,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         if (dataNodeServer == null) {
             if (cmdLine[0].equals("start")) {
                 //dataNodeServer = new DataNodeServer(cmdLine[2], getAddress(), Integer.valueOf(cmdLine[1]));
-                dataNodeServer = new DataNodeServer(cmdLine[1], ip, port);
+                dataNodeServer = new DataNodeServer(ip, port);
                 dataNodeServer.start();
                 FileTransferManager.getInstance().subscribe(this);
                 buffer = ObjectConverter.getByteBuffer("Node started");

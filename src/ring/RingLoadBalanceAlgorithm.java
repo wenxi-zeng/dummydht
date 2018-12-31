@@ -3,11 +3,9 @@ package ring;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import filemanagement.FileTransferManager;
+import util.Config;
 import util.MathX;
 import util.SimpleLog;
-
-import static util.Config.NUMBER_OF_HASH_SLOTS;
-import static util.Config.NUMBER_OF_REPLICAS;
 
 public class RingLoadBalanceAlgorithm {
 
@@ -23,7 +21,7 @@ public class RingLoadBalanceAlgorithm {
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
             int bound = successor.getHash() - vnode.getHash();
-            int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
+            int dh = MathX.NextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
 
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             increaseLoad(table, dh, vnode);
@@ -45,7 +43,7 @@ public class RingLoadBalanceAlgorithm {
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
             int bound = vnode.getHash() - predecessor.getHash();
-            int dh = MathX.NextInt(bound < 0 ? NUMBER_OF_HASH_SLOTS + bound : bound);
+            int dh = MathX.NextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
 
             SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             decreaseLoad(table, dh, vnode);
@@ -58,14 +56,14 @@ public class RingLoadBalanceAlgorithm {
     public void decreaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
         int hf = hi - dh;
-        if (hf < 0) hf = NUMBER_OF_HASH_SLOTS + hf;
+        if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
 
         if (dh == 0 || hf == LookupTable.getInstance().getTable().pre(node).getHash()) {
             SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }
 
-        Indexable toNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
+        Indexable toNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
@@ -75,14 +73,14 @@ public class RingLoadBalanceAlgorithm {
 
     public void increaseLoad(LookupTable table, int dh, Indexable node) {
         int hi = node.getHash();
-        int hf = (hi + dh) % NUMBER_OF_HASH_SLOTS;
+        int hf = (hi + dh) % Config.getInstance().getNumberOfHashSlots();
 
         if (dh == 0 || hf == LookupTable.getInstance().getTable().next(node).getHash()) {
             SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }
 
-        Indexable fromNode = table.getTable().get(node.getIndex() + NUMBER_OF_REPLICAS);
+        Indexable fromNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
 
         node.setHash(hf);
@@ -94,10 +92,10 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Adding virtual node [hash=" + node.getHash() + "] for " + ((VirtualNode)node).getPhysicalNodeId());
 
         Indexable successor = table.getTable().next(node);
-        Indexable startNode = table.getTable().get(node.getIndex() - NUMBER_OF_REPLICAS);
+        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas());
         Indexable endNode = table.getTable().next(startNode);
 
-        for (int i = 0; i < NUMBER_OF_REPLICAS; i++) {
+        for (int i = 0; i < Config.getInstance().getNumberOfReplicas(); i++) {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 
@@ -119,10 +117,10 @@ public class RingLoadBalanceAlgorithm {
 
         Indexable successor = table.getTable().get(node.getIndex());
         Indexable predecessor = table.getTable().pre(successor);
-        Indexable startNode = table.getTable().get(node.getIndex() - NUMBER_OF_REPLICAS);
+        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas());
         Indexable endNode = table.getTable().next(startNode);
 
-        for (int i = 0; i < NUMBER_OF_REPLICAS; i++) {
+        for (int i = 0; i < Config.getInstance().getNumberOfReplicas(); i++) {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 

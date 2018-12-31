@@ -2,33 +2,29 @@ package elastic;
 
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
+import util.Config;
 import util.MathX;
-import util.ResourcesLoader;
 import util.SimpleLog;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.ResourceBundle;
-
-import static util.Config.*;
 
 public class ElasticMembershipAlgorithm {
 
     public void initialize(LookupTable table) {
         SimpleLog.i("Initializing table...");
 
-        ResourceBundle rb = ResourcesLoader.getBundle(CONFIG_ELASTIC);
+        Config config = Config.getInstance();
 
-        NUMBER_OF_HASH_SLOTS = Integer.valueOf(rb.getString(PROPERTY_HASH_SLOTS));
-        DEFAULT_NUMBER_OF_HASH_SLOTS = NUMBER_OF_HASH_SLOTS;
-        String startIp = rb.getString(PROPERTY_START_IP);
-        int ipRange = Integer.valueOf(rb.getString(PROPERTY_IP_RANGE));
-        int startPort = Integer.valueOf(rb.getString(PROPERTY_START_PORT));
-        int portRange = Integer.valueOf(rb.getString(PROPERTY_PORT_RANGE));
-        NUMBER_OF_REPLICAS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
-        int numberOfPhysicalNodes = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
-
+        int numberOfHashSlots = config.getNumberOfHashSlots();
+        String startIp = config.getStartIp();
+        int ipRange = config.getIpRange();
+        int startPort = config.getStartPort();
+        int portRange = config.getPortRange();
+        int numberOfPhysicalNodes = config.getNumberOfPhysicalNodes();
+        int numberOfReplicas = config.getNumberOfReplicas();
+        
         int lastDot = startIp.lastIndexOf(".") + 1;
         String ipPrefix = startIp.substring(0, lastDot);
         int intStartIp = Integer.valueOf(startIp.substring(lastDot));
@@ -50,9 +46,9 @@ public class ElasticMembershipAlgorithm {
         }
 
         // generate table
-        int[] array = new int[NUMBER_OF_HASH_SLOTS];
-        table.createTable(NUMBER_OF_HASH_SLOTS);
-        for (int i = 0; i < NUMBER_OF_HASH_SLOTS; i++) {
+        int[] array = new int[numberOfHashSlots];
+        table.createTable(numberOfHashSlots);
+        for (int i = 0; i < numberOfHashSlots; i++) {
             array[i] = i;
         }
 
@@ -61,7 +57,7 @@ public class ElasticMembershipAlgorithm {
         int iterator = 0;
         for (int i : array) {
             int count = 0;
-            while (count++ < NUMBER_OF_REPLICAS) {
+            while (count++ < numberOfReplicas) {
                 BucketNode bucketNode = table.getTable()[i];
                 PhysicalNode physicalNode = pnodes.get(iterator++ % numberOfPhysicalNodes);
                 bucketNode.getPhysicalNodes().add(physicalNode.getId());
@@ -70,7 +66,7 @@ public class ElasticMembershipAlgorithm {
         }
 
         SimpleLog.i("Allocating files...");
-        LocalFileManager.getInstance().generateFileBuckets(NUMBER_OF_HASH_SLOTS);
+        LocalFileManager.getInstance().generateFileBuckets(numberOfHashSlots);
         SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Table initialized...");
@@ -123,7 +119,8 @@ public class ElasticMembershipAlgorithm {
     }
 
     public int[] generateSpareBuckets(LookupTable table) {
-        Queue<Integer> bucketPool = MathX.nonrepeatRandom(NUMBER_OF_HASH_SLOTS, NUMBER_OF_HASH_SLOTS / table.getPhysicalNodeMap().size());
+        int numberOfHashSlots = Config.getInstance().getNumberOfHashSlots();
+        Queue<Integer> bucketPool = MathX.nonrepeatRandom(numberOfHashSlots, numberOfHashSlots / table.getPhysicalNodeMap().size());
 
         return bucketPool.stream().mapToInt(Integer::intValue).toArray();
     }

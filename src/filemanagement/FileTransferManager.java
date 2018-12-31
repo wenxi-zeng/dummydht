@@ -1,12 +1,11 @@
 package filemanagement;
 
 import commonmodels.PhysicalNode;
+import util.Config;
 import util.SimpleLog;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static util.Config.NUMBER_OF_HASH_SLOTS;
 
 public class FileTransferManager {
 
@@ -103,7 +102,7 @@ public class FileTransferManager {
         List<Integer> buckets = new ArrayList<>();
 
         if (hf < hi) {
-            for (int bucket = hi + 1; bucket <= NUMBER_OF_HASH_SLOTS; bucket++) {
+            for (int bucket = hi + 1; bucket <= Config.getInstance().getNumberOfHashSlots(); bucket++) {
                 buckets.add(bucket);
             }
             for (int bucket = 0; bucket <= hf; bucket++) {

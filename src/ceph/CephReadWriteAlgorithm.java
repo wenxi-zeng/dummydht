@@ -2,13 +2,12 @@ package ceph;
 
 import commonmodels.Clusterable;
 import filemanagement.LocalFileManager;
+import util.Config;
 import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static util.Config.NUMBER_OF_PLACEMENT_GROUPS;
-import static util.Config.NUMBER_OF_REPLICAS;
 import static util.Config.STATUS_ACTIVE;
 
 public class CephReadWriteAlgorithm {
@@ -29,7 +28,7 @@ public class CephReadWriteAlgorithm {
         int r = 0;
 
         List<Clusterable> replicas = new ArrayList<>();
-        while (replicas.size() < NUMBER_OF_REPLICAS) {
+        while (replicas.size() < Config.getInstance().getNumberOfReplicas()) {
             Clusterable node = map.rush(pgid, r++);
 
             if (node != null && node.getStatus().equals(STATUS_ACTIVE)) {
@@ -37,7 +36,7 @@ public class CephReadWriteAlgorithm {
             }
         }
 
-        LocalFileManager.getInstance().write(MathX.positiveHash(filename.hashCode()) % NUMBER_OF_PLACEMENT_GROUPS);
+        LocalFileManager.getInstance().write(MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfPlacementGroups());
         return replicas;
     }
 }

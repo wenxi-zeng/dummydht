@@ -4,12 +4,11 @@ import ceph.strategies.WeightDistributeStrategy;
 import commonmodels.Clusterable;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
+import util.Config;
 import util.MathX;
 
 import java.io.Serializable;
 import java.util.*;
-
-import static util.Config.NUMBER_OF_PLACEMENT_GROUPS;
 
 public class ClusterMap implements Serializable {
 
@@ -168,7 +167,7 @@ public class ClusterMap implements Serializable {
     }
 
     public String getPlacementGroupId(String name) {
-        int pgid = MathX.positiveHash(name.hashCode()) % NUMBER_OF_PLACEMENT_GROUPS;
+        int pgid = MathX.positiveHash(name.hashCode()) % Config.getInstance().getNumberOfPlacementGroups();
         return "PG" + pgid;
     }
 

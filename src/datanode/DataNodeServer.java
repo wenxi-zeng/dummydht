@@ -21,20 +21,27 @@ public class DataNodeServer {
 
     private MembershipStrategy membershipStrategy;
 
-    public DataNodeServer(String type, String ip, int port) throws Exception {
-        initDataNode(type, ip, port);
+    public DataNodeServer(String ip, int port) throws Exception {
+        initDataNode(ip, port);
         initStrategy();
     }
 
-    private void initDataNode(String type, String ip, int port) throws Exception {
-        if (type.equalsIgnoreCase("ring"))
-            dataNode = new RingDataNode();
-        else if (type.equalsIgnoreCase("elastic"))
-            dataNode = new ElasticDataNode();
-        else if (type.equalsIgnoreCase("ceph"))
-            dataNode = new CephDataNode();
-        else
-            throw new Exception("Invalid DHT type");
+    private void initDataNode(String ip, int port) throws Exception {
+        String scheme = Config.getInstance().getScheme();
+
+        switch (scheme) {
+            case Config.SCHEME_RING:
+                dataNode = new RingDataNode();
+                break;
+            case Config.SCHEME_ELASTIC:
+                dataNode = new ElasticDataNode();
+                break;
+            case Config.SCHEME_CEPH:
+                dataNode = new CephDataNode();
+                break;
+            default:
+                throw new Exception("Invalid DHT type");
+        }
 
         dataNode.setPort(port);
         dataNode.setIp(ip);
@@ -99,6 +106,10 @@ public class DataNodeServer {
                 new PhysicalNode(dataNode.getIp(), dataNode.getPort()),
                 new PhysicalNode(params[1])
         );
+    }
+
+    public void loadConfig() {
+
     }
 
     public String processCommand(String[] args) {

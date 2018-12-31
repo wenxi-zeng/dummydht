@@ -5,36 +5,35 @@ import ceph.strategies.InClusterStrategy;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
+import util.Config;
 import util.MathX;
-import util.ResourcesLoader;
 import util.SimpleLog;
 
 import java.util.Queue;
-import java.util.ResourceBundle;
 
-import static util.Config.*;
+import static util.Config.STATUS_ACTIVE;
+import static util.Config.STATUS_INACTIVE;
 
 public class CephMembershipAlgorithm {
 
     public void initialize(ClusterMap map) {
         SimpleLog.i("Initializing map...");
 
-        ResourceBundle rb = ResourcesLoader.getBundle(CONFIG_CEPH);
+        Config config = Config.getInstance();
 
-        NUMBER_OF_PLACEMENT_GROUPS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PLACEMENT_GROUPS));
-        String startIp = rb.getString(PROPERTY_START_IP);
-        int ipRange = Integer.valueOf(rb.getString(PROPERTY_IP_RANGE));
-        int startPort = Integer.valueOf(rb.getString(PROPERTY_START_PORT));
-        int portRange = Integer.valueOf(rb.getString(PROPERTY_PORT_RANGE));
-        NUMBER_OF_REPLICAS = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
-        int numberOfPhysicalNodes = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
-        INITIAL_WEIGHT = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
-        int numberOfRushLevel = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_RUSH_LEVEL));
-        int clusterCapacity = Integer.valueOf(rb.getString(PROPERTY_CLUSTER_CAPACITY));
-        String[] rushLevelNames = rb.getString(PROPERTY_RUSH_LEVEL_NAMES).split(",");
-        ENABLE_CROSS_CLUSTER_LOAD_BALANCING = Boolean.valueOf(rb.getString(PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING));
+        int numberOfPlacementGroups = config.getNumberOfPlacementGroups();
+        String startIp = config.getStartIp();
+        int ipRange = config.getIpRange();
+        int startPort = config.getStartPort();
+        int portRange = config.getPortRange();
+        int numberOfPhysicalNodes = config.getNumberOfPhysicalNodes();
+        float initialWeight = config.getInitialWeight();
+        int numberOfRushLevel = config.getNumberOfRushLevel();
+        int clusterCapacity = config.getClusterCapacity();
+        String[] rushLevelNames = config.getRushLevelNames();
+        boolean enableCrossClusterLoadBalancing = config.enableCrossClusterLoadBalancing();
 
-        if (ENABLE_CROSS_CLUSTER_LOAD_BALANCING)
+        if (enableCrossClusterLoadBalancing)
             map.setWeightDistributeStrategy(new CrossClustersStrategy());
         else
             map.setWeightDistributeStrategy(new InClusterStrategy());
@@ -61,7 +60,7 @@ public class CephMembershipAlgorithm {
                 portPool,
                 rushLevelNames,
                 numberOfRushLevel,
-                INITIAL_WEIGHT,
+                initialWeight,
                 clusterCapacity,
                 ipPrefix,
                 intStartIp,
@@ -74,7 +73,7 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Placement groups allocated...");
 
         SimpleLog.i("Allocating files...");
-        LocalFileManager.getInstance().generateFileBuckets(NUMBER_OF_PLACEMENT_GROUPS);
+        LocalFileManager.getInstance().generateFileBuckets(numberOfPlacementGroups);
         SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Map initialized...");
@@ -131,12 +130,12 @@ public class CephMembershipAlgorithm {
     }
 
     private void allocatePlacementGroups(ClusterMap map) {
-        for (int i = 0; i< NUMBER_OF_PLACEMENT_GROUPS; i++) {
+        for (int i = 0; i< Config.getInstance().getNumberOfPlacementGroups(); i++) {
             int r = 0;
             int count = 0;
             String pgid = map.getPlacementGroupId(i);
 
-            while (count < NUMBER_OF_REPLICAS) {
+            while (count < Config.getInstance().getNumberOfReplicas()) {
                 Clusterable node = map.rush(pgid, r);
 
                 if (node != null &&

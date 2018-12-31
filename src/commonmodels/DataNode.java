@@ -2,11 +2,7 @@ package commonmodels;
 
 import util.Config;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.ResourceBundle;
-
-import static util.Config.*;
 
 public abstract class DataNode {
 
@@ -27,21 +23,13 @@ public abstract class DataNode {
     public DataNode() {
         useDynamicAddress = false;
         loadProperties();
+        createTerminal();
     }
 
     public DataNode(int port) {
         this.port = port;
         useDynamicAddress = true;
         loadProperties();
-    }
-
-    private void loadProperties() {
-        ResourceBundle config = loadConfig();
-        loadProperties(config);
-
-        if (!useDynamicAddress)
-            loadAddress(config);
-
         createTerminal();
     }
 
@@ -98,17 +86,11 @@ public abstract class DataNode {
         this.ip = ip;
     }
 
-    private void loadAddress(ResourceBundle config) {
-        ip = config.getString(PROPERTY_LISTEN_ADDRESS);
-        port = Integer.valueOf(config.getString(PROPERTY_LISTEN_PORT));
-    }
-
-    private void loadProperties(ResourceBundle config) {
-        seeds = Arrays.asList(config.getString(PROPERTY_SEEDS).split(","));
-        clusterName = config.getString(PROPERTY_CLUSTER_NAME);
-        mode = config.getString(PROPERTY_MODE);
-        Config.LOG_SERVER = config.getString(PROPERTY_LOG_SERVER);
-        Config.LOG_MODE = config.getString(PROPERTY_LOG_MODE);
+    private void loadProperties() {
+        Config config = Config.getInstance();
+        seeds = config.getSeeds();
+        clusterName = config.getClusterName();
+        mode = config.getMode();
     }
 
     public void createTable() {
@@ -120,7 +102,6 @@ public abstract class DataNode {
     }
 
     public abstract void createTerminal();
-    public abstract ResourceBundle loadConfig();
     public abstract Object getTable();
     public abstract String updateTable(Object o);
     public abstract List<PhysicalNode> getPhysicalNodes();

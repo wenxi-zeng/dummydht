@@ -4,24 +4,15 @@ import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import org.apache.commons.lang3.StringUtils;
-import util.ResourcesLoader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
-
-import static util.Config.CONFIG_ELASTIC;
 
 public class ElasticDataNode extends DataNode {
 
     @Override
     public void createTerminal() {
         terminal = new ElasticTerminal();
-    }
-
-    @Override
-    public ResourceBundle loadConfig() {
-        return ResourcesLoader.getBundle(CONFIG_ELASTIC);
     }
 
     @Override

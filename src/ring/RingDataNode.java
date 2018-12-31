@@ -4,24 +4,15 @@ import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import org.apache.commons.lang3.StringUtils;
-import util.ResourcesLoader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
-
-import static util.Config.CONFIG_RING;
 
 public class RingDataNode extends DataNode {
 
     @Override
     public void createTerminal() {
         terminal = new RingTerminal();
-    }
-
-    @Override
-    public ResourceBundle loadConfig() {
-        return ResourcesLoader.getBundle(CONFIG_RING);
     }
 
     @Override

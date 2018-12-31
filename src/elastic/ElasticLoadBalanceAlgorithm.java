@@ -79,7 +79,7 @@ public class ElasticLoadBalanceAlgorithm {
     public void onTableShrink(LookupTable table) {
         SimpleLog.i("Shrinking table...");
 
-        if (table.getTable().length  / 2 < Config.DEFAULT_NUMBER_OF_HASH_SLOTS) {
+        if (table.getTable().length  / 2 < Config.getInstance().getDefaultNumberOfHashSlots()) {
             SimpleLog.i("Table cannot be shrunk anymore");
             return;
         }

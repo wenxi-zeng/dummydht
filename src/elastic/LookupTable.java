@@ -64,9 +64,10 @@ public class LookupTable implements Serializable {
     }
 
     protected void expandTable() {
-        Config.NUMBER_OF_HASH_SLOTS *= 2;
+        int numberOfHashSlots = Config.getInstance().getNumberOfHashSlots();
+        numberOfHashSlots *= 2;
         int i = table.length;
-        table = Arrays.copyOf(table, Config.NUMBER_OF_HASH_SLOTS);
+        table = Arrays.copyOf(table, numberOfHashSlots);
 
         for (; i < table.length; i++) {
             table[i] = new BucketNode(i);
@@ -74,8 +75,10 @@ public class LookupTable implements Serializable {
     }
 
     protected void shrinkTable() {
-        Config.NUMBER_OF_HASH_SLOTS /= 2;
-        table = Arrays.copyOf(table, Config.NUMBER_OF_HASH_SLOTS);
+        int numberOfHashSlots = Config.getInstance().getNumberOfHashSlots();
+
+        numberOfHashSlots /= 2;
+        table = Arrays.copyOf(table, numberOfHashSlots);
     }
 
     public long getEpoch() {

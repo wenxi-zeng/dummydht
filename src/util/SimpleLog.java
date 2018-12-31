@@ -33,7 +33,7 @@ public class SimpleLog {
     }
 
     public static synchronized void i(String message) {
-        switch (Config.LOG_MODE) {
+        switch (Config.getInstance().getLogMode()) {
             case Config.LOG_MODE_SCREEN:
                 v(message);
                 break;
@@ -58,7 +58,7 @@ public class SimpleLog {
     public synchronized void send(String message) {
         try {
             if (socketClient == null) {
-                socketClient = new UDPClient(Config.LOG_SERVER);
+                socketClient = new UDPClient(Config.getInstance().getLogServer());
             }
 
             socketClient.send(String.format("[%s %s]: %s", identity, dateFormatter.format(new Date()), message));

@@ -4,6 +4,7 @@ import commonmodels.Clusterable;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import filemanagement.FileTransferManager;
+import util.Config;
 import util.SimpleLog;
 
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static util.Config.NUMBER_OF_REPLICAS;
 import static util.Config.STATUS_ACTIVE;
 import static util.Config.STATUS_INACTIVE;
 
@@ -82,7 +82,7 @@ public class CephLoadBalanceAlgorithm {
                 boolean replicatePG = false;
                 PlacementGroup pg = (PlacementGroup) placementGroup;
 
-                while (count < NUMBER_OF_REPLICAS) {
+                while (count < Config.getInstance().getNumberOfReplicas()) {
                     Clusterable replica = map.rush(pg.getId(), r++);
 
                     // if replicatePG = false, we need to keep checking if the replica

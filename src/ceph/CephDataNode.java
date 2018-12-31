@@ -3,24 +3,15 @@ package ceph;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
-import util.ResourcesLoader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
-
-import static util.Config.CONFIG_CEPH;
 
 public class CephDataNode extends DataNode {
 
     @Override
     public void createTerminal() {
         terminal = new CephTerminal();
-    }
-
-    @Override
-    public ResourceBundle loadConfig() {
-        return ResourcesLoader.getBundle(CONFIG_CEPH);
     }
 
     @Override

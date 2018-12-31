@@ -2,14 +2,13 @@ package ceph.strategies;
 
 import ceph.ClusterMap;
 import commonmodels.Clusterable;
-
-import static util.Config.INITIAL_WEIGHT;
+import util.Config;
 
 public class CrossClustersStrategy implements WeightDistributeStrategy{
 
     @Override
     public void onNodeAddition(ClusterMap map, Clusterable parent, Clusterable child) {
-        child.setWeight(INITIAL_WEIGHT);
+        child.setWeight(Config.getInstance().getInitialWeight());
         map.getRoot().updateWeight();
     }
 

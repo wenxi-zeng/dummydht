@@ -60,4 +60,9 @@ public class LogServer implements SocketServer.EventHandler {
             SimpleLog.v("[NIO error]: " + message);
         }
     }
+
+    @Override
+    public void onReceived(AsynchronousSocketChannel out, Object o) {
+        onReceived(out, o.toString());
+    }
 }
