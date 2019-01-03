@@ -1,6 +1,8 @@
 package datanode.strategies;
 
 import commonmodels.DataNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Response;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
 import org.apache.gossip.Member;
@@ -48,7 +50,11 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 if (pre != null) {
                     message.setContent(pre.getContent());
                     addMessage(message);
-                    dataNode.execute(message.getContent());
+                    try {
+                        dataNode.execute(message.getContent());
+                    } catch (InvalidRequestException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
             case DOWN:
@@ -66,14 +72,14 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     }
 
     @Override
-    public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException {
+    public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException, InvalidRequestException {
         super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.init();
         SharedMessage message = new SharedMessage()
                 .withSender(dataNode.getAddress())
                 .withSubject(dataNode.getAddress())
-                .withContent(dataNode.prepareAddNodeCommand());
+                .withContent(dataNode.prepareAddNodeCommand().toCommand());
         addMessage(message);
         dataNode.execute(message.getContent());
     }
@@ -84,8 +90,9 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     }
 
     @Override
-    public String getMembersStatus() {
-        return printLiveMembers() + printDeadMembers();
+    public Response getMembersStatus() {
+        return new Response().withStatus(Response.STATUS_SUCCESS)
+                    .withMessage(printLiveMembers() + printDeadMembers());
     }
 
     private void initGossipManager(DataNode dataNode) throws URISyntaxException {
@@ -191,7 +198,11 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private void processAddedValue(Set<SharedMessage> value) {
         for (SharedMessage message : value) {
-            dataNode.execute(message.getContent());
+            try {
+                dataNode.execute(message.getContent());
+            } catch (InvalidRequestException e) {
+                e.printStackTrace();
+            }
         }
     }
 

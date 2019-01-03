@@ -1,6 +1,7 @@
 package datanode.strategies;
 
 import commonmodels.DataNode;
+import commonmodels.transport.Response;
 
 public class CentralizedStrategy extends MembershipStrategy {
 
@@ -9,7 +10,7 @@ public class CentralizedStrategy extends MembershipStrategy {
     }
 
     @Override
-    public String getMembersStatus() {
+    public Response getMembersStatus() {
         return dataNode.execute(dataNode.prepareListPhysicalNodesCommand());
     }
 

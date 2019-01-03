@@ -2,6 +2,9 @@ package ceph;
 
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import util.SimpleLog;
 
 import java.util.List;
@@ -9,59 +12,75 @@ import java.util.List;
 public enum CephCommand {
 
     INITIALIZE {
-        public String execute(String[] args) {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.INITIALIZE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
             ClusterMap.getInstance().initialize();
-            return "Finished initialization";
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
         @Override
         public String getParameterizedString() {
-            return "INITIALIZE";
+            return CephCommand.INITIALIZE.name();
         }
 
         @Override
         public String getHelpString() {
-            return "INITIALIZE";
+            return getParameterizedString();
         }
     },
 
     DESTROY {
-        public String execute(String[] args) {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.DESTROY.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
             ClusterMap.deleteInstance();
-            return "Finished deconstruction";
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
         }
 
         @Override
         public String getParameterizedString() {
-            return "DESTROY";
+            return CephCommand.DESTROY.name();
         }
 
         @Override
         public String getHelpString() {
-            return "DESTROY";
+            return getParameterizedString();
         }
     },
 
     READ {
-        public String execute(String[] args) {
-            String result;
-
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            Clusterable node = ClusterMap.getInstance().read(args[1]);
-            result = "Found " + args[1] + " on:\n" + node.toString();
+            return new Request().withHeader(CephCommand.READ.name())
+                    .withEpoch(ClusterMap.getInstance().getEpoch())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            Clusterable node = ClusterMap.getInstance().read(request.getAttachment());
+            String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "read %s";
+            return CephCommand.READ.name() + " %s";
         }
 
         @Override
@@ -72,16 +91,22 @@ public enum CephCommand {
     },
 
     WRITE{
-        public String execute(String[] args) {
-            String execResult;
-
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
-                execResult = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(execResult);
-                return execResult;
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            List<Clusterable> nodes = ClusterMap.getInstance().write(args[1]);
+            return new Request().withHeader(CephCommand.WRITE.name())
+                    .withEpoch(ClusterMap.getInstance().getEpoch())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String execResult;
+
+            List<Clusterable> nodes = ClusterMap.getInstance().write(request.getAttachment());
 
             StringBuilder result = new StringBuilder();
             if (nodes != null) {
@@ -89,20 +114,20 @@ public enum CephCommand {
                     result.append(node.toString()).append('\n');
                 }
 
-                execResult = "Write " + args[1] + " to:\n" + result.toString();
+                execResult = "Write " + request.getAttachment() + " to:\n" + result.toString();
                 SimpleLog.i(execResult);
             }
             else {
-                execResult = "Failed to write " + args[1];
+                execResult = "Failed to write " + request.getAttachment();
                 SimpleLog.i(execResult);
             }
 
-            return execResult;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(execResult);
         }
 
         @Override
         public String getParameterizedString() {
-            return "write %s";
+            return CephCommand.WRITE.name() + " %s";
         }
 
         @Override
@@ -113,32 +138,39 @@ public enum CephCommand {
     },
 
     ADDNODE{
-        public String execute(String[] args) {
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 3) {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            if (!args[1].contains(":")) {
+                throw new InvalidRequestException("Invalid ip format. Try: " + getHelpString());
+            }
+
+            String attachment = args[1] + " " + args[2];
+            return new Request().withHeader(CephCommand.ADDNODE.name())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
             String result;
 
-            if (args.length != 3) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
-
+            String[] args = request.getAttachment().split(" ");
             String clusterId = args[1];
-            String[] address1 = args[2].split(":");
-            if (address1.length != 2) {
-                result = "Invalid ip format. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
+            String[] address1 = args[0].split(":");
+
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
             ClusterMap.getInstance().addNode(clusterId, pnode);
             result = "Node added";
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "addNode %s:%s %s";
+            return CephCommand.ADDNODE.name() + " %s:%s %s";
         }
 
         @Override
@@ -149,28 +181,33 @@ public enum CephCommand {
     },
 
     REMOVENODE{
-        public String execute(String[] args) {
-            String result;
-
-            if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            String[] address = args[1].split(":");
+            return new Request().withHeader(CephCommand.REMOVENODE.name())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+
+            String[] address = request.getAttachment().split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
             ClusterMap.getInstance().removeNode(pnode);
 
             result = "Node removed";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "removeNode %s:%s";
+            return CephCommand.REMOVENODE.name() + " %s:%s";
         }
 
         @Override
@@ -181,33 +218,39 @@ public enum CephCommand {
     },
 
     CHANGEWEIGHT{
-        public String execute(String[] args) {
-            String result;
-
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 3) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
+
+            if (!args[1].contains(":")) {
+                throw new InvalidRequestException("Invalid ip format. Try: " + getHelpString());
+            }
+
+            String attachment = args[1] + " " + args[2];
+
+            return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+            String[] args = request.getAttachment().split(" ");
 
             float deltaWeight = Float.valueOf(args[1]);
-            String[] address1 = args[2].split(":");
-            if (address1.length != 2) {
-                result = "Invalid ip format. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
+            String[] address1 = args[0].split(":");
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
-
             ClusterMap.getInstance().changeWeight(pnode, deltaWeight);
 
             result = "Weight changed";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "changeWeight %s:%s %s";
+            return CephCommand.CHANGEWEIGHT.name() + " %s:%s %s";
         }
 
         @Override
@@ -217,24 +260,22 @@ public enum CephCommand {
     },
 
     LISTPHYSICALNODES {
-        public String execute(String[] args) {
-            String result;
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.LISTPHYSICALNODES.name());
+        }
 
-            if (args.length != 1) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
-
-            result = ClusterMap.getInstance().listPhysicalNodes();
+        @Override
+        public Response execute(Request request) {
+            String result = ClusterMap.getInstance().listPhysicalNodes();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "listPhysicalNodes";
+            return CephCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
@@ -244,24 +285,22 @@ public enum CephCommand {
     },
 
     PRINTCLUSTERMAP {
-        public String execute(String[] args) {
-            String result;
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.PRINTCLUSTERMAP.name());
+        }
 
-            if (args.length != 1) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
-
-            result = ClusterMap.getInstance().toString();
+        @Override
+        public Response execute(Request request) {
+            String result = ClusterMap.getInstance().toString();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "printClusterMap";
+            return CephCommand.PRINTCLUSTERMAP.name();
         }
 
         @Override
@@ -270,7 +309,8 @@ public enum CephCommand {
         }
     };
 
-    public abstract String execute(String[] args);
+    public abstract Request convertToRequest(String[] args) throws InvalidRequestException;
+    public abstract Response execute(Request request);
     public abstract String getParameterizedString();
     public abstract String getHelpString();
 }

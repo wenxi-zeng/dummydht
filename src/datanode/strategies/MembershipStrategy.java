@@ -1,12 +1,13 @@
 package datanode.strategies;
 
 import commonmodels.DataNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Response;
 import socket.SocketClient;
 import util.SimpleLog;
 
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
 
 public abstract class MembershipStrategy {
 
@@ -16,9 +17,9 @@ public abstract class MembershipStrategy {
         this.dataNode = dataNode;
     }
 
-    public abstract String getMembersStatus();
+    public abstract Response getMembersStatus();
 
-    public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException {
+    public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException, InvalidRequestException {
         bootstrap();
     }
 

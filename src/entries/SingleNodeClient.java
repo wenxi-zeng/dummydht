@@ -38,7 +38,7 @@ public class SingleNodeClient {
             String cmdLine[] = in.nextLine().split("\\s+");
 
             try {
-                terminal.execute(cmdLine);
+                terminal.process(cmdLine);
             }
             catch (Exception e) {
                 System.out.println("Command not found");

@@ -18,7 +18,7 @@ import java.io.Serializable;
         "attachment",
         "epoch"
 })
-public class Request extends JacksonObject implements Serializable
+public class Request implements Serializable
 {
 
     @JsonProperty("header")
@@ -34,20 +34,6 @@ public class Request extends JacksonObject implements Serializable
     @JsonProperty("epoch")
     private long epoch;
     private final static long serialVersionUID = 2464827715445932636L;
-
-    public final static String HEADER_INITIALIZE = "initialize";
-    public final static String HEADER_DESTROY = "destroy";
-    public final static String HEADER_READ = "read";
-    public final static String HEADER_WRITE = "write";
-    public final static String HEADER_ADDNODE = "addNode";
-    public final static String HEADER_REMOVENODE = "removeNode";
-    public final static String HEADER_INCREASELOAD = "increaseLoad";
-    public final static String HEADER_DECREASELOAD = "decreaseLoad";
-    public final static String HEADER_LISTPHYSICALNODES = "listPhysicalNodes";
-    public final static String HEADER_PRINTLOOKUPTABLE = "printLookupTable";
-    public final static String HEADER_MOVEBUCKET = "moveBucket";
-    public final static String HEADER_EXPAND = "expand";
-    public final static String HEADER_SHRINK = "shrink";
 
     /**
      * No args constructor for use in serialization
@@ -150,6 +136,16 @@ public class Request extends JacksonObject implements Serializable
         return this;
     }
 
+    public Request withAttachments(Object... attachments) {
+        StringBuilder result = new StringBuilder();
+        for (Object str : attachments) {
+            result.append(str).append(" ");
+        }
+
+        this.attachment = result.toString().trim();
+        return this;
+    }
+
     @JsonProperty("epoch")
     public long getEpoch() {
         return epoch;
@@ -187,4 +183,18 @@ public class Request extends JacksonObject implements Serializable
         return new EqualsBuilder().append(sender, rhs.sender).append(receiver, rhs.receiver).append(epoch, rhs.epoch).append(attachment, rhs.attachment).append(forwardTo, rhs.forwardTo).append(header, rhs.header).isEquals();
     }
 
+    public String toCommand() {
+        String command = "";
+
+        if (header != null)
+            command += header + " ";
+
+        if (receiver != null)
+            command += receiver + " ";
+
+        if (attachment != null)
+            command +=  attachment + " ";
+
+        return command.trim();
+    }
 }

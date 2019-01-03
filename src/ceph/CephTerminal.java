@@ -1,6 +1,9 @@
 package ceph;
 
 import commonmodels.Terminal;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 
 public class CephTerminal implements Terminal {
     @Override
@@ -26,16 +29,20 @@ public class CephTerminal implements Terminal {
     }
 
     @Override
-    public String execute(String[] args) {
-        CephCommand cmd;
-
+    public Response process(String[] args) throws InvalidRequestException {
         try {
-            cmd = CephCommand.valueOf(args[0].toUpperCase());
+            CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
+            Request request = cmd.convertToRequest(args);
+            return cmd.execute(request);
         }
         catch (IllegalArgumentException e) {
-            return "Command " + args[0] + " not found";
+            throw new InvalidRequestException("Command " + args[0] + " not found");
         }
+    }
 
-        return cmd.execute(args);
+    @Override
+    public Response process(Request request) {
+        CephCommand cmd = CephCommand.valueOf(request.getHeader());
+        return cmd.execute(request);
     }
 }

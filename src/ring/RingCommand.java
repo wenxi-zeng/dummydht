@@ -2,6 +2,9 @@ package ring;
 
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import util.SimpleLog;
 
 import java.util.Arrays;
@@ -9,60 +12,75 @@ import java.util.Arrays;
 public enum RingCommand {
 
     INITIALIZE {
-        public String execute(String[] args) {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(RingCommand.INITIALIZE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
             LookupTable.getInstance().initialize();
-            return "Finished initialization";
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
         @Override
         public String getParameterizedString() {
-            return "INITIALIZE";
+            return RingCommand.INITIALIZE.name();
         }
 
         @Override
         public String getHelpString() {
-            return "INITIALIZE";
+            return getParameterizedString();
         }
     },
 
     DESTROY {
-        public String execute(String[] args) {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(RingCommand.DESTROY.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
             LookupTable.deleteInstance();
-            return "Finished deconstruction";
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
         }
 
         @Override
         public String getParameterizedString() {
-            return "DESTROY";
+            return RingCommand.DESTROY.name();
         }
 
         @Override
         public String getHelpString() {
-            return "DESTROY";
+            return getParameterizedString();
         }
     },
 
     READ {
-        public String execute(String[] args) {
-            String result;
-
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            Indexable node = LookupTable.getInstance().read(args[1]);
+            return new Request().withHeader(RingCommand.READ.name())
+                    .withEpoch(LookupTable.getInstance().getEpoch())
+                    .withAttachment(args[1]);
+        }
 
-            result = "Found " + args[1] + " on:\n" + node.toString();
+        @Override
+        public Response execute(Request request) {
+            Indexable node = LookupTable.getInstance().read(request.getAttachment());
+            String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "read %s";
+            return RingCommand.READ.name() + " %s";
         }
 
         @Override
@@ -73,25 +91,29 @@ public enum RingCommand {
     },
 
     WRITE{
-        public String execute(String[] args) {
-            String result;
-
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            Indexable node = LookupTable.getInstance().write(args[1]);
-            result = "Write " + args[1] + " to:\n" + node.toString();
+            return new Request().withHeader(RingCommand.WRITE.name())
+                    .withEpoch(LookupTable.getInstance().getEpoch())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            Indexable node = LookupTable.getInstance().write(request.getAttachment());
+            String result = "Write " + request.getAttachment() + " to:\n" + node.toString();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "write %s";
+            return RingCommand.WRITE.name() + " %s";
         }
 
         @Override
@@ -102,21 +124,35 @@ public enum RingCommand {
     },
 
     ADDNODE{
-        public String execute(String[] args) {
-            String result;
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            String attachment;
 
-            if (args.length != 2 && args.length != 3) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+            if (args.length == 2) {
+                attachment = args[1];
+            }
+            else if (args.length == 3) {
+                attachment = args[1] + " " + args[2];
+            }
+            else  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            String[] address = args[1].split(":");
+            return new Request().withHeader(RingCommand.ADDNODE.name())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+            String[] args = request.getAttachment().split(" ");
+
+            String[] address = args[0].split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
 
-            if (args.length == 2) {
+            if (args.length == 1) {
                 LookupTable.getInstance().addNode(pnode);
             }
             else {
@@ -125,12 +161,12 @@ public enum RingCommand {
             }
 
             result = "Node added";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "addNode %s:%s %s";
+            return RingCommand.ADDNODE.name() + " %s:%s %s";
         }
 
         @Override
@@ -141,28 +177,33 @@ public enum RingCommand {
     },
 
     REMOVENODE{
-        public String execute(String[] args) {
-            String result;
-
-            if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            String[] address = args[1].split(":");
+            return new Request().withHeader(RingCommand.REMOVENODE.name())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+
+            String[] address = request.getAttachment().split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().removeNode(pnode);
 
             result = "Node removed";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "removeNode %s:%s";
+            return RingCommand.REMOVENODE.name() + " %s:%s";
         }
 
         @Override
@@ -173,28 +214,33 @@ public enum RingCommand {
     },
 
     INCREASELOAD{
-        public String execute(String[] args) {
-            String result;
-
-            if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            String[] address = args[1].split(":");
+            return new Request().withHeader(RingCommand.INCREASELOAD.name())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+
+            String[] address = request.getAttachment().split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().increaseLoad(pnode);
 
             result = "Load increased";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "increaseLoad %s:%s";
+            return RingCommand.INCREASELOAD.name() + " %s:%s";
         }
 
         @Override
@@ -205,28 +251,33 @@ public enum RingCommand {
     },
 
     DECREASELOAD{
-        public String execute(String[] args) {
-            String result;
-
-            if (args.length != 2) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            String[] address = args[1].split(":");
+            return new Request().withHeader(RingCommand.DECREASELOAD.name())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+
+            String[] address = request.getAttachment().split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().decreaseLoad(pnode);
 
             result = "Load decreased";
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "decreaseLoad %s:%s";
+            return RingCommand.INITIALIZE.name() + " %s:%s";
         }
 
         @Override
@@ -237,24 +288,22 @@ public enum RingCommand {
     },
 
     LISTPHYSICALNODES {
-        public String execute(String[] args) {
-            String result;
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(RingCommand.LISTPHYSICALNODES.name());
+        }
 
-            if (args.length != 1) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
-
-            result = LookupTable.getInstance().listPhysicalNodes();
+        @Override
+        public Response execute(Request request) {
+            String result = LookupTable.getInstance().listPhysicalNodes();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "listPhysicalNodes";
+            return RingCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
@@ -265,24 +314,22 @@ public enum RingCommand {
     },
 
     PRINTLOOKUPTABLE {
-        public String execute(String[] args) {
-            String result;
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(RingCommand.PRINTLOOKUPTABLE.name());
+        }
 
-            if (args.length != 1) {
-                result = "Wrong arguments. Try: " + getHelpString();
-                SimpleLog.i(result);
-                return result;
-            }
-
-            result = LookupTable.getInstance().toString();
+        @Override
+        public Response execute(Request request) {
+            String result = LookupTable.getInstance().toString();
             SimpleLog.i(result);
 
-            return result;
+            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
         public String getParameterizedString() {
-            return "printLookupTable";
+            return RingCommand.PRINTLOOKUPTABLE.name();
         }
 
         @Override
@@ -292,7 +339,8 @@ public enum RingCommand {
 
     };
 
-    public abstract String execute(String[] args);
+    public abstract Request convertToRequest(String[] args) throws InvalidRequestException;
+    public abstract Response execute(Request request);
     public abstract String getParameterizedString();
     public abstract String getHelpString();
 }

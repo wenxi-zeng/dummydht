@@ -1,6 +1,9 @@
 package elastic;
 
 import commonmodels.Terminal;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 
 public class ElasticTerminal implements Terminal {
 
@@ -29,17 +32,21 @@ public class ElasticTerminal implements Terminal {
     }
 
     @Override
-    public String execute(String[] args) {
-        ElasticCommand cmd;
-
+    public Response process(String[] args) throws InvalidRequestException {
         try {
-            cmd = ElasticCommand.valueOf(args[0].toUpperCase());
+            ElasticCommand cmd = ElasticCommand.valueOf(args[0].toUpperCase());
+            Request request = cmd.convertToRequest(args);
+            return cmd.execute(request);
         }
         catch (IllegalArgumentException e) {
-            return "Command " + args[0] + " not found";
+            throw new InvalidRequestException("Command " + args[0] + " not found");
         }
+    }
 
-        return cmd.execute(args);
+    @Override
+    public Response process(Request request) {
+        ElasticCommand cmd = ElasticCommand.valueOf(request.getHeader());
+        return cmd.execute(request);
     }
 
 }

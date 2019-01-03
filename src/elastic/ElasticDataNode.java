@@ -3,6 +3,7 @@ package elastic;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.Request;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -43,25 +44,31 @@ public class ElasticDataNode extends DataNode {
         );
     }
 
+
     @Override
-    public String prepareListPhysicalNodesCommand() {
-        return ElasticCommand.LISTPHYSICALNODES.getParameterizedString();
+    public Request prepareListPhysicalNodesCommand() {
+        return new Request()
+                .withHeader(ElasticCommand.LISTPHYSICALNODES.name());
     }
 
     @Override
-    public String prepareAddNodeCommand() {
+    public Request prepareAddNodeCommand() {
         return prepareAddNodeCommand(ip, port);
     }
 
     @Override
-    public String prepareAddNodeCommand(String nodeIp, int nodePort) {
+    public Request prepareAddNodeCommand(String nodeIp, int nodePort) {
         String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
-        return String.format(ElasticCommand.ADDNODE.getParameterizedString(), ip, port, buckets);
+        return new Request()
+                .withHeader(ElasticCommand.ADDNODE.name())
+                .withAttachments(ip + ":" + port, buckets);
     }
 
     @Override
-    public String prepareRemoveNodeCommand(String nodeIp, int nodePort) {
-        return String.format(ElasticCommand.REMOVENODE.getParameterizedString(), nodeIp, nodePort);
+    public Request prepareRemoveNodeCommand(String nodeIp, int nodePort) {
+        return new Request()
+                .withHeader(ElasticCommand.REMOVENODE.name())
+                .withAttachments(nodeIp + ":" + nodePort);
     }
 
     @Override

@@ -1,8 +1,5 @@
 package util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import commonmodels.transport.JacksonObject;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 
@@ -45,28 +42,5 @@ public class ObjectConverter {
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
         return bytes;
-    }
-
-    public static ByteBuffer getByteBuffer(JacksonObject o) throws IOException {
-        return ByteBuffer.wrap(getBytes(o));
-    }
-
-    public static byte[] getBytes(JacksonObject object) throws IOException {
-        return new ObjectMapper().writeValueAsBytes(object);
-    }
-
-    public static JacksonObject getJacksonObject(ByteBuffer buffer) {
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        return getJacksonObject(bytes);
-    }
-
-    public static JacksonObject getJacksonObject(byte[] buf){
-        try {
-            return new ObjectMapper().readValue(buf, JacksonObject.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }

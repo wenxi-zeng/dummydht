@@ -3,6 +3,8 @@ package datanode;
 import ceph.CephDataNode;
 import commonmodels.DataNode;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Response;
 import datanode.strategies.CentralizedStrategy;
 import datanode.strategies.DistributedStrategy;
 import datanode.strategies.MembershipStrategy;
@@ -66,7 +68,7 @@ public class DataNodeServer {
         dataNode.destroy();
     }
 
-    public String getMembersStatus() {
+    public Response getMembersStatus() {
         return membershipStrategy.getMembersStatus();
     }
 
@@ -112,8 +114,8 @@ public class DataNodeServer {
 
     }
 
-    public String processCommand(String[] args) {
-        return dataNode.getTerminal().execute(args);
+    public Response processCommand(String[] args) throws InvalidRequestException {
+        return dataNode.execute(args);
     }
 
 }

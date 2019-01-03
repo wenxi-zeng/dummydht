@@ -1,5 +1,8 @@
 package commonmodels;
 
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import util.Config;
 
 import java.util.List;
@@ -97,17 +100,25 @@ public abstract class DataNode {
         terminal.initialize();
     }
 
-    public String execute(String command) {
-        return terminal.execute(command.split("\\s+"));
+    public Response execute(String command) throws InvalidRequestException {
+        return execute(command.split("\\s+"));
+    }
+
+    public Response execute(String[] args) throws InvalidRequestException {
+        return terminal.process(args);
+    }
+
+    public Response execute(Request request) {
+        return terminal.process(request);
     }
 
     public abstract void createTerminal();
     public abstract Object getTable();
     public abstract String updateTable(Object o);
     public abstract List<PhysicalNode> getPhysicalNodes();
-    public abstract String prepareListPhysicalNodesCommand();
-    public abstract String prepareAddNodeCommand();
-    public abstract String prepareAddNodeCommand(String nodeIp, int nodePort);
-    public abstract String prepareRemoveNodeCommand(String nodeIp, int nodePort);
+    public abstract Request prepareListPhysicalNodesCommand();
+    public abstract Request prepareAddNodeCommand();
+    public abstract Request prepareAddNodeCommand(String nodeIp, int nodePort);
+    public abstract Request prepareRemoveNodeCommand(String nodeIp, int nodePort);
     public abstract void setLoadBalancingCallBack(LoadBalancingCallBack callBack);
 }
