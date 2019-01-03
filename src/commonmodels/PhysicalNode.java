@@ -80,6 +80,10 @@ public class PhysicalNode implements Clusterable, Serializable {
         return address;
     }
 
+    public String getFullAddress() {
+        return address + ":" + port;
+    }
+
     public void setAddress(String address) {
         this.address = address;
     }

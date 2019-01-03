@@ -1,10 +1,15 @@
 package entries;
 
 import ceph.CephDataNode;
+import commonmodels.CommonCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
+import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import org.apache.commons.lang3.StringUtils;
 import ring.RingDataNode;
@@ -32,7 +37,7 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
-        public void onResponse(Object o) {
+        public void onResponse(Response o) {
             SimpleLog.i(String.valueOf(o));
         }
 
@@ -135,32 +140,6 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
         }
     }
 
-    @Override
-    public void onReceived(AsynchronousSocketChannel out, Object o) throws Exception {
-        ByteBuffer buffer = ObjectConverter.getByteBuffer("Proxy should not receive an object");
-        out.write(buffer).get();
-    }
-
-    @Override
-    public void onFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        String request = formatRequest("transfer", buckets, toNode);
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
-    }
-
-    @Override
-    public void onFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        String request = formatRequest("copy", buckets, toNode);
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
-    }
-
-    private String formatRequest(String header, List<Integer> buckets, PhysicalNode dest) {
-        return String.format("%s %s:%s %s",
-                header,
-                dest.getAddress(),
-                dest.getPort(),
-                StringUtils.join(buckets, ','));
-    }
-
     private void propagateTable() {
         for (PhysicalNode node : dataNode.getPhysicalNodes()) {
             socketClient.send(node.getAddress(), node.getPort(), dataNode.getTable(), callBack);
@@ -174,5 +153,56 @@ public class Proxy implements SocketServer.EventHandler, FileTransferManager.Fil
     @Override
     public void onFinished() {
         propagateTable();
+    }
+
+
+    @Override
+    public void onTransferring(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        Request request = new Request()
+                .withHeader(CommonCommand.TRANSFER.name())
+                .withSender(from.getFullAddress())
+                .withReceiver(toNode.getFullAddress())
+                .withAttachment(StringUtils.join(buckets, ','));
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    @Override
+    public void onReplicating(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        Request request = new Request()
+                .withHeader(CommonCommand.COPY.name())
+                .withSender(from.getFullAddress())
+                .withReceiver(toNode.getFullAddress())
+                .withAttachment(StringUtils.join(buckets, ','));
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    @Override
+    public void onTransmitted(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
+
+    }
+
+    @Override
+    public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
+        Response response = processCommonCommand(o);
+        if (response.getStatus() == Response.STATUS_FAILED)
+            response = processDataNodeCommand(o);
+
+        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
+        out.write(buffer).get();
+    }
+
+    private Response processCommonCommand(Request o) {
+        try {
+            CommonCommand command = CommonCommand.valueOf(o.getHeader());
+            return command.execute(o);
+        }
+        catch (IllegalArgumentException e) {
+            return new Response(o).withStatus(Response.STATUS_FAILED)
+                    .withMessage(e.getMessage());
+        }
+    }
+
+    private Response processDataNodeCommand(Request o) {
+        return dataNode.execute(o);
     }
 }

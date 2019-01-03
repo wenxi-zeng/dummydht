@@ -1,5 +1,7 @@
 package socket;
 
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import util.ObjectConverter;
 
 import java.io.ByteArrayOutputStream;
@@ -18,15 +20,15 @@ public class SocketClient {
     public SocketClient() {
     }
 
-    public void sendAsync(int port, Object data, ServerCallBack callBack) {
+    public void sendAsync(int port, Request data, ServerCallBack callBack) {
         sendAsync(new InetSocketAddress("localhost", port), data, callBack);
     }
 
-    public void sendAsync(String address, int port, Object data, ServerCallBack callBack) {
+    public void sendAsync(String address, int port, Request data, ServerCallBack callBack) {
         sendAsync(new InetSocketAddress(address, port), data, callBack);
     }
 
-    private void sendAsync(InetSocketAddress inetSocketAddress, Object data, ServerCallBack callBack) {
+    private void sendAsync(InetSocketAddress inetSocketAddress, Request data, ServerCallBack callBack) {
         try (AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
             if (asynchronousSocketChannel != null) {
                 asynchronousSocketChannel.connect(inetSocketAddress, null, new CompletionHandler<Void, Void>() {
@@ -51,20 +53,20 @@ public class SocketClient {
         }
     }
 
-    public void send(int port, Object data, ServerCallBack callBack) {
+    public void send(int port, Request data, ServerCallBack callBack) {
         send(new InetSocketAddress("localhost", port), data, callBack);
     }
 
-    public void send(String address, int port, Object data, ServerCallBack callBack) {
+    public void send(String address, int port, Request data, ServerCallBack callBack) {
         send(new InetSocketAddress(address, port), data, callBack);
     }
 
-    public void send(String address, Object data, ServerCallBack callBack) {
+    public void send(String address, Request data, ServerCallBack callBack) {
         String[] address1 = address.split(":");
         send(new InetSocketAddress(address1[0], Integer.valueOf(address1[1])), data, callBack);
     }
 
-    public void send(InetSocketAddress inetSocketAddress, Object data, ServerCallBack callBack) {
+    public void send(InetSocketAddress inetSocketAddress, Request data, ServerCallBack callBack) {
         try(AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
             if (asynchronousSocketChannel != null) {
                 Void connect = asynchronousSocketChannel.connect(inetSocketAddress).get(3, TimeUnit.SECONDS);
@@ -97,7 +99,7 @@ public class SocketClient {
         return asynchronousSocketChannel;
     }
 
-    private void onServerConnected(AsynchronousSocketChannel asynchronousSocketChannel, Object data, ServerCallBack callBack) {
+    private void onServerConnected(AsynchronousSocketChannel asynchronousSocketChannel, Request data, ServerCallBack callBack) {
         boolean success = false;
         Object o = null;
         String message = "Unknown server connection error";
@@ -132,8 +134,8 @@ public class SocketClient {
             try {
                 asynchronousSocketChannel.close();
 
-                if (success)
-                    callBack.onResponse(o);
+                if (success && o instanceof Response)
+                    callBack.onResponse((Response) o);
                 else
                     callBack.onFailure(message);
 
@@ -144,7 +146,7 @@ public class SocketClient {
     }
 
     public interface ServerCallBack {
-        void onResponse(Object o);
+        void onResponse(Response o);
         void onFailure(String error);
     }
 }

@@ -2,20 +2,15 @@ package datanode;
 
 import ceph.CephDataNode;
 import commonmodels.DataNode;
-import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.strategies.CentralizedStrategy;
 import datanode.strategies.DistributedStrategy;
 import datanode.strategies.MembershipStrategy;
 import elastic.ElasticDataNode;
-import filemanagement.FileTransferManager;
 import ring.RingDataNode;
 import util.Config;
-
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class DataNodeServer {
 
@@ -80,42 +75,12 @@ public class DataNodeServer {
         return dataNode.updateTable(o);
     }
 
-    public void transferFile(String command) {
-        String[] params = command.split(" ");
-
-        Pattern pattern = Pattern.compile(",");
-        List<Integer> buckets = pattern.splitAsStream(params[2])
-                .map(Integer::valueOf)
-                .collect(Collectors.toList());
-
-        FileTransferManager.getInstance().transfer(
-                buckets,
-                new PhysicalNode(dataNode.getIp(), dataNode.getPort()),
-                new PhysicalNode(params[1])
-        );
-    }
-
-    public void copyFile(String command) {
-        String[] params = command.split(" ");
-
-        Pattern pattern = Pattern.compile(",");
-        List<Integer> buckets = pattern.splitAsStream(params[2])
-                .map(Integer::valueOf)
-                .collect(Collectors.toList());
-
-        FileTransferManager.getInstance().copy(
-                buckets,
-                new PhysicalNode(dataNode.getIp(), dataNode.getPort()),
-                new PhysicalNode(params[1])
-        );
-    }
-
-    public void loadConfig() {
-
-    }
-
     public Response processCommand(String[] args) throws InvalidRequestException {
         return dataNode.execute(args);
+    }
+
+    public Response processCommand(Request request) throws InvalidRequestException {
+        return dataNode.execute(request);
     }
 
 }

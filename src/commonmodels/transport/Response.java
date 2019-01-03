@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 public class Response implements Serializable
 {
-
+    private String header;
     private short status;
     private String message;
     private Object attachment;
@@ -24,17 +24,36 @@ public class Response implements Serializable
     public Response() {
     }
 
+    public Response(Request request) {
+        if (request != null)
+            this.header = request.getHeader();
+    }
+
     /**
-     *
+     * @param header
      * @param message
      * @param status
      * @param attachment
      */
-    public Response(short status, String message, Object attachment) {
+    public Response(String header, short status, String message, Object attachment) {
         super();
+        this.header = header;
         this.status = status;
         this.message = message;
         this.attachment = attachment;
+    }
+
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
+
+    public Response withHeader(String header) {
+        this.header = header;
+        return this;
     }
 
     public short getStatus() {
@@ -78,12 +97,12 @@ public class Response implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("status", status).append("message", message).append("attachment", attachment).toString();
+        return new ToStringBuilder(this).append("header", header).append("status", status).append("message", message).append("attachment", attachment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(message).append(status).append(attachment).toHashCode();
+        return new HashCodeBuilder().append(header).append(message).append(status).append(attachment).toHashCode();
     }
 
     @Override
@@ -95,7 +114,7 @@ public class Response implements Serializable
             return false;
         }
         Response rhs = ((Response) other);
-        return new EqualsBuilder().append(message, rhs.message).append(status, rhs.status).append(attachment, rhs.attachment).isEquals();
+        return new EqualsBuilder().append(header, rhs.header).append(message, rhs.message).append(status, rhs.status).append(attachment, rhs.attachment).isEquals();
     }
 
 }

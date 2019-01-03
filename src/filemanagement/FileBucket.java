@@ -1,6 +1,8 @@
 package filemanagement;
 
-public class FileBucket {
+import java.io.Serializable;
+
+public class FileBucket implements Serializable {
 
     private int key;
 

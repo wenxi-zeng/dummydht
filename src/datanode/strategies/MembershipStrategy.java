@@ -1,13 +1,16 @@
 package datanode.strategies;
 
+import commonmodels.CommonCommand;
 import commonmodels.DataNode;
 import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import socket.SocketClient;
 import util.SimpleLog;
 
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class MembershipStrategy {
 
@@ -28,19 +31,19 @@ public abstract class MembershipStrategy {
     }
 
     private void bootstrap() {
-        final boolean[] fetched = {false};
+        AtomicBoolean fetched = new AtomicBoolean(false);
         SocketClient socketClient = new SocketClient();
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
-            public void onResponse(Object o) {
+            public void onResponse(Response o) {
                 SimpleLog.i(String.valueOf(o));
 
-                if ("Datanode server is not started".equals(o)) {
-                    onFailure("Datanode server is not started");
+                if (o.getStatus() == Response.STATUS_FAILED) {
+                    onFailure(o.getMessage());
                 }
                 else {
-                    dataNode.updateTable(o);
-                    fetched[0] = true;
+                    dataNode.updateTable(o.getAttachment());
+                    fetched.set(true);
                 }
             }
 
@@ -52,12 +55,13 @@ public abstract class MembershipStrategy {
 
         for (String seed : dataNode.getSeeds()) {
             if (!seed.equals(dataNode.getAddress()) && !seed.equals(dataNode.getLocalAddress())) {
-                socketClient.send(seed, "fetch", callBack);
+                Request request = new Request().withHeader(CommonCommand.FETCH.name());
+                socketClient.send(seed, request, callBack);
             }
-            if (fetched[0]) break;
+            if (fetched.get()) break;
         }
 
-        if (!fetched[0]) {
+        if (!fetched.get()) {
             SimpleLog.i("Creating table");
             dataNode.createTable();
         }

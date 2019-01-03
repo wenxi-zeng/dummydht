@@ -1,6 +1,7 @@
 package ceph;
 
 import commonmodels.Clusterable;
+import commonmodels.Command;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -9,7 +10,7 @@ import util.SimpleLog;
 
 import java.util.List;
 
-public enum CephCommand {
+public enum CephCommand implements Command {
 
     INITIALIZE {
         @Override
@@ -20,7 +21,7 @@ public enum CephCommand {
         @Override
         public Response execute(Request request) {
             ClusterMap.getInstance().initialize();
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
         @Override
@@ -43,7 +44,7 @@ public enum CephCommand {
         @Override
         public Response execute(Request request) {
             ClusterMap.deleteInstance();
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
         }
 
         @Override
@@ -75,7 +76,7 @@ public enum CephCommand {
             String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -122,7 +123,7 @@ public enum CephCommand {
                 SimpleLog.i(execResult);
             }
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(execResult);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(execResult);
         }
 
         @Override
@@ -165,7 +166,7 @@ public enum CephCommand {
             ClusterMap.getInstance().addNode(clusterId, pnode);
             result = "Node added";
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -202,7 +203,7 @@ public enum CephCommand {
             ClusterMap.getInstance().removeNode(pnode);
 
             result = "Node removed";
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -245,7 +246,7 @@ public enum CephCommand {
             ClusterMap.getInstance().changeWeight(pnode, deltaWeight);
 
             result = "Weight changed";
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -270,7 +271,7 @@ public enum CephCommand {
             String result = ClusterMap.getInstance().listPhysicalNodes();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -295,7 +296,7 @@ public enum CephCommand {
             String result = ClusterMap.getInstance().toString();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -308,9 +309,4 @@ public enum CephCommand {
             return getParameterizedString();
         }
     };
-
-    public abstract Request convertToRequest(String[] args) throws InvalidRequestException;
-    public abstract Response execute(Request request);
-    public abstract String getParameterizedString();
-    public abstract String getHelpString();
 }

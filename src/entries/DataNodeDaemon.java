@@ -1,7 +1,12 @@
 package entries;
 
+import commonmodels.CommonCommand;
 import commonmodels.PhysicalNode;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import datanode.DataNodeServer;
+import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
@@ -31,7 +36,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
-        public void onResponse(Object o) {
+        public void onResponse(Response o) {
             SimpleLog.i(String.valueOf(o));
         }
 
@@ -68,7 +73,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
 
         try {
-            DataNodeDaemon daemon = new DataNodeDaemon(getAddress(), daemonPort);
+            DataNodeDaemon daemon = DataNodeDaemon.newInstance(getAddress(), daemonPort);
             SimpleLog.with(daemon.ip, daemon.port);
             SimpleLog.i("Daemon: " + daemonPort + " started");
             daemon.exec();
@@ -77,7 +82,18 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
     }
 
-    public DataNodeDaemon(String ip, int port) {
+    private static volatile DataNodeDaemon instance = null;
+
+    public static DataNodeDaemon getInstance() {
+        return instance;
+    }
+
+    public static DataNodeDaemon newInstance(String ip, int port) {
+        instance = new DataNodeDaemon(ip, port);
+        return getInstance();
+    }
+
+    private DataNodeDaemon(String ip, int port) {
         this.ip = ip;
         this.port = port;
         this.socketServer = new SocketServer(this.port, this);
@@ -87,81 +103,30 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         socketServer.start();
     }
 
-    @Override
-    public void onReceived(AsynchronousSocketChannel out, String message) throws Exception {
-        String cmdLine[] = message.split("\\s+");
-        ByteBuffer buffer;
-
+    public void startDataNodeServer() throws Exception {
         if (dataNodeServer == null) {
-            if (cmdLine[0].equals("start")) {
-                //dataNodeServer = new DataNodeServer(cmdLine[2], getAddress(), Integer.valueOf(cmdLine[1]));
-                dataNodeServer = new DataNodeServer(ip, port);
-                dataNodeServer.start();
-                FileTransferManager.getInstance().subscribe(this);
-                buffer = ObjectConverter.getByteBuffer("Node started");
-            }
-            else {
-                buffer = ObjectConverter.getByteBuffer("Datanode server is not started");
-            }
-
-            out.write(buffer).get();
+            dataNodeServer = new DataNodeServer(ip, port);
+            dataNodeServer.start();
+            FileTransferManager.getInstance().subscribe(this);
         }
-        else if (cmdLine[0].equals("stop")){
+        else {
+            throw new Exception("Data node is already started");
+        }
+    }
+
+    public void stopDataNodeServer() throws Exception {
+        if (dataNodeServer == null) {
+            throw new Exception("Data node is not started yet");
+        }
+        else {
             dataNodeServer.stop();
             dataNodeServer = null;
             FileTransferManager.getInstance().unsubscribe(this);
-            buffer = ObjectConverter.getByteBuffer("Node stopped");
-            out.write(buffer).get();
-        }
-        else if (cmdLine[0].equals("status")) {
-            buffer = ObjectConverter.getByteBuffer(dataNodeServer.getMembersStatus());
-            out.write(buffer).get();
-        }
-        else if (cmdLine[0].equals("fetch")) {
-            buffer = ObjectConverter.getByteBuffer(dataNodeServer.getDataNodeTable());
-            out.write(buffer).get();
-        }
-        else if (cmdLine[0].equals("transfer")) {
-            buffer = ObjectConverter.getByteBuffer("Received file transfer request.");
-            out.write(buffer).get();
-            dataNodeServer.transferFile(message);
-        }
-        else if (cmdLine[0].equals("copy")) {
-            buffer = ObjectConverter.getByteBuffer("Received file replicate request.");
-            out.write(buffer).get();
-            dataNodeServer.copyFile(message);
-        }
-        else {
-            buffer = ObjectConverter.getByteBuffer(dataNodeServer.processCommand(cmdLine));
-            out.write(buffer).get();
         }
     }
 
-    @Override
-    public void onReceived(AsynchronousSocketChannel out, Object o) throws Exception {
-        String result = dataNodeServer.updateTable(o);
-        ByteBuffer buffer = ObjectConverter.getByteBuffer(result);
-        out.write(buffer).get();
-    }
-
-    @Override
-    public void onFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        String request = formatRequest("transfer", buckets, toNode);
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
-    }
-
-    @Override
-    public void onFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        String request = formatRequest("copy", buckets, toNode);
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
-    }
-
-    private String formatRequest(String header, List<Integer> buckets, PhysicalNode dest) {
-        return String.format("%s %s:%s %s",
-                header,
-                dest.getAddress(),
-                dest.getPort(),
-                StringUtils.join(buckets, ','));
+    public DataNodeServer getDataNodeServer() {
+        return dataNodeServer;
     }
 
     private static String getAddress() {
@@ -173,5 +138,61 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
 
         return null;
+    }
+
+    @Override
+    public void onTransferring(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        Request request = new Request()
+                .withHeader(CommonCommand.TRANSFER.name())
+                .withSender(from.getFullAddress())
+                .withReceiver(toNode.getFullAddress())
+                .withAttachment(StringUtils.join(buckets, ','));
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    @Override
+    public void onReplicating(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        Request request = new Request()
+                .withHeader(CommonCommand.COPY.name())
+                .withSender(from.getFullAddress())
+                .withReceiver(toNode.getFullAddress())
+                .withAttachment(StringUtils.join(buckets, ','));
+        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+    }
+
+    @Override
+    public void onTransmitted(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
+
+    }
+
+    @Override
+    public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
+        Response response = processCommonCommand(o);
+        if (response.getStatus() == Response.STATUS_FAILED)
+            response = processDataNodeCommand(o);
+
+        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
+        out.write(buffer).get();
+    }
+
+    private Response processCommonCommand(Request o) {
+        try {
+            CommonCommand command = CommonCommand.valueOf(o.getHeader());
+            return command.execute(o);
+        }
+        catch (IllegalArgumentException e) {
+            return new Response(o).withStatus(Response.STATUS_FAILED)
+                    .withMessage(e.getMessage());
+        }
+    }
+
+    private Response processDataNodeCommand(Request o) {
+        try {
+            return dataNodeServer.processCommand(o);
+        }
+        catch (InvalidRequestException e) {
+            return new Response(o).withStatus(Response.STATUS_FAILED)
+                    .withMessage(e.getMessage());
+        }
     }
 }

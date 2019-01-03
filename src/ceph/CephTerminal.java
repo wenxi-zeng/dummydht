@@ -45,4 +45,20 @@ public class CephTerminal implements Terminal {
         CephCommand cmd = CephCommand.valueOf(request.getHeader());
         return cmd.execute(request);
     }
+
+    @Override
+    public Request translate(String[] args) throws InvalidRequestException {
+        try {
+            CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
+            return cmd.convertToRequest(args);
+        }
+        catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Command " + args[0] + " not found");
+        }
+    }
+
+    @Override
+    public Request translate(String command) throws InvalidRequestException {
+        return translate(command.split(" "));
+    }
 }

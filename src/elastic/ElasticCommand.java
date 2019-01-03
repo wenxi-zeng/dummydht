@@ -1,5 +1,6 @@
 package elastic;
 
+import commonmodels.Command;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
@@ -9,7 +10,7 @@ import util.SimpleLog;
 
 import java.util.Arrays;
 
-public enum ElasticCommand {
+public enum ElasticCommand implements Command {
 
     INITIALIZE {
         @Override
@@ -20,7 +21,7 @@ public enum ElasticCommand {
         @Override
         public Response execute(Request request) {
             LookupTable.getInstance().initialize();
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
         @Override
@@ -43,7 +44,7 @@ public enum ElasticCommand {
         @Override
         public Response execute(Request request) {
             LookupTable.deleteInstance();
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Finished deconstruction");
         }
 
         @Override
@@ -75,7 +76,7 @@ public enum ElasticCommand {
             String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -107,7 +108,7 @@ public enum ElasticCommand {
             String result = "Write " + request.getAttachment() + " to:\n" + node.toString();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -159,7 +160,7 @@ public enum ElasticCommand {
             }
 
             result = "Node added";
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -195,7 +196,7 @@ public enum ElasticCommand {
             LookupTable.getInstance().removeNode(pnode);
 
             result = "Node removed";
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -243,7 +244,7 @@ public enum ElasticCommand {
             LookupTable.getInstance().moveBucket(bucketNode, from , to);
 
             result = "Bucket moved";
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -272,7 +273,7 @@ public enum ElasticCommand {
             LookupTable.getInstance().expand();
             String result = "Table expanded";
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -301,7 +302,7 @@ public enum ElasticCommand {
             LookupTable.getInstance().shrink();
             String result = "Table shrunk";
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -326,7 +327,7 @@ public enum ElasticCommand {
             String result = LookupTable.getInstance().listPhysicalNodes();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -351,7 +352,7 @@ public enum ElasticCommand {
             String result = LookupTable.getInstance().toString();
             SimpleLog.i(result);
 
-            return new Response().withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
         @Override
@@ -364,9 +365,4 @@ public enum ElasticCommand {
             return getParameterizedString();
         }
     };
-
-    public abstract Request convertToRequest(String[] args) throws InvalidRequestException;
-    public abstract Response execute(Request request);
-    public abstract String getParameterizedString();
-    public abstract String getHelpString();
 }

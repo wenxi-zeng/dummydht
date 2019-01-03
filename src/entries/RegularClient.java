@@ -1,6 +1,13 @@
 package entries;
 
-import ceph.ClusterMap;
+import ceph.CephTerminal;
+import commonmodels.CommonCommand;
+import commonmodels.Terminal;
+import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
+import elastic.ElasticTerminal;
+import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
@@ -12,18 +19,15 @@ public class RegularClient {
 
     private SocketClient socketClient = new SocketClient();
 
-    private ClusterMap map;
-
-    private elastic.LookupTable elasticTable;
-
-    private ring.LookupTable ringTable;
+    private Terminal terminal;
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
-        public void onResponse(Object o) {
+        public void onResponse(Response o) {
+            if (o.getHeader().equals(CommonCommand.FETCH.name())) {
+                handleTableUpdates
+            }
             SimpleLog.v(String.valueOf(o));
-
-
         }
 
         @Override
@@ -35,10 +39,17 @@ public class RegularClient {
     public static void main(String args[]) {
         if (args.length > 1) return;
 
-        RegularClient regularClient = new RegularClient();
+        RegularClient regularClient = null;
+
+        try {
+            regularClient = new RegularClient();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
         if (args.length == 0) {
-
+            regularClient.run();
         }
         else {
             String[] params = args[0].split(":");
@@ -59,21 +70,45 @@ public class RegularClient {
         }
     }
 
+    public RegularClient() throws Exception {
+        String scheme = Config.getInstance().getScheme();
+
+        switch (scheme) {
+            case Config.SCHEME_RING:
+                terminal = new RingTerminal();
+                break;
+            case Config.SCHEME_ELASTIC:
+                terminal = new ElasticTerminal();
+                break;
+            case Config.SCHEME_CEPH:
+                terminal = new CephTerminal();
+                break;
+            default:
+                throw new Exception("Invalid DHT type");
+        }
+    }
+
     private void connect(InetSocketAddress address) {
         Scanner in = new Scanner(System.in);
         String command = in.nextLine();
 
         while (!command.equalsIgnoreCase("exit")){
-            socketClient.send(address, command, callBack);
-            command = in.nextLine();
+            try {
+                Request request = terminal.translate(command);
+                socketClient.send(address, request, callBack);
+                command = in.nextLine();
+            } catch (InvalidRequestException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void exec() {
+    private void run() {
         SimpleLog.v("Fetching table...");
 
         if (Config.getInstance().getSeeds().size() > 0) {
-            socketClient.send(Config.getInstance().getSeeds().get(0), "fetch", callBack);
+            Request request = new Request().withHeader(CommonCommand.FETCH.name());
+            socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
         }
         else {
             SimpleLog.v("No seed/proxy info found!");

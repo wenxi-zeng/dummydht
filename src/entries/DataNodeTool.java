@@ -1,6 +1,7 @@
 package entries;
 
 import ceph.CephCommand;
+import commonmodels.transport.Response;
 import elastic.ElasticCommand;
 import org.apache.commons.lang3.StringUtils;
 import ring.RingCommand;
@@ -15,8 +16,9 @@ public class DataNodeTool {
     private SocketClient socketClient = new SocketClient();
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
+
         @Override
-        public void onResponse(Object o) {
+        public void onResponse(Response o) {
             SimpleLog.v(String.valueOf(o));
         }
 

@@ -48,4 +48,20 @@ public class RingTerminal implements Terminal {
         return cmd.execute(request);
     }
 
+    @Override
+    public Request translate(String[] args) throws InvalidRequestException {
+        try {
+            RingCommand cmd = RingCommand.valueOf(args[0].toUpperCase());
+            return cmd.convertToRequest(args);
+        }
+        catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Command " + args[0] + " not found");
+        }
+    }
+
+    @Override
+    public Request translate(String command) throws InvalidRequestException {
+        return translate(command.split(" "));
+    }
+
 }
