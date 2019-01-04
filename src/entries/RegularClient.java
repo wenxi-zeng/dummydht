@@ -1,7 +1,9 @@
 package entries;
 
 import ceph.CephTerminal;
-import commonmodels.CommonCommand;
+import commands.DaemonCommand;
+import commands.RingCommand;
+import commonmodels.PhysicalNode;
 import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -13,6 +15,7 @@ import util.Config;
 import util.SimpleLog;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Scanner;
 
 public class RegularClient {
@@ -24,8 +27,8 @@ public class RegularClient {
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
         public void onResponse(Response o) {
-            if (o.getHeader().equals(CommonCommand.FETCH.name())) {
-                handleTableUpdates
+            if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
+                onTableFetched(o.getAttachment());
             }
             SimpleLog.v(String.valueOf(o));
         }
@@ -103,15 +106,61 @@ public class RegularClient {
         }
     }
 
+    private void connect() {
+        Scanner in = new Scanner(System.in);
+        String command = in.nextLine();
+
+        while (!command.equalsIgnoreCase("exit")){
+            try {
+                Request request = terminal.translate(command);
+                if (request.getHeader().equals(RingCommand.READ.name()) ||
+                        request.getHeader().equals(RingCommand.WRITE.name())) {
+                    request.withEpoch(terminal.getEpoch());
+                    PhysicalNode server = choseServer(request.getAttachment());
+                    socketClient.send(server.getFullAddress(), request, callBack);
+                }
+                else {
+                    Response response = terminal.process(request);
+                    SimpleLog.v(String.valueOf(response));
+                }
+
+                command = in.nextLine();
+            } catch (InvalidRequestException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void run() {
         SimpleLog.v("Fetching table...");
 
         if (Config.getInstance().getSeeds().size() > 0) {
-            Request request = new Request().withHeader(CommonCommand.FETCH.name());
+            Request request = new Request().withHeader(DaemonCommand.FETCH.name());
             socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
         }
         else {
             SimpleLog.v("No seed/proxy info found!");
         }
+    }
+    private void onTableFetched(Object table) {
+        Request request = new Request()
+                            .withHeader(DaemonCommand.UPDATE.name())
+                            .withLargeAttachment(table);
+
+        Response response = terminal.process(request);
+        SimpleLog.v(String.valueOf(response));
+
+        connect();
+    }
+
+    private PhysicalNode choseServer(String filename) {
+        Request request = new Request()
+                    .withHeader(RingCommand.LOOKUP.name())
+                    .withAttachment(filename);
+        Response response = terminal.process(request);
+
+        @SuppressWarnings("unchecked")
+        List<PhysicalNode> pnodes = (List<PhysicalNode>) response.getAttachment();
+        return pnodes.get(0);
     }
 }

@@ -1,5 +1,6 @@
 package ceph;
 
+import commands.CephCommand;
 import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -26,6 +27,11 @@ public class CephTerminal implements Terminal {
                 CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
                 CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n");
+    }
+
+    @Override
+    public long getEpoch() {
+        return ClusterMap.getInstance().getEpoch();
     }
 
     @Override

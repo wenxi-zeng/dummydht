@@ -213,12 +213,8 @@ public class ClusterMap implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
-    public List<Clusterable> write(String filename) {
-        return readWriteAlgorithm.write(this, filename);
-    }
-
-    public Clusterable read(String filename) {
-        return readWriteAlgorithm.read(this, filename);
+    public List<PhysicalNode> lookup(String filename) {
+        return readWriteAlgorithm.lookup(this, filename);
     }
 
     public String listPhysicalNodes() {
@@ -234,5 +230,19 @@ public class ClusterMap implements Serializable {
     @Override
     public String toString() {
         return "Epoch: " + epoch + "\n" + root.toTreeString("", true);
+    }
+
+    public String updateTable(Object o) {
+        if (o instanceof ClusterMap) {
+            ClusterMap remoteMap = (ClusterMap)o;
+            this.setRoot(remoteMap.getRoot());
+            this.setEpoch(remoteMap.getEpoch());
+            this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
+
+            return "Map updated.";
+        }
+        else {
+            return "Invalid map type.";
+        }
     }
 }

@@ -1,11 +1,15 @@
-package ceph;
+package commands;
 
-import commonmodels.Clusterable;
+import ceph.ClusterMap;
 import commonmodels.Command;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import filemanagement.FileBucket;
+import filemanagement.LocalFileManager;
+import util.Config;
+import util.MathX;
 import util.SimpleLog;
 
 import java.util.List;
@@ -72,11 +76,22 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            Clusterable node = ClusterMap.getInstance().read(request.getAttachment());
-            String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
-            SimpleLog.i(result);
+            int hash = MathX.positiveHash(request.getAttachment().hashCode()) % Config.getInstance().getNumberOfPlacementGroups();
+            FileBucket fileBucket = LocalFileManager.getInstance().read(hash);
 
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            Response response = new Response(request);
+
+            if (fileBucket == null)
+                response.withStatus(Response.STATUS_FAILED)
+                        .withMessage("Bucket not found in this node.");
+            else
+                response.withStatus(Response.STATUS_SUCCESS)
+                        .withMessage(fileBucket.toString());
+
+            if (request.getEpoch() < ClusterMap.getInstance().getEpoch())
+                response.setAttachment(ClusterMap.getInstance().getRoot());
+
+            return response;
         }
 
         @Override
@@ -90,45 +105,84 @@ public enum CephCommand implements Command {
         }
 
     },
-
+    
     WRITE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2 && args.length != 3) {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            String attachment = args[1];
+            if (args.length == 3)
+                attachment += " " + args[2];
+
+            return new Request().withHeader(CephCommand.WRITE.name())
+                    .withEpoch(ClusterMap.getInstance().getEpoch())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String[] temp = request.getAttachment().split(" ");
+
+            String filename = temp[0];
+            int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfPlacementGroups();
+            FileBucket fileBucket;
+            if (temp.length == 2) {
+                long filesize = Long.valueOf(temp[1]);
+                fileBucket = LocalFileManager.getInstance().write(hash, filesize);
+            }
+            else {
+                fileBucket = LocalFileManager.getInstance().write(hash);
+            }
+
+            Response response = new Response(request);
+            if (fileBucket.isLocked())
+                response.withStatus(Response.STATUS_FAILED)
+                        .withMessage("Bucket is locked.");
+            else
+                response.withStatus(Response.STATUS_SUCCESS)
+                        .withMessage(fileBucket.toString());
+
+            if (request.getEpoch() < ClusterMap.getInstance().getEpoch())
+                response.setAttachment(ClusterMap.getInstance().getRoot());
+
+            return response;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return ElasticCommand.WRITE.name() + " %s %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<filename>", "[size]");
+        }
+
+    },
+    
+    LOOKUP {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            return new Request().withHeader(CephCommand.WRITE.name())
-                    .withEpoch(ClusterMap.getInstance().getEpoch())
+            return new Request().withHeader(CephCommand.LOOKUP.name())
                     .withAttachment(args[1]);
         }
 
         @Override
         public Response execute(Request request) {
-            String execResult;
-
-            List<Clusterable> nodes = ClusterMap.getInstance().write(request.getAttachment());
-
-            StringBuilder result = new StringBuilder();
-            if (nodes != null) {
-                for (Clusterable node : nodes) {
-                    result.append(node.toString()).append('\n');
-                }
-
-                execResult = "Write " + request.getAttachment() + " to:\n" + result.toString();
-                SimpleLog.i(execResult);
-            }
-            else {
-                execResult = "Failed to write " + request.getAttachment();
-                SimpleLog.i(execResult);
-            }
-
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(execResult);
+            List<PhysicalNode> pnodes = ClusterMap.getInstance().lookup(request.getAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withAttachment(pnodes);
         }
 
         @Override
         public String getParameterizedString() {
-            return CephCommand.WRITE.name() + " %s";
+            return CephCommand.READ.name() + " %s";
         }
 
         @Override
@@ -308,5 +362,28 @@ public enum CephCommand implements Command {
         public String getHelpString() {
             return getParameterizedString();
         }
-    };
+    },
+
+    UPDATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.UPDATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CephCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    }
 }

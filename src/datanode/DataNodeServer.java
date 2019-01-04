@@ -2,6 +2,7 @@ package datanode;
 
 import ceph.CephDataNode;
 import commonmodels.DataNode;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -11,6 +12,8 @@ import datanode.strategies.MembershipStrategy;
 import elastic.ElasticDataNode;
 import ring.RingDataNode;
 import util.Config;
+
+import java.util.List;
 
 public class DataNodeServer {
 
@@ -71,6 +74,10 @@ public class DataNodeServer {
         return dataNode.getTable();
     }
 
+    public List<PhysicalNode> getPhysicalNodes() {
+        return dataNode.getPhysicalNodes();
+    }
+
     public String updateTable(Object o) {
         return dataNode.updateTable(o);
     }
@@ -83,4 +90,7 @@ public class DataNodeServer {
         return dataNode.execute(request);
     }
 
+    public DataNode getDataNode() {
+        return dataNode;
+    }
 }

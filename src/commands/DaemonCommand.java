@@ -1,5 +1,7 @@
-package commonmodels;
+package commands;
 
+import commonmodels.Command;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -10,12 +12,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public enum CommonCommand implements Command {
+public enum DaemonCommand implements Command {
 
     START {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CommonCommand.START.name());
+            return new Request().withHeader(DaemonCommand.START.name());
         }
 
         @Override
@@ -33,7 +35,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.START.name();
+            return DaemonCommand.START.name();
         }
 
         @Override
@@ -45,7 +47,7 @@ public enum CommonCommand implements Command {
     STOP {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CommonCommand.STOP.name());
+            return new Request().withHeader(DaemonCommand.STOP.name());
         }
 
         @Override
@@ -64,7 +66,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.STOP.name();
+            return DaemonCommand.STOP.name();
         }
 
         @Override
@@ -76,7 +78,7 @@ public enum CommonCommand implements Command {
     STATUS {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CommonCommand.STATUS.name());
+            return new Request().withHeader(DaemonCommand.STATUS.name());
         }
 
         @Override
@@ -97,7 +99,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.STATUS.name();
+            return DaemonCommand.STATUS.name();
         }
 
         @Override
@@ -109,7 +111,7 @@ public enum CommonCommand implements Command {
     FETCH {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CommonCommand.FETCH.name());
+            return new Request().withHeader(DaemonCommand.FETCH.name());
         }
 
         @Override
@@ -133,7 +135,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.FETCH.name();
+            return DaemonCommand.FETCH.name();
         }
 
         @Override
@@ -150,7 +152,7 @@ public enum CommonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(CommonCommand.TRANSFER.name())
+                    .withHeader(DaemonCommand.TRANSFER.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -187,7 +189,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.TRANSFER.name() + " %s:%s %s:%s %s";
+            return DaemonCommand.TRANSFER.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -204,7 +206,7 @@ public enum CommonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(CommonCommand.COPY.name())
+                    .withHeader(DaemonCommand.COPY.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -241,7 +243,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.COPY.name() + " %s:%s %s:%s %s";
+            return DaemonCommand.COPY.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -258,7 +260,7 @@ public enum CommonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(CommonCommand.RECEIVED.name())
+                    .withHeader(DaemonCommand.RECEIVED.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -295,7 +297,7 @@ public enum CommonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.RECEIVED.name() + " %s:%s %s:%s %s";
+            return DaemonCommand.RECEIVED.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -304,10 +306,10 @@ public enum CommonCommand implements Command {
         }
     },
 
-    PROPAGATE {
+    UPDATE {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CommonCommand.PROPAGATE.name());
+            return new Request().withHeader(DaemonCommand.UPDATE.name());
         }
 
         @Override
@@ -322,13 +324,14 @@ public enum CommonCommand implements Command {
                 return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
             }
             else {
-                return DataNodeDaemon.getInstance().getDataNodeServer().getMembersStatus();
+                DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
+                return new Response(request).withStatus(Response.STATUS_SUCCESS);
             }
         }
 
         @Override
         public String getParameterizedString() {
-            return CommonCommand.STATUS.name();
+            return DaemonCommand.STATUS.name();
         }
 
         @Override

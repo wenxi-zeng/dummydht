@@ -42,16 +42,28 @@ public class LocalFileManager {
         }
     }
 
-    public void write(int bucket) {
+    public FileBucket read(int bucket) {
+        return localBuckets.get(bucket);
+    }
+
+    public FileBucket write(int bucket) {
         int fileSize = MathX.NextInt(Integer.MAX_VALUE);
 
+        return write(bucket, fileSize);
+    }
+
+    public FileBucket write(int bucket, long fileSize) {
         FileBucket fileBucket = localBuckets.get(bucket);
 
-        if (fileBucket == null) return;
+        if (fileBucket == null) {
+            fileBucket = new FileBucket(bucket);
+            localBuckets.put(bucket, fileBucket);
+        }
 
         fileBucket.setNumberOfFiles(fileBucket.getNumberOfFiles() + 1);
         fileBucket.setSize(fileBucket.getSize() + fileSize);
 
         SimpleLog.i("File written to bucket [" + bucket + "], file size:" + fileSize);
+        return fileBucket;
     }
 }

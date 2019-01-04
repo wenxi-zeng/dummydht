@@ -1,6 +1,7 @@
 package entries;
 
-import commonmodels.CommonCommand;
+import commands.DaemonCommand;
+import commonmodels.Daemon;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -22,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferManager.FileTransferRequestCallBack {
+public class DataNodeDaemon implements Daemon {
 
     private SocketServer socketServer;
 
@@ -33,18 +34,6 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
     private String ip;
 
     private int port;
-
-    private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
-        @Override
-        public void onResponse(Response o) {
-            SimpleLog.i(String.valueOf(o));
-        }
-
-        @Override
-        public void onFailure(String error) {
-            SimpleLog.i(error);
-        }
-    };
 
     public static void main(String[] args){
         if (args.length > 1)
@@ -93,16 +82,32 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         return getInstance();
     }
 
+    public static DataNodeDaemon newInstance(String address) {
+        String[] temp = address.split(":");
+        instance = new DataNodeDaemon(temp[0], Integer.valueOf(temp[1]));
+        return getInstance();
+    }
+
     private DataNodeDaemon(String ip, int port) {
         this.ip = ip;
         this.port = port;
         this.socketServer = new SocketServer(this.port, this);
     }
 
-    private void exec() throws Exception {
+    public String getIp() {
+        return ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    @Override
+    public void exec() throws Exception {
         socketServer.start();
     }
 
+    @Override
     public void startDataNodeServer() throws Exception {
         if (dataNodeServer == null) {
             dataNodeServer = new DataNodeServer(ip, port);
@@ -114,6 +119,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
     }
 
+    @Override
     public void stopDataNodeServer() throws Exception {
         if (dataNodeServer == null) {
             throw new Exception("Data node is not started yet");
@@ -125,6 +131,7 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
     }
 
+    @Override
     public DataNodeServer getDataNodeServer() {
         return dataNodeServer;
     }
@@ -143,21 +150,21 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
     @Override
     public void onTransferring(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         Request request = new Request()
-                .withHeader(CommonCommand.TRANSFER.name())
+                .withHeader(DaemonCommand.TRANSFER.name())
                 .withSender(from.getFullAddress())
                 .withReceiver(toNode.getFullAddress())
                 .withAttachment(StringUtils.join(buckets, ','));
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+        send(from.getAddress(), from.getPort(), request, this);
     }
 
     @Override
     public void onReplicating(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         Request request = new Request()
-                .withHeader(CommonCommand.COPY.name())
+                .withHeader(DaemonCommand.COPY.name())
                 .withSender(from.getFullAddress())
                 .withReceiver(toNode.getFullAddress())
                 .withAttachment(StringUtils.join(buckets, ','));
-        socketClient.send(from.getAddress(), from.getPort(), request, callBack);
+        send(from.getAddress(), from.getPort(), request, this);
     }
 
     @Override
@@ -175,9 +182,10 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         out.write(buffer).get();
     }
 
-    private Response processCommonCommand(Request o) {
+    @Override
+    public Response processCommonCommand(Request o) {
         try {
-            CommonCommand command = CommonCommand.valueOf(o.getHeader());
+            DaemonCommand command = DaemonCommand.valueOf(o.getHeader());
             return command.execute(o);
         }
         catch (IllegalArgumentException e) {
@@ -186,7 +194,8 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
         }
     }
 
-    private Response processDataNodeCommand(Request o) {
+    @Override
+    public Response processDataNodeCommand(Request o) {
         try {
             return dataNodeServer.processCommand(o);
         }
@@ -194,5 +203,20 @@ public class DataNodeDaemon implements SocketServer.EventHandler, FileTransferMa
             return new Response(o).withStatus(Response.STATUS_FAILED)
                     .withMessage(e.getMessage());
         }
+    }
+
+    @Override
+    public void send(String address, int port, Request request, SocketClient.ServerCallBack callBack) {
+        socketClient.send(address, port, request, callBack);
+    }
+
+    @Override
+    public void onResponse(Response o) {
+        SimpleLog.i(String.valueOf(o));
+    }
+
+    @Override
+    public void onFailure(String error) {
+        SimpleLog.i(error);
     }
 }

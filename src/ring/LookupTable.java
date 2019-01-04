@@ -7,6 +7,7 @@ import commonmodels.PhysicalNode;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LookupTable implements Serializable {
@@ -51,6 +52,20 @@ public class LookupTable implements Serializable {
 
     public static void deleteInstance() {
         instance = null;
+    }
+
+    public String updateTable(Object o) {
+        if (o instanceof LookupTable) {
+            LookupTable remoteTable = (LookupTable)o;
+            this.setTable(remoteTable.getTable());
+            this.setEpoch(remoteTable.getEpoch());
+            this.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
+
+            return "Table updated.";
+        }
+        else {
+            return "Invalid table type.";
+        }
     }
 
     public void initialize() {
@@ -130,12 +145,8 @@ public class LookupTable implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
-    public Indexable write(String filename) {
-        return readWriteAlgorithm.write(this, filename);
-    }
-
-    public Indexable read(String filename) {
-        return readWriteAlgorithm.read(this, filename);
+    public List<PhysicalNode> lookup(String filename) {
+        return readWriteAlgorithm.lookup(this, filename);
     }
 
     public String listPhysicalNodes() {

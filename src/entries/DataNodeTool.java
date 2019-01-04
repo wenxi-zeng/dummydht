@@ -1,10 +1,10 @@
 package entries;
 
-import ceph.CephCommand;
+import commands.CephCommand;
 import commonmodels.transport.Response;
-import elastic.ElasticCommand;
+import commands.ElasticCommand;
 import org.apache.commons.lang3.StringUtils;
-import ring.RingCommand;
+import commands.RingCommand;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;

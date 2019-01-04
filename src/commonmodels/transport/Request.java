@@ -33,6 +33,9 @@ public class Request implements Serializable
     private String attachment;
     @JsonProperty("epoch")
     private long epoch;
+
+    private Object largeAttachment;
+
     private final static long serialVersionUID = 2464827715445932636L;
 
     /**
@@ -143,6 +146,19 @@ public class Request implements Serializable
         }
 
         this.attachment = result.toString().trim();
+        return this;
+    }
+
+    public Object getLargeAttachment() {
+        return largeAttachment;
+    }
+
+    public void setLargeAttachment(Object largeAttachment) {
+        this.largeAttachment = largeAttachment;
+    }
+
+    public Request withLargeAttachment(Object largeAttachment) {
+        this.largeAttachment = largeAttachment;
         return this;
     }
 

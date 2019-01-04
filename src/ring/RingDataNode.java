@@ -1,5 +1,6 @@
 package ring;
 
+import commands.RingCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
@@ -23,18 +24,7 @@ public class RingDataNode extends DataNode {
 
     @Override
     public String updateTable(Object o) {
-        if (o instanceof LookupTable) {
-            LookupTable remoteTable = (LookupTable)o;
-            LookupTable localTable = LookupTable.getInstance();
-            localTable.setTable(remoteTable.getTable());
-            localTable.setEpoch(remoteTable.getEpoch());
-            localTable.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
-
-            return "Table updated.";
-        }
-        else {
-            return "Invalid table type.";
-        }
+        return LookupTable.getInstance().updateTable(o);
     }
 
     @Override

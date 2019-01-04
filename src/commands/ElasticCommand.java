@@ -1,14 +1,19 @@
-package elastic;
+package commands;
 
 import commonmodels.Command;
-import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import elastic.BucketNode;
+import elastic.LookupTable;
+import filemanagement.FileBucket;
+import filemanagement.LocalFileManager;
+import util.MathX;
 import util.SimpleLog;
 
 import java.util.Arrays;
+import java.util.List;
 
 public enum ElasticCommand implements Command {
 
@@ -72,11 +77,22 @@ public enum ElasticCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            Indexable node = LookupTable.getInstance().read(request.getAttachment());
-            String result = "Found " + request.getAttachment() + " on:\n" + node.toString();
-            SimpleLog.i(result);
+            int hash = MathX.positiveHash(request.getAttachment().hashCode()) % LookupTable.getInstance().getTable().length;
+            FileBucket fileBucket = LocalFileManager.getInstance().read(hash);
 
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            Response response = new Response(request);
+
+            if (fileBucket == null)
+                response.withStatus(Response.STATUS_FAILED)
+                        .withMessage("Bucket not found in this node.");
+            else
+                response.withStatus(Response.STATUS_SUCCESS)
+                        .withMessage(fileBucket.toString());
+
+            if (request.getEpoch() < LookupTable.getInstance().getEpoch())
+                response.setAttachment(LookupTable.getInstance().getTable());
+
+            return response;
         }
 
         @Override
@@ -88,38 +104,93 @@ public enum ElasticCommand implements Command {
         public String getHelpString() {
             return String.format(getParameterizedString(), "<filename>");
         }
+
     },
 
     WRITE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2 && args.length != 3) {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            String attachment = args[1];
+            if (args.length == 3)
+                attachment += " " + args[2];
+
+            return new Request().withHeader(ElasticCommand.WRITE.name())
+                    .withEpoch(LookupTable.getInstance().getEpoch())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String[] temp = request.getAttachment().split(" ");
+
+            String filename = temp[0];
+            int hash = MathX.positiveHash(filename.hashCode()) % LookupTable.getInstance().getTable().length;
+            FileBucket fileBucket;
+            if (temp.length == 2) {
+                long filesize = Long.valueOf(temp[1]);
+                fileBucket = LocalFileManager.getInstance().write(hash, filesize);
+            }
+            else {
+                fileBucket = LocalFileManager.getInstance().write(hash);
+            }
+
+            Response response = new Response(request);
+            if (fileBucket.isLocked())
+                response.withStatus(Response.STATUS_FAILED)
+                        .withMessage("Bucket is locked.");
+            else
+                response.withStatus(Response.STATUS_SUCCESS)
+                        .withMessage(fileBucket.toString());
+
+            if (request.getEpoch() < LookupTable.getInstance().getEpoch())
+                response.setAttachment(LookupTable.getInstance().getTable());
+
+            return response;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return ElasticCommand.WRITE.name() + " %s %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<filename>", "[size]");
+        }
+
+    },
+
+    LOOKUP {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
             if (args.length != 2) {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            return new Request().withHeader(ElasticCommand.WRITE.name())
-                    .withEpoch(LookupTable.getInstance().getEpoch())
+            return new Request().withHeader(ElasticCommand.LOOKUP.name())
                     .withAttachment(args[1]);
         }
 
         @Override
         public Response execute(Request request) {
-            Indexable node = LookupTable.getInstance().write(request.getAttachment());
-            String result = "Write " + request.getAttachment() + " to:\n" + node.toString();
-            SimpleLog.i(result);
-
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            List<PhysicalNode> pnodes = LookupTable.getInstance().lookup(request.getAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withAttachment(pnodes);
         }
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.WRITE.name() + " %s";
+            return ElasticCommand.READ.name() + " %s";
         }
 
         @Override
         public String getHelpString() {
             return String.format(getParameterizedString(), "<filename>");
         }
+
     },
 
     ADDNODE{
@@ -364,5 +435,28 @@ public enum ElasticCommand implements Command {
         public String getHelpString() {
             return getParameterizedString();
         }
-    };
+    },
+
+    UPDATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(ElasticCommand.UPDATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return ElasticCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    }
 }

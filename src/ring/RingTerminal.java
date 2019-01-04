@@ -1,5 +1,6 @@
 package ring;
 
+import commands.RingCommand;
 import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -28,6 +29,11 @@ public class RingTerminal implements Terminal {
                 RingCommand.DECREASELOAD.getHelpString() + "\n" +
                 RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
+    }
+
+    @Override
+    public long getEpoch() {
+        return LookupTable.getInstance().getEpoch();
     }
 
     @Override

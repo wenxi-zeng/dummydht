@@ -1,5 +1,6 @@
 package elastic;
 
+import commands.ElasticCommand;
 import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -29,6 +30,11 @@ public class ElasticTerminal implements Terminal {
                 ElasticCommand.SHRINK.getHelpString() + "\n" +
                 ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
+    }
+
+    @Override
+    public long getEpoch() {
+        return LookupTable.getInstance().getEpoch();
     }
 
     @Override

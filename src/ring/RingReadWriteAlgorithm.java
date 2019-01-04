@@ -1,24 +1,26 @@
 package ring;
 
-import commonmodels.Indexable;
-import filemanagement.LocalFileManager;
+import commonmodels.PhysicalNode;
 import util.Config;
 import util.MathX;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RingReadWriteAlgorithm {
+    public List<PhysicalNode> lookup(LookupTable table, String filename) {
+        List<PhysicalNode> pnodes = new ArrayList<>();
 
-    public Indexable read(LookupTable table, String filename) {
         int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfHashSlots();
-        Indexable node = table.getTable().find(new VirtualNode(hash));
-        return table.getTable().get(node.getIndex());
-    }
+        VirtualNode node = (VirtualNode)table.getTable().find(new VirtualNode(hash));
 
-    public Indexable write(LookupTable table, String filename) {
-        int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfHashSlots();
-        Indexable node = table.getTable().find(new VirtualNode(hash));
+        int i = 0;
+        do {
+            PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getPhysicalNodeId());
+            pnodes.add(pnode);
+            node = (VirtualNode)table.getTable().next(node);
+        } while (++i < Config.getInstance().getNumberOfReplicas());
 
-        LocalFileManager.getInstance().write(hash);
-
-        return table.getTable().get(node.getIndex());
+        return pnodes;
     }
 }

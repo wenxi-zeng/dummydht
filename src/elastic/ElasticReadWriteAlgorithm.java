@@ -1,20 +1,23 @@
 package elastic;
 
-import commonmodels.Indexable;
-import filemanagement.LocalFileManager;
+import commonmodels.PhysicalNode;
 import util.MathX;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ElasticReadWriteAlgorithm {
-    public Indexable read(LookupTable table, String filename) {
-        int hash = MathX.positiveHash(filename.hashCode()) % table.getTable().length;
-        return table.getTable()[hash];
-    }
+    public List<PhysicalNode> lookup(LookupTable lookupTable, String filename) {
+        List<PhysicalNode> pnodes = new ArrayList<>();
 
-    public Indexable write(LookupTable table, String filename) {
-        int hash = MathX.positiveHash(filename.hashCode()) % table.getTable().length;
+        int hash = MathX.positiveHash(filename.hashCode()) % lookupTable.getTable().length;
+        BucketNode node = lookupTable.getTable()[hash];
 
-        LocalFileManager.getInstance().write(hash);
+        for (String pnodeId : node.getPhysicalNodes()) {
+            PhysicalNode pnode = lookupTable.getPhysicalNodeMap().get(pnodeId);
+            pnodes.add(pnode);
+        }
 
-        return table.getTable()[hash];
+        return pnodes;
     }
 }

@@ -1,6 +1,5 @@
 package elastic;
 
-import commonmodels.Indexable;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import util.Config;
@@ -148,12 +147,8 @@ public class LookupTable implements Serializable {
         loadBalanceAlgorithm.copyBucket(this, node, to);
     }
 
-    public Indexable write(String filename) {
-        return readWriteAlgorithm.write(this, filename);
-    }
-
-    public Indexable read(String filename) {
-        return readWriteAlgorithm.read(this, filename);
+    public List<PhysicalNode> lookup(String filename) {
+        return readWriteAlgorithm.lookup(this, filename);
     }
 
     public void expand() {
@@ -181,5 +176,19 @@ public class LookupTable implements Serializable {
     @Override
     public String toString() {
         return "Epoch: " + epoch + "\n" + Arrays.toString(table);
+    }
+
+    public String updateTable(Object o) {
+        if (o instanceof LookupTable) {
+            LookupTable remoteTable = (LookupTable)o;
+            this.setTable(remoteTable.getTable());
+            this.setEpoch(remoteTable.getEpoch());
+            this.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
+
+            return "Table updated.";
+        }
+        else {
+            return "Invalid table type.";
+        }
     }
 }

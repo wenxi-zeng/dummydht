@@ -1,6 +1,6 @@
 package datanode.strategies;
 
-import commonmodels.CommonCommand;
+import commands.DaemonCommand;
 import commonmodels.DataNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -55,7 +55,7 @@ public abstract class MembershipStrategy {
 
         for (String seed : dataNode.getSeeds()) {
             if (!seed.equals(dataNode.getAddress()) && !seed.equals(dataNode.getLocalAddress())) {
-                Request request = new Request().withHeader(CommonCommand.FETCH.name());
+                Request request = new Request().withHeader(DaemonCommand.FETCH.name());
                 socketClient.send(seed, request, callBack);
             }
             if (fetched.get()) break;
