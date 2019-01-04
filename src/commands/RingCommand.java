@@ -360,7 +360,11 @@ public enum RingCommand implements Command {
     LISTPHYSICALNODES {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(RingCommand.LISTPHYSICALNODES.name());
+            Request request = new Request().withHeader(RingCommand.LISTPHYSICALNODES.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -373,12 +377,18 @@ public enum RingCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return RingCommand.LISTPHYSICALNODES.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return RingCommand.LISTPHYSICALNODES.name() + " %s";
+            else
+                return RingCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
 
     },
@@ -386,7 +396,11 @@ public enum RingCommand implements Command {
     PRINTLOOKUPTABLE {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(RingCommand.PRINTLOOKUPTABLE.name());
+            Request request = new Request().withHeader(RingCommand.PRINTLOOKUPTABLE.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -399,12 +413,18 @@ public enum RingCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return RingCommand.PRINTLOOKUPTABLE.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return RingCommand.PRINTLOOKUPTABLE.name() + " %s";
+            else
+                return RingCommand.PRINTLOOKUPTABLE.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
 
     },

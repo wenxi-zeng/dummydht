@@ -9,6 +9,7 @@ import elastic.BucketNode;
 import elastic.LookupTable;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
+import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
@@ -332,11 +333,15 @@ public enum ElasticCommand implements Command {
     EXPAND {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            if (args.length != 1)  {
+            if (args.length !=  1 && args.length != 2)  {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            return new Request().withHeader(ElasticCommand.EXPAND.name());
+            Request request = new Request().withHeader(ElasticCommand.EXPAND.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -349,23 +354,33 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.EXPAND.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.EXPAND.name() + " %s";
+            else
+                return ElasticCommand.EXPAND.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
     SHRINK {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            if (args.length != 1)  {
+            if (args.length !=  1 && args.length != 2)  {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            return new Request().withHeader(ElasticCommand.SHRINK.name());
+            Request request = new Request().withHeader(ElasticCommand.SHRINK.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -376,21 +391,32 @@ public enum ElasticCommand implements Command {
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
+
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.SHRINK.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.SHRINK.name() + " %s";
+            else
+                return ElasticCommand.SHRINK.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
     LISTPHYSICALNODES {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(ElasticCommand.LISTPHYSICALNODES.name());
+            Request request = new Request().withHeader(ElasticCommand.LISTPHYSICALNODES.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -401,21 +427,32 @@ public enum ElasticCommand implements Command {
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
+
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.LISTPHYSICALNODES.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.LISTPHYSICALNODES.name() + " %s";
+            else
+                return ElasticCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
     PRINTLOOKUPTABLE {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(ElasticCommand.PRINTLOOKUPTABLE.name());
+            Request request = new Request().withHeader(ElasticCommand.PRINTLOOKUPTABLE.name());
+            if (args.length == 2)
+                request.setReceiver(args[1]);
+
+            return request;
         }
 
         @Override
@@ -428,12 +465,18 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.PRINTLOOKUPTABLE.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.PRINTLOOKUPTABLE.name() + " %s";
+            else
+                return ElasticCommand.PRINTLOOKUPTABLE.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
