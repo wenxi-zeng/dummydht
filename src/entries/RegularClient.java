@@ -153,10 +153,11 @@ public class RegularClient {
         connect();
     }
 
-    private PhysicalNode choseServer(String filename) {
+    private PhysicalNode choseServer(String attachment) {
+        String[] filename = attachment.split(" ");
         Request request = new Request()
                     .withHeader(RingCommand.LOOKUP.name())
-                    .withAttachment(filename);
+                    .withAttachment(filename[0]);
         Response response = terminal.process(request);
 
         @SuppressWarnings("unchecked")

@@ -330,12 +330,18 @@ public enum CephCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CephCommand.LISTPHYSICALNODES.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return CephCommand.LISTPHYSICALNODES.name() + " %s";
+            else
+                return CephCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
@@ -355,12 +361,18 @@ public enum CephCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CephCommand.PRINTCLUSTERMAP.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return CephCommand.PRINTCLUSTERMAP.name() + " %s";
+            else
+                return CephCommand.PRINTCLUSTERMAP.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 

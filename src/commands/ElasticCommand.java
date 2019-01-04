@@ -9,6 +9,7 @@ import elastic.BucketNode;
 import elastic.LookupTable;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
+import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
@@ -349,12 +350,18 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.EXPAND.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.EXPAND.name() + " %s";
+            else
+                return ElasticCommand.EXPAND.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
@@ -376,14 +383,21 @@ public enum ElasticCommand implements Command {
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
+
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.SHRINK.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.SHRINK.name() + " %s";
+            else
+                return ElasticCommand.SHRINK.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
@@ -401,14 +415,21 @@ public enum ElasticCommand implements Command {
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 
+
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.LISTPHYSICALNODES.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.LISTPHYSICALNODES.name() + " %s";
+            else
+                return ElasticCommand.LISTPHYSICALNODES.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 
@@ -428,12 +449,18 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.PRINTLOOKUPTABLE.name();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return ElasticCommand.PRINTLOOKUPTABLE.name() + " %s";
+            else
+                return ElasticCommand.PRINTLOOKUPTABLE.name();
         }
 
         @Override
         public String getHelpString() {
-            return getParameterizedString();
+            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
+                return String.format(getParameterizedString(), "[ip:port]");
+            else
+                return getParameterizedString();
         }
     },
 

@@ -1,10 +1,16 @@
 package entries;
 
+import ceph.CephTerminal;
 import commands.CephCommand;
-import commonmodels.transport.Response;
+import commands.DaemonCommand;
 import commands.ElasticCommand;
-import org.apache.commons.lang3.StringUtils;
 import commands.RingCommand;
+import commonmodels.Terminal;
+import commonmodels.transport.Request;
+import commonmodels.transport.Response;
+import elastic.ElasticTerminal;
+import org.apache.commons.lang3.StringUtils;
+import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
@@ -12,6 +18,8 @@ import util.SimpleLog;
 import java.util.Scanner;
 
 public class DataNodeTool {
+
+    private Terminal terminal;
 
     private SocketClient socketClient = new SocketClient();
 
@@ -29,43 +37,74 @@ public class DataNodeTool {
     };
 
     public static void main(String[] args){
-        DataNodeTool dataNodeTool = new DataNodeTool();
+        DataNodeTool dataNodeTool;
 
-        if (args.length == 0){
-            Scanner in = new Scanner(System.in);
-            String command = in.nextLine();
+        try{
+            dataNodeTool = new DataNodeTool();
 
-            while (!command.equalsIgnoreCase("exit")){
-                dataNodeTool.process(command.split(","));
-                command = in.nextLine();
+            if (args.length == 0){
+                Scanner in = new Scanner(System.in);
+                String command = in.nextLine();
+
+                while (!command.equalsIgnoreCase("exit")){
+                    dataNodeTool.process(command);
+                    command = in.nextLine();
+                }
             }
-        }
-        else {
-            dataNodeTool.process(args);
+            else {
+                dataNodeTool.process(StringUtils.join(args,  ' '));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    private void process(String[] args) {
-        if (args[0].equalsIgnoreCase("help")) {
+    public DataNodeTool() throws Exception {
+        String scheme = Config.getInstance().getScheme();
+
+        switch (scheme) {
+            case Config.SCHEME_RING:
+                terminal = new RingTerminal();
+                break;
+            case Config.SCHEME_ELASTIC:
+                terminal = new ElasticTerminal();
+                break;
+            case Config.SCHEME_CEPH:
+                terminal = new CephTerminal();
+                break;
+            default:
+                throw new Exception("Invalid DHT type");
+        }
+    }
+
+    private void process(String command) throws Exception {
+        if (command.equalsIgnoreCase("help")) {
             SimpleLog.v(getHelp());
             return;
         }
 
+        Request request = terminal.translate(command);
+        terminal.process(request);
+
         Config config = Config.getInstance();
-        if (config.getMode().equals(Config.MODE_DISTRIBUTED)) {
-            if (args[1].contains(":")) {
-                String command = StringUtils.join(args,  ' ')
-                        .replace("addNode",  "start")
-                        .replace("removeNode", "stop");
-                socketClient.send(args[1], command, callBack);
+        if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
+            if (config.getSeeds().size() > 0) {
+                request.setReceiver(config.getSeeds().get(0));
             }
             else {
-                SimpleLog.v("Invalid command!");
+                throw new Exception("Proxy not specified.");
             }
         }
-        else if (config.getSeeds().size() > 0){
-            socketClient.send(config.getSeeds().get(0), StringUtils.join(args, ' '), callBack);
+        else {
+            if (request.getHeader().equals(RingCommand.ADDNODE.name())) {
+                request.setHeader(DaemonCommand.START.name());
+            }
+            else if (request.getHeader().equals(RingCommand.REMOVENODE.name())) {
+                request.setHeader(DaemonCommand.STOP.name());
+            }
         }
+
+        socketClient.send(request.getReceiver(), request, callBack);
     }
 
     private static String getHelp() {
@@ -82,60 +121,29 @@ public class DataNodeTool {
     }
 
     private static String getRingHelp() {
-        String help = RingCommand.ADDNODE.getHelpString() + "\n" +
+        return RingCommand.ADDNODE.getHelpString() + "\n" +
                 RingCommand.REMOVENODE.getHelpString() + "\n" +
                 RingCommand.INCREASELOAD.getHelpString() + "\n" +
-                RingCommand.DECREASELOAD.getHelpString() + "\n";
-
-        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
-            help += RingCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
-                    RingCommand.PRINTLOOKUPTABLE.getHelpString() + " <ip>:<port>\n";
-        }
-        else {
-            help += RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
-                    RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
-        }
-
-        return help;
+                RingCommand.DECREASELOAD.getHelpString() + "\n" +
+                RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
     }
 
     private static String getElasticHelp() {
-        String help = ElasticCommand.ADDNODE.getHelpString() + "\n" +
+        return ElasticCommand.ADDNODE.getHelpString() + "\n" +
                         ElasticCommand.REMOVENODE.getHelpString() + "\n" +
-                        ElasticCommand.MOVEBUCKET.getHelpString() + "\n";
-
-        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
-            help += ElasticCommand.EXPAND.getHelpString() + " <ip>:<port>\n" +
-                    ElasticCommand.SHRINK.getHelpString() + " <ip>:<port>\n" +
-                    ElasticCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
-                    ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + " <ip>:<port>\n";
-        }
-        else {
-            help += ElasticCommand.EXPAND.getHelpString() + "\n" +
-                    ElasticCommand.SHRINK.getHelpString() + "\n" +
-                    ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
-                    ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
-        }
-
-        return help;
+                        ElasticCommand.MOVEBUCKET.getHelpString() + "\n" +
+                        ElasticCommand.EXPAND.getHelpString() + "\n" +
+                        ElasticCommand.SHRINK.getHelpString() + "\n" +
+                        ElasticCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
+                        ElasticCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
     }
 
     private static String getCephHelp() {
-        String help = CephCommand.ADDNODE.getHelpString() + "\n" +
+        return CephCommand.ADDNODE.getHelpString() + "\n" +
                         CephCommand.REMOVENODE.getHelpString() + "\n" +
                         CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
                         CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                         CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
-
-        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
-            help += CephCommand.LISTPHYSICALNODES.getHelpString() + " <ip>:<port>\n" +
-                    CephCommand.PRINTCLUSTERMAP.getHelpString() + " <ip>:<port>\n";
-        }
-        else {
-            help += CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
-                    CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
-        }
-
-        return help;
     }
 }
