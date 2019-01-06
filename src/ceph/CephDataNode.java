@@ -5,6 +5,7 @@ import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
+import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,13 @@ public class CephDataNode extends DataNode {
         return new Request()
                 .withHeader(CephCommand.REMOVENODE.name())
                 .withAttachments(nodeIp + ":" + nodePort);
+    }
+
+    @Override
+    public Request prepareLoadBalancingCommand(String... addresses) {
+        int weight = MathX.nextInt((int)ClusterMap.getInstance().getRoot().getWeight());
+        return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                .withAttachment(addresses[0] + " " + weight);
     }
 
     @Override

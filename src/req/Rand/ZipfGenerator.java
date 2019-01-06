@@ -193,4 +193,9 @@ public class ZipfGenerator implements RandomGenerator{
 			return 1.+x*(1./2.)*(1.+x*(1./3.)*(1.+x*(1./4.)));
 		}
 	}
+
+	@Override
+	public void setUpper(int upper) {
+		this.upper = upper;
+	}
 }

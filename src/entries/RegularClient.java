@@ -9,6 +9,8 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
+import req.Rand.RandomGenerator;
+import req.StaticTree;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
@@ -163,5 +165,49 @@ public class RegularClient {
         @SuppressWarnings("unchecked")
         List<PhysicalNode> pnodes = (List<PhysicalNode>) response.getAttachment();
         return pnodes.get(0);
+    }
+
+    public class RequestGenerator {
+
+        private final RandomGenerator generator;
+
+        private final StaticTree tree;
+
+        private final Terminal terminal; // we need terminal in order to tag the request with epoch
+
+        public RequestGenerator(RandomGenerator generator, StaticTree tree, Terminal terminal) {
+            this.generator = generator;
+            this.tree = tree;
+            this.terminal = terminal;
+
+            this.generator.setUpper(this.tree.getFileSize() - 1);
+        }
+
+        public Request nextRead() {
+            StaticTree.RandTreeNode file = tree.getFiles().get(generator.nextInt());
+            String[] args = new String[] { RingCommand.READ.name(),  file.toString() };
+            Request request = null;
+            try {
+                request = terminal.translate(args);
+            } catch (InvalidRequestException e) {
+                e.printStackTrace();
+            }
+
+            return request;
+        }
+
+        public Request nextWrite() {
+            StaticTree.RandTreeNode file = tree.getFiles().get(generator.nextInt());
+            String[] args = new String[] { RingCommand.WRITE.name(),  file.toString(), String.valueOf(file.getSize()) };
+            Request request = null;
+            try {
+                request = terminal.translate(args);
+            } catch (InvalidRequestException e) {
+                e.printStackTrace();
+            }
+
+            return request;
+        }
+
     }
 }

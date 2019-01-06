@@ -38,4 +38,9 @@ public class UniformGenerator implements RandomGenerator{
 		}while(bits-val+(upper-1)<0L);
 		return val;
 	}
+
+	@Override
+	public void setUpper(int upper) {
+		this.upper = upper;
+	}
 }

@@ -6,6 +6,7 @@ import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import org.apache.commons.lang3.StringUtils;
+import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,20 @@ public class RingDataNode extends DataNode {
         return new Request()
                 .withHeader(RingCommand.REMOVENODE.name())
                 .withAttachments(nodeIp + ":" + nodePort);
+    }
+
+    @Override
+    public Request prepareLoadBalancingCommand(String... addresses) {
+        int coin = MathX.nextInt(0, 1);
+
+        if (coin == 0) {
+            return new Request().withHeader(RingCommand.DECREASELOAD.name())
+                    .withAttachment(addresses[0]);
+        }
+        else {
+            return new Request().withHeader(RingCommand.INCREASELOAD.name())
+                    .withAttachment(addresses[0]);
+        }
     }
 
     @Override

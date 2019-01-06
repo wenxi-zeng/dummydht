@@ -1,25 +1,29 @@
 package entries;
 
-import ceph.CephTerminal;
+import ceph.CephDataNode;
 import commands.CephCommand;
 import commands.DaemonCommand;
 import commands.ElasticCommand;
 import commands.RingCommand;
-import commonmodels.Terminal;
+import commonmodels.DataNode;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
-import elastic.ElasticTerminal;
+import elastic.ElasticDataNode;
 import org.apache.commons.lang3.StringUtils;
-import ring.RingTerminal;
+import req.Rand.RandomGenerator;
+import ring.RingDataNode;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class DataNodeTool {
 
-    private Terminal terminal;
+    private DataNode dataNode;
 
     private SocketClient socketClient = new SocketClient();
 
@@ -64,13 +68,13 @@ public class DataNodeTool {
 
         switch (scheme) {
             case Config.SCHEME_RING:
-                terminal = new RingTerminal();
+                dataNode = new RingDataNode();
                 break;
             case Config.SCHEME_ELASTIC:
-                terminal = new ElasticTerminal();
+                dataNode = new ElasticDataNode();
                 break;
             case Config.SCHEME_CEPH:
-                terminal = new CephTerminal();
+                dataNode = new CephDataNode();
                 break;
             default:
                 throw new Exception("Invalid DHT type");
@@ -83,8 +87,8 @@ public class DataNodeTool {
             return;
         }
 
-        Request request = terminal.translate(command);
-        terminal.process(request);
+        Request request = dataNode.getTerminal().translate(command);
+        dataNode.execute(request);
 
         Config config = Config.getInstance();
         if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
@@ -145,5 +149,69 @@ public class DataNodeTool {
                         CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
                         CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                         CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
+    }
+
+    public class RequestGenerator {
+
+        private final RandomGenerator generator;
+
+        private List<PhysicalNode> activePhysicalNodes;
+
+        private List<PhysicalNode> inactivePhysicalNodes;
+
+        private DataNode dataNode;
+
+        public RequestGenerator(RandomGenerator generator, List<PhysicalNode> physicalNodes, DataNode dataNode) {
+            this.generator = generator;
+            this.inactivePhysicalNodes = physicalNodes;
+            this.activePhysicalNodes = new ArrayList<>();
+            this.dataNode = dataNode;
+        }
+
+        public Request nextAdd() throws Exception {
+            if (inactivePhysicalNodes.size() < 1)
+                throw new Exception("No node available for addition anymore.");
+
+            int key = generator.nextInt(inactivePhysicalNodes.size() - 1);
+            PhysicalNode node = inactivePhysicalNodes.get(key);
+            activePhysicalNodes.add(node);
+            inactivePhysicalNodes.remove(node);
+
+            return dataNode.prepareAddNodeCommand(
+                    node.getAddress(),
+                    node.getPort());
+        }
+
+        public Request nextRemove() throws Exception {
+            if (activePhysicalNodes.size() < 1)
+                throw new Exception("No node available for removal anymore.");
+
+            int key = generator.nextInt(activePhysicalNodes.size() - 1);
+            PhysicalNode node = activePhysicalNodes.get(key);
+            inactivePhysicalNodes.add(node);
+            activePhysicalNodes.add(node);
+
+            return dataNode.prepareRemoveNodeCommand(
+                    node.getAddress(),
+                    node.getPort());
+        }
+
+        public Request nextLoadBalancing() throws Exception {
+            if (activePhysicalNodes.size() < 2)
+                throw new Exception("Not enough active nodes for load balancing");
+
+            int key1 = generator.nextInt(activePhysicalNodes.size() - 1);
+            int key2;
+            do {
+                key2 = generator.nextInt(activePhysicalNodes.size() - 1);
+            } while (key1 == key2);
+
+            PhysicalNode node1 = activePhysicalNodes.get(key1);
+            PhysicalNode node2 = activePhysicalNodes.get(key2);
+
+            return dataNode.prepareLoadBalancingCommand(
+                    node1.getAddress() + " " + node1.getPort(),
+                    node2.getAddress() + " " + node2.getPort());
+        }
     }
 }

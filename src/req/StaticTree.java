@@ -15,11 +15,35 @@ import java.util.regex.Pattern;
 
 public class StaticTree{
     static Log log=Log.get();
-    RandomGenerator uniform;
+    RandomGenerator generator;
     List<RandTreeNode> emptyDirs=new ArrayList<>();
     List<RandTreeNode> nonEmptyDirs=new ArrayList<>();  //  it's pointless to ls empty dirs
     List<RandTreeNode> files=new ArrayList<>();
     String sep=null;
+
+    public static Log getLog() {
+        return log;
+    }
+
+    public RandomGenerator getGenerator() {
+        return generator;
+    }
+
+    public List<RandTreeNode> getEmptyDirs() {
+        return emptyDirs;
+    }
+
+    public List<RandTreeNode> getNonEmptyDirs() {
+        return nonEmptyDirs;
+    }
+
+    public List<RandTreeNode> getFiles() {
+        return files;
+    }
+
+    public String getSep() {
+        return sep;
+    }
 
     public void shuffleFiles(String file) throws IOException{
         List<Integer> list=parseShuffle(file);
@@ -40,7 +64,7 @@ public class StaticTree{
     }
 
     public void shuffleFiles(){
-        plainShuffle(files,uniform);
+        plainShuffle(files,generator);
     }
 
     public void shuffleFilesUneven(String shuffle) throws IOException{
@@ -55,21 +79,21 @@ public class StaticTree{
                 }
                 order.add(sort);
             }
-            unevenShuffle(files,uniform,order);
+            unevenShuffle(files,generator,order);
         }
     }
 
     //  Fisher–Yates
-    public static <T> void plainShuffle(List<T> list,RandomGenerator uniform){
+    public static <T> void plainShuffle(List<T> list,RandomGenerator generator){
         for(int i=list.size()-1;i>0;--i){
-            int j=uniform.nextInt(i+1);
+            int j=generator.nextInt(i+1);
             T t=list.get(i);
             list.set(i,list.get(j));
             list.set(j,t);
         }
     }
 
-//	static <T,K> void evenShuffle(List<T> list,RandomGenerator uniform,List<List<K>> weight){
+//	static <T,K> void evenShuffle(List<T> list,RandomGenerator generator,List<List<K>> weight){
 //		if(list.size()!=weight.size())
 //			throw new IllegalArgumentException("Original list size and weight size do not match.");
 //		Map<K, Integer> counter=new HashMap<>();
@@ -84,7 +108,7 @@ public class StaticTree{
 //		Arrays.fill(c,0);
 //
 //		Map<K, List<Integer>> map=getCounter(weight);
-//		skew(list,uniform,map);
+//		skew(list,generator,map);
 //	}
 //
 //	private static <K> Map<K, List<Integer>> getCounter(List<List<K>> weight){
@@ -108,11 +132,11 @@ public class StaticTree{
 //		return null;
 //	}
 //
-//	private static <T,K> void skew(List<T> list,RandomGenerator uniform,Map<K, List<Integer>> map){
+//	private static <T,K> void skew(List<T> list,RandomGenerator generator,Map<K, List<Integer>> map){
 //		for(List<Integer> entry : map.values()){
 //			for(int k=entry.size()-1;k>=0;--k){
 //				int i=entry.get(k);
-//				int j=uniform.nextInt(i+1);
+//				int j=generator.nextInt(i+1);
 //				T t=list.get(i);
 //				list.set(i,list.get(j));
 //				list.set(j,t);
@@ -120,7 +144,7 @@ public class StaticTree{
 //		}
 //	}
 
-    public static <T,K> void unevenShuffle(List<T> list,RandomGenerator uniform,List<List<K>> weight){
+    public static <T,K> void unevenShuffle(List<T> list,RandomGenerator generator,List<List<K>> weight){
         if(list.size()!=weight.size())
             throw new IllegalArgumentException("Original list size and weight size do not match.");
 //		Map<K, List<Integer>> map=getCounter(weight);
@@ -129,14 +153,14 @@ public class StaticTree{
             for(K key : weight.get(i)) set.add(key);
         }
         List<K> l=new ArrayList<>(set);
-        K chosen=l.get(uniform.nextInt(l.size()));
+        K chosen=l.get(generator.nextInt(l.size()));
         List<T> removeList=new ArrayList<>();
         for(int i=0;i<weight.size();++i){
             if(weight.get(i).contains(chosen)) removeList.add(list.get(i));
         }
         list.removeAll(removeList);
-        plainShuffle(list,uniform);
-        plainShuffle(removeList,uniform);
+        plainShuffle(list,generator);
+        plainShuffle(removeList,generator);
         list.addAll(0,removeList);
     }
 
@@ -160,28 +184,29 @@ public class StaticTree{
     }
 
     protected StaticTree(){
+        this(new UniformGenerator());
     }
 
-    protected StaticTree(RandomGenerator uniform){
-        this.uniform=uniform;
+    protected StaticTree(RandomGenerator generator){
+        this.generator=generator;
     }
 
-    public StaticTree(RandomGenerator uniform,String sep){
-        this.uniform=uniform;
+    public StaticTree(RandomGenerator generator,String sep){
+        this.generator=generator;
         this.sep=sep;
     }
 
-    public static StaticTree getStaticTree(String filename,UniformGenerator uniform) throws IOException{
-        StaticTree tree=new StaticTree(uniform);
+    public static StaticTree getStaticTree(String filename) throws IOException{
+        StaticTree tree=new StaticTree();
         new TreeParser<StaticTree, RandTreeNode>().parse(tree,filename,false);
         return tree;
     }
 
     protected String randName(){
-        return String.format("%8X%8X",uniform.nextInt(),uniform.nextInt());
+        return String.format("%8X%8X",generator.nextInt(),generator.nextInt());
     }
 
-    protected class RandTreeNode{
+    public class RandTreeNode{
         RandTreeNode parent=null;
         String name=null;
         long size=0;
@@ -202,6 +227,18 @@ public class StaticTree{
         protected RandTreeNode(RandTreeNode parent,String name){
             this.parent=parent;
             this.name=name;
+        }
+
+        public RandTreeNode getParent() {
+            return parent;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public long getSize() {
+            return size;
         }
 
         @Override
@@ -257,8 +294,8 @@ public class StaticTree{
             }
         }
 
-        protected void parse(Tree tree,String filename,RandomGenerator uniform,boolean fillEmpty) throws IOException{
-            tree.uniform=uniform;
+        protected void parse(Tree tree,String filename,RandomGenerator generator,boolean fillEmpty) throws IOException{
+            tree.generator=generator;
             parse(tree,filename,fillEmpty);
         }
 

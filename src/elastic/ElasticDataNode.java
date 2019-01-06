@@ -6,6 +6,8 @@ import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import org.apache.commons.lang3.StringUtils;
+import util.Config;
+import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +61,14 @@ public class ElasticDataNode extends DataNode {
         return new Request()
                 .withHeader(ElasticCommand.REMOVENODE.name())
                 .withAttachments(nodeIp + ":" + nodePort);
+    }
+
+    @Override
+    public Request prepareLoadBalancingCommand(String... addresses) {
+        int bucket = MathX.nextInt(Config.getInstance().getNumberOfHashSlots());
+
+        return new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
+                .withAttachment(addresses[0] + " " + addresses[1] + " " + bucket);
     }
 
     @Override

@@ -38,7 +38,7 @@ public class LocalFileManager {
 
     public void generateFileBuckets(int numberOfBuckets) {
         for (int i = 0; i < numberOfBuckets; i++) {
-            localBuckets.put(i, new FileBucket(i, MathX.NextInt(1000, 10000), MathX.NextInt(Integer.MAX_VALUE)));
+            localBuckets.put(i, new FileBucket(i, MathX.nextInt(1000, 10000), MathX.nextInt(Integer.MAX_VALUE)));
         }
     }
 
@@ -47,7 +47,7 @@ public class LocalFileManager {
     }
 
     public FileBucket write(int bucket) {
-        int fileSize = MathX.NextInt(Integer.MAX_VALUE);
+        int fileSize = MathX.nextInt(Integer.MAX_VALUE);
 
         return write(bucket, fileSize);
     }

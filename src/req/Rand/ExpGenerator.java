@@ -27,4 +27,9 @@ public class ExpGenerator implements RandomGenerator{
 	public double nextDouble(){
 		return -FastMath.log(1.0-uniform.nextDouble())/lambda;
 	}
+
+	@Override
+	public void setUpper(int upper) {
+		this.upper = upper;
+	}
 }

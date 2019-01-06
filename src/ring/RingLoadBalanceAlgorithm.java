@@ -21,7 +21,7 @@ public class RingLoadBalanceAlgorithm {
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
             int bound = successor.getHash() - vnode.getHash();
-            int dh = MathX.NextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+            int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
 
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             increaseLoad(table, dh, vnode);
@@ -43,7 +43,7 @@ public class RingLoadBalanceAlgorithm {
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
             int bound = vnode.getHash() - predecessor.getHash();
-            int dh = MathX.NextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+            int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
 
             SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             decreaseLoad(table, dh, vnode);

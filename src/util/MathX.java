@@ -30,11 +30,11 @@ public class MathX {
         return nonrepeatRandom(bound, size, new ArrayList<>());
     }
 
-    public static int NextInt(int bound) {
+    public static int nextInt(int bound) {
         return (int)(random.nextDouble() * (bound));
     }
 
-    public static int NextInt(int min, int max) {
+    public static int nextInt(int min, int max) {
         return min + (int)(random.nextDouble() * ((max - min) + 1));
     }
 
