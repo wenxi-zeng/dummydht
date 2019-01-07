@@ -30,6 +30,13 @@ public class ResourcesLoader {
         return ResourceBundle.getBundle(filename, Locale.getDefault(), loader);
     }
 
+    public static String getRelativeFileName(String filename) {
+        if (runInJar())
+            return getProgramPath() + File.separator + filename;
+        else
+            return File.separator + filename;
+    }
+
     public static String getProgramPath() {
         URL url = ResourcesLoader.class.getProtectionDomain().getCodeSource().getLocation();
         String jarPath = null;
