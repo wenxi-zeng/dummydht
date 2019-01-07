@@ -9,15 +9,22 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
+import req.Rand.ExpGenerator;
 import req.Rand.RandomGenerator;
+import req.Rand.UniformGenerator;
+import req.Rand.ZipfGenerator;
+import req.RequestTypeGenerator;
 import req.StaticTree;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class RegularClient {
@@ -42,9 +49,7 @@ public class RegularClient {
     };
 
     public static void main(String args[]) {
-        if (args.length > 1) return;
-
-        RegularClient regularClient = null;
+        RegularClient regularClient;
 
         try {
             regularClient = new RegularClient();
@@ -55,6 +60,14 @@ public class RegularClient {
 
         if (args.length == 0) {
             regularClient.run();
+        }
+        else if (args[0].equals("-r")) {
+            if (args.length == 2) {
+                regularClient.generateRequest(args[1]);
+            }
+            else {
+                System.out.println ("Usage: RegularClient -r <filename>");
+            }
         }
         else {
             String[] params = args[0].split(":");
@@ -144,6 +157,25 @@ public class RegularClient {
             SimpleLog.v("No seed/proxy info found!");
         }
     }
+
+    private void generateRequest(String filename) {
+        try {
+            StaticTree tree = StaticTree.getStaticTree(filename);
+            RequestGenerator generator = new RequestGenerator(tree, terminal);
+            long interArrivalTime = Config.getInstance().getReadWriteInterArrivalTime();
+
+            while(true) {
+                Request request = generator.next();
+                PhysicalNode server = choseServer(request.getAttachment());
+                socketClient.send(server.getFullAddress(), request, callBack);
+
+                Thread.sleep(interArrivalTime);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void onTableFetched(Object table) {
         Request request = new Request()
                             .withHeader(DaemonCommand.UPDATE.name())
@@ -175,12 +207,25 @@ public class RegularClient {
 
         private final Terminal terminal; // we need terminal in order to tag the request with epoch
 
-        public RequestGenerator(RandomGenerator generator, StaticTree tree, Terminal terminal) {
-            this.generator = generator;
+        private RequestTypeGenerator headerGenerator;
+
+        public RequestGenerator(StaticTree tree, Terminal terminal) {
+            this.generator = loadGenerator(tree.getFileSize() - 1);
             this.tree = tree;
             this.terminal = terminal;
 
-            this.generator.setUpper(this.tree.getFileSize() - 1);
+            Map<Request, Double> requestTypes = loadRequestRatio();
+            this.headerGenerator = new RequestTypeGenerator(
+                    loadRequestRatio(),
+                    loadGenerator(requestTypes.size()));
+        }
+
+        public Request next() {
+            Request header = headerGenerator.next();
+            if (header.getHeader().equals(RingCommand.READ.name()))
+                return nextRead();
+            else
+                return nextWrite();
         }
 
         public Request nextRead() {
@@ -189,6 +234,7 @@ public class RegularClient {
             Request request = null;
             try {
                 request = terminal.translate(args);
+                request.setEpoch(terminal.getEpoch());
             } catch (InvalidRequestException e) {
                 e.printStackTrace();
             }
@@ -202,6 +248,7 @@ public class RegularClient {
             Request request = null;
             try {
                 request = terminal.translate(args);
+                request.setEpoch(terminal.getEpoch());
             } catch (InvalidRequestException e) {
                 e.printStackTrace();
             }
@@ -209,5 +256,29 @@ public class RegularClient {
             return request;
         }
 
+        private Map<Request, Double> loadRequestRatio() {
+            double[] ratio = Config.getInstance().getReadWriteRatio();
+            Map<Request, Double> map = new HashMap<>();
+            map.put(new Request().withHeader(RingCommand.READ.name()), ratio[Config.RATIO_KEY_READ]);
+            map.put(new Request().withHeader(RingCommand.WRITE.name()), ratio[Config.RATIO_KEY_WRITE]);
+            return map;
+        }
+
+        private RandomGenerator loadGenerator(int upper) {
+            UniformGenerator generator = new UniformGenerator(upper);
+
+            if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_EXP))
+                return new ExpGenerator(
+                        Config.getInstance().getExpLamda(),
+                        upper,
+                        generator);
+            else if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_ZIPF))
+                return new ZipfGenerator(
+                        Config.getInstance().getZipfAlpha(),
+                        upper,
+                        generator);
+            else
+                return generator;
+        }
     }
 }

@@ -11,15 +11,17 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
 import org.apache.commons.lang3.StringUtils;
+import req.Rand.ExpGenerator;
 import req.Rand.RandomGenerator;
+import req.Rand.UniformGenerator;
+import req.Rand.ZipfGenerator;
+import req.RequestTypeGenerator;
 import ring.RingDataNode;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class DataNodeTool {
 
@@ -55,6 +57,14 @@ public class DataNodeTool {
                     command = in.nextLine();
                 }
             }
+            else if (args[0].equals("-r")) {
+                if (args.length == 2) {
+                    dataNodeTool.generateRequest();
+                }
+                else {
+                    System.out.println ("Usage: RegularClient -r <filename>");
+                }
+            }
             else {
                 dataNodeTool.process(StringUtils.join(args,  ' '));
             }
@@ -78,6 +88,22 @@ public class DataNodeTool {
                 break;
             default:
                 throw new Exception("Invalid DHT type");
+        }
+    }
+
+    private void generateRequest() {
+        try {
+            RequestGenerator generator = new RequestGenerator(new ArrayList<>(), dataNode);
+            long interArrivalTime = Config.getInstance().getLoadBalancingInterArrivalTime();
+
+            while(true) {
+                Request request = generator.next();
+                process(request.toCommand());
+
+                Thread.sleep(interArrivalTime);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -161,11 +187,28 @@ public class DataNodeTool {
 
         private DataNode dataNode;
 
-        public RequestGenerator(RandomGenerator generator, List<PhysicalNode> physicalNodes, DataNode dataNode) {
-            this.generator = generator;
+        private RequestTypeGenerator headerGenerator;
+
+        public RequestGenerator(List<PhysicalNode> physicalNodes, DataNode dataNode) {
+            this.generator = loadGenerator(physicalNodes.size() - 1);
             this.inactivePhysicalNodes = physicalNodes;
             this.activePhysicalNodes = new ArrayList<>();
             this.dataNode = dataNode;
+
+            Map<Request, Double> requestTypes = loadRequestRatio();
+            this.headerGenerator = new RequestTypeGenerator(
+                    loadRequestRatio(),
+                    loadGenerator(requestTypes.size()));
+        }
+
+        public Request next() throws Exception {
+            Request header = headerGenerator.next();
+            if (header.getHeader().equals(CephCommand.ADDNODE.name()))
+                return nextAdd();
+            else if (header.getHeader().equals(CephCommand.REMOVENODE.name()))
+                return nextRemove();
+            else
+                return nextLoadBalancing();
         }
 
         public Request nextAdd() throws Exception {
@@ -212,6 +255,32 @@ public class DataNodeTool {
             return dataNode.prepareLoadBalancingCommand(
                     node1.getAddress() + " " + node1.getPort(),
                     node2.getAddress() + " " + node2.getPort());
+        }
+
+        private Map<Request, Double> loadRequestRatio() {
+            double[] ratio = Config.getInstance().getReadWriteRatio();
+            Map<Request, Double> map = new HashMap<>();
+            map.put(new Request().withHeader(CephCommand.ADDNODE.name()), ratio[Config.RATIO_KEY_READ]);
+            map.put(new Request().withHeader(CephCommand.REMOVENODE.name()), ratio[Config.RATIO_KEY_WRITE]);
+            map.put(new Request().withHeader(CephCommand.CHANGEWEIGHT.name()), ratio[Config.RATIO_KEY_LOAD_BALANCING]);
+            return map;
+        }
+
+        private RandomGenerator loadGenerator(int upper) {
+            UniformGenerator generator = new UniformGenerator(upper);
+
+            if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_EXP))
+                return new ExpGenerator(
+                        Config.getInstance().getExpLamda(),
+                        upper,
+                        generator);
+            else if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_ZIPF))
+                return new ZipfGenerator(
+                        Config.getInstance().getZipfAlpha(),
+                        upper,
+                        generator);
+            else
+                return generator;
         }
     }
 }

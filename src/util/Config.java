@@ -28,6 +28,13 @@ public class Config {
     private final static String PROPERTY_LOG_MODE = "log_mode";
     private final static String PROPERTY_SCHEME = "scheme";
     private final static String PROPERTY_NETWORK_SPEED = "network_speed";
+    private final static String PROPERTY_RATIO_READ_WRITE = "read_write_ratio";
+    private final static String PROPERTY_RATIO_LOAD_BALANCING = "load_balancing_ratio";
+    private final static String PROPERTY_INTER_ARRIVAL_TIME_READ_WRITE = "read_write_inter_arrival_time";
+    private final static String PROPERTY_INTER_ARRIVAL_TIME_LOAD_BALANCING = "load_balancing_inter_arrival_time";
+    private final static String PROPERTY_REQUEST_DISTRIBUTION = "request_distribution";
+    private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
+    private final static String PROPERTY_REQUEST_EXP_LAMDA = "lamda";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -40,6 +47,14 @@ public class Config {
     public final static String SCHEME_RING = "ring";
     public final static String SCHEME_ELASTIC = "elastic";
     public final static String SCHEME_CEPH = "ceph";
+    public final static int RATIO_KEY_READ = 0;
+    public final static int RATIO_KEY_WRITE = 1;
+    public final static int RATIO_KEY_ADD = 0;
+    public final static int RATIO_KEY_REMOVE = 1;
+    public final static int RATIO_KEY_LOAD_BALANCING = 2;
+    public final static String REQUEST_DISTRIBUTION_UNIFORM = "uniform";
+    public final static String REQUEST_DISTRIBUTION_ZIPF = "zipf";
+    public final static String REQUEST_DISTRIBUTION_EXP = "exp";
 
     private static volatile Config instance = null;
 
@@ -176,5 +191,39 @@ public class Config {
 
     public float getNetworkSpeed() {
         return networkSpeed;
+    }
+
+    public double[] getReadWriteRatio() {
+        String[] ratio = rb.getString(PROPERTY_RATIO_READ_WRITE).split(",");
+        return Arrays.stream(ratio)
+                .mapToDouble(Double::parseDouble)
+                .toArray();
+    }
+
+    public double[] getLoadBalancingRatio() {
+        String[] ratio = rb.getString(PROPERTY_RATIO_LOAD_BALANCING).split(",");
+        return Arrays.stream(ratio)
+                .mapToDouble(Double::parseDouble)
+                .toArray();
+    }
+
+    public long getReadWriteInterArrivalTime() {
+        return Long.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_TIME_READ_WRITE));
+    }
+
+    public long getLoadBalancingInterArrivalTime() {
+        return Long.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_TIME_LOAD_BALANCING));
+    }
+
+    public String getRequestDistribution() {
+        return rb.getString(PROPERTY_REQUEST_DISTRIBUTION);
+    }
+
+    public double getZipfAlpha() {
+        return Double.valueOf(rb.getString(PROPERTY_REQUEST_ZIPF_ALPHA));
+    }
+
+    public double getExpLamda() {
+        return Double.valueOf(rb.getString(PROPERTY_REQUEST_EXP_LAMDA));
     }
 }
