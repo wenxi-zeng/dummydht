@@ -9,11 +9,9 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
-import req.Rand.ExpGenerator;
-import req.Rand.RandomGenerator;
-import req.Rand.UniformGenerator;
-import req.Rand.ZipfGenerator;
-import req.RequestTypeGenerator;
+import req.RequestGenerator;
+import req.RequestService;
+import req.RequestThread;
 import req.StaticTree;
 import ring.RingTerminal;
 import socket.SocketClient;
@@ -46,6 +44,11 @@ public class RegularClient {
         public void onFailure(String error) {
             SimpleLog.v(error);
         }
+    };
+
+    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = request -> {
+        PhysicalNode server = choseServer(request.getAttachment());
+        socketClient.send(server.getFullAddress(), request, callBack);
     };
 
     public static void main(String args[]) {
@@ -159,19 +162,24 @@ public class RegularClient {
     }
 
     private void generateRequest(String filename) {
+        StaticTree tree;
         try {
-            StaticTree tree = StaticTree.getStaticTree(filename);
-            RequestGenerator generator = new RequestGenerator(tree, terminal);
-            long interArrivalTime = Config.getInstance().getReadWriteInterArrivalTime();
+            tree = StaticTree.getStaticTree(filename);
+        } catch (IOException e) {
+            System.out.println("Failed to load file");
+            return;
+        }
 
-            while(true) {
-                Request request = generator.next();
-                PhysicalNode server = choseServer(request.getAttachment());
-                socketClient.send(server.getFullAddress(), request, callBack);
+        RequestGenerator generator = new ClientRequestGenerator(tree, terminal);
+        int numThreads = Config.getInstance().getNumberOfThreads();
+        RequestService service = new RequestService(numThreads,
+                Config.getInstance().getReadWriteInterArrivalTime(),
+                generator,
+                requestGenerateThreadCallBack);
 
-                Thread.sleep(interArrivalTime);
-            }
-        } catch (IOException | InterruptedException e) {
+        try {
+            service.start();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -199,27 +207,19 @@ public class RegularClient {
         return pnodes.get(0);
     }
 
-    public class RequestGenerator {
-
-        private final RandomGenerator generator;
+    public class ClientRequestGenerator extends RequestGenerator {
 
         private final StaticTree tree;
 
         private final Terminal terminal; // we need terminal in order to tag the request with epoch
 
-        private RequestTypeGenerator headerGenerator;
-
-        public RequestGenerator(StaticTree tree, Terminal terminal) {
-            this.generator = loadGenerator(tree.getFileSize() - 1);
+        public ClientRequestGenerator(StaticTree tree, Terminal terminal) {
+            super(tree.getFileSize() - 1);
             this.tree = tree;
             this.terminal = terminal;
-
-            Map<Request, Double> requestTypes = loadRequestRatio();
-            this.headerGenerator = new RequestTypeGenerator(
-                    loadRequestRatio(),
-                    loadGenerator(requestTypes.size()));
         }
 
+        @Override
         public Request next() {
             Request header = headerGenerator.next();
             if (header.getHeader().equals(RingCommand.READ.name()))
@@ -256,29 +256,13 @@ public class RegularClient {
             return request;
         }
 
-        private Map<Request, Double> loadRequestRatio() {
+        @Override
+        public Map<Request, Double> loadRequestRatio() {
             double[] ratio = Config.getInstance().getReadWriteRatio();
             Map<Request, Double> map = new HashMap<>();
             map.put(new Request().withHeader(RingCommand.READ.name()), ratio[Config.RATIO_KEY_READ]);
             map.put(new Request().withHeader(RingCommand.WRITE.name()), ratio[Config.RATIO_KEY_WRITE]);
             return map;
-        }
-
-        private RandomGenerator loadGenerator(int upper) {
-            UniformGenerator generator = new UniformGenerator(upper);
-
-            if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_EXP))
-                return new ExpGenerator(
-                        Config.getInstance().getExpLamda(),
-                        upper,
-                        generator);
-            else if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_ZIPF))
-                return new ZipfGenerator(
-                        Config.getInstance().getZipfAlpha(),
-                        upper,
-                        generator);
-            else
-                return generator;
         }
     }
 }

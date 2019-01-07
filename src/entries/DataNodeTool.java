@@ -11,11 +11,9 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
 import org.apache.commons.lang3.StringUtils;
-import req.Rand.ExpGenerator;
-import req.Rand.RandomGenerator;
-import req.Rand.UniformGenerator;
-import req.Rand.ZipfGenerator;
-import req.RequestTypeGenerator;
+import req.RequestGenerator;
+import req.RequestService;
+import req.RequestThread;
 import ring.RingDataNode;
 import socket.SocketClient;
 import util.Config;
@@ -39,6 +37,14 @@ public class DataNodeTool {
         @Override
         public void onFailure(String error) {
             SimpleLog.v(error);
+        }
+    };
+
+    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = request -> {
+        try {
+            process(request.toCommand());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     };
 
@@ -92,17 +98,16 @@ public class DataNodeTool {
     }
 
     private void generateRequest() {
+        RequestGenerator generator = new ControlRequestGenerator(new ArrayList<>(), dataNode);
+        int numThreads = Config.getInstance().getNumberOfThreads();
+        RequestService service = new RequestService(numThreads,
+                Config.getInstance().getLoadBalancingInterArrivalTime(),
+                generator,
+                requestGenerateThreadCallBack);
+
         try {
-            RequestGenerator generator = new RequestGenerator(new ArrayList<>(), dataNode);
-            long interArrivalTime = Config.getInstance().getLoadBalancingInterArrivalTime();
-
-            while(true) {
-                Request request = generator.next();
-                process(request.toCommand());
-
-                Thread.sleep(interArrivalTime);
-            }
-        } catch (Exception e) {
+            service.start();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -177,9 +182,7 @@ public class DataNodeTool {
                         CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
     }
 
-    public class RequestGenerator {
-
-        private final RandomGenerator generator;
+    public class ControlRequestGenerator extends RequestGenerator {
 
         private List<PhysicalNode> activePhysicalNodes;
 
@@ -187,20 +190,14 @@ public class DataNodeTool {
 
         private DataNode dataNode;
 
-        private RequestTypeGenerator headerGenerator;
-
-        public RequestGenerator(List<PhysicalNode> physicalNodes, DataNode dataNode) {
-            this.generator = loadGenerator(physicalNodes.size() - 1);
+        public ControlRequestGenerator(List<PhysicalNode> physicalNodes, DataNode dataNode) {
+            super(physicalNodes.size() - 1);
             this.inactivePhysicalNodes = physicalNodes;
             this.activePhysicalNodes = new ArrayList<>();
             this.dataNode = dataNode;
-
-            Map<Request, Double> requestTypes = loadRequestRatio();
-            this.headerGenerator = new RequestTypeGenerator(
-                    loadRequestRatio(),
-                    loadGenerator(requestTypes.size()));
         }
 
+        @Override
         public Request next() throws Exception {
             Request header = headerGenerator.next();
             if (header.getHeader().equals(CephCommand.ADDNODE.name()))
@@ -257,30 +254,14 @@ public class DataNodeTool {
                     node2.getAddress() + " " + node2.getPort());
         }
 
-        private Map<Request, Double> loadRequestRatio() {
+        @Override
+        public Map<Request, Double> loadRequestRatio() {
             double[] ratio = Config.getInstance().getReadWriteRatio();
             Map<Request, Double> map = new HashMap<>();
             map.put(new Request().withHeader(CephCommand.ADDNODE.name()), ratio[Config.RATIO_KEY_READ]);
             map.put(new Request().withHeader(CephCommand.REMOVENODE.name()), ratio[Config.RATIO_KEY_WRITE]);
             map.put(new Request().withHeader(CephCommand.CHANGEWEIGHT.name()), ratio[Config.RATIO_KEY_LOAD_BALANCING]);
             return map;
-        }
-
-        private RandomGenerator loadGenerator(int upper) {
-            UniformGenerator generator = new UniformGenerator(upper);
-
-            if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_EXP))
-                return new ExpGenerator(
-                        Config.getInstance().getExpLamda(),
-                        upper,
-                        generator);
-            else if (Config.getInstance().getRequestDistribution().equals(Config.REQUEST_DISTRIBUTION_ZIPF))
-                return new ZipfGenerator(
-                        Config.getInstance().getZipfAlpha(),
-                        upper,
-                        generator);
-            else
-                return generator;
         }
     }
 }

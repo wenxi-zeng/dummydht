@@ -35,6 +35,7 @@ public class Config {
     private final static String PROPERTY_REQUEST_DISTRIBUTION = "request_distribution";
     private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
     private final static String PROPERTY_REQUEST_EXP_LAMDA = "lamda";
+    private final static String PROPERTY_REQUEST_NUMBER_OF_THREADS = "number_threads";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -225,5 +226,9 @@ public class Config {
 
     public double getExpLamda() {
         return Double.valueOf(rb.getString(PROPERTY_REQUEST_EXP_LAMDA));
+    }
+
+    public int getNumberOfThreads() {
+        return Integer.valueOf(rb.getString(PROPERTY_REQUEST_NUMBER_OF_THREADS));
     }
 }
