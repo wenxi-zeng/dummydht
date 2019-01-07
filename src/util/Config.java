@@ -8,12 +8,11 @@ public class Config {
     private final static String CONFIG_PATH = "config";
 
     private final static String PROPERTY_HASH_SLOTS = "hash_slots";
-    private final static String PROPERTY_START_IP = "start_ip";
-    private final static String PROPERTY_IP_RANGE = "ip_range";
+    private final static String PROPERTY_NODES = "nodes";
     private final static String PROPERTY_START_PORT = "start_port";
     private final static String PROPERTY_PORT_RANGE = "port_range";
     private final static String PROPERTY_NUMBER_OF_REPLICAS = "number_of_replicas";
-    private final static String PROPERTY_NUMBER_OF_PHYSICAL_NODES = "number_of_physical_nodes";
+    private final static String PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES = "init_number_of_active_nodes";
     private final static String PROPERTY_VIRTUAL_PHYSICAL_RATIO = "virtual_physical_ratio";
     private final static String PROPERTY_NUMBER_OF_PLACEMENT_GROUPS = "number_of_placement_groups";
     private final static String PROPERTY_INITIAL_WEIGHT = "initial_weight";
@@ -114,12 +113,8 @@ public class Config {
         return defaultNumberOfHashSlots;
     }
 
-    public String getStartIp() {
-        return rb.getString(PROPERTY_START_IP);
-    }
-
-    public int getIpRange() {
-        return Integer.valueOf(rb.getString(PROPERTY_IP_RANGE));
+    public String[] getNodes() {
+        return rb.getString(PROPERTY_NODES).split(",");
     }
 
     public int getStartPort() {
@@ -134,8 +129,8 @@ public class Config {
         return numberOfReplicas;
     }
 
-    public int getNumberOfPhysicalNodes() {
-        return Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_PHYSICAL_NODES));
+    public int getInitNumberOfActiveNodes() {
+        return Integer.valueOf(rb.getString(PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES));
     }
 
     public int getVirtualPhysicalRatio() {

@@ -18,28 +18,21 @@ public class ElasticMembershipAlgorithm {
         Config config = Config.getInstance();
 
         int numberOfHashSlots = config.getNumberOfHashSlots();
-        String startIp = config.getStartIp();
-        int ipRange = config.getIpRange();
+        String[] nodes = config.getNodes();
         int startPort = config.getStartPort();
         int portRange = config.getPortRange();
-        int numberOfPhysicalNodes = config.getNumberOfPhysicalNodes();
+        int numberOfActiveNodes = config.getInitNumberOfActiveNodes();
         int numberOfReplicas = config.getNumberOfReplicas();
-        
-        int lastDot = startIp.lastIndexOf(".") + 1;
-        String ipPrefix = startIp.substring(0, lastDot);
-        int intStartIp = Integer.valueOf(startIp.substring(lastDot));
 
-        Queue<Integer> ipPool = MathX.nonrepeatRandom(ipRange, numberOfPhysicalNodes);
-        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfPhysicalNodes);
+        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfActiveNodes);
 
         List<PhysicalNode> pnodes = new ArrayList<>(); // use for reference when generate table
-        while (!ipPool.isEmpty()){
-            Integer ip = ipPool.poll();
+        for (String ip : nodes){
             Integer port = portPool.poll();
             assert port != null;
 
             PhysicalNode node = new PhysicalNode();
-            node.setAddress(ipPrefix + (intStartIp + ip));
+            node.setAddress(ip);
             node.setPort(startPort + port);
             table.getPhysicalNodeMap().put(node.getId(), node);
             pnodes.add(node);
@@ -59,7 +52,7 @@ public class ElasticMembershipAlgorithm {
             int count = 0;
             while (count++ < numberOfReplicas) {
                 BucketNode bucketNode = table.getTable()[i];
-                PhysicalNode physicalNode = pnodes.get(iterator++ % numberOfPhysicalNodes);
+                PhysicalNode physicalNode = pnodes.get(iterator++ % numberOfActiveNodes);
                 bucketNode.getPhysicalNodes().add(physicalNode.getId());
                 physicalNode.getVirtualNodes().add(bucketNode);
             }

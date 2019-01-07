@@ -19,29 +19,22 @@ public class RingMembershipAlgorithm {
         Config config = Config.getInstance();
 
         int numberOfHashSlots = config.getNumberOfHashSlots();
-        String startIp = config.getStartIp();
-        int ipRange = config.getIpRange();
+        String[] nodes = config.getNodes();
         int startPort = config.getStartPort();
         int portRange = config.getPortRange();
-        int numberOfPhysicalNodes = config.getNumberOfPhysicalNodes();
+        int numberOfActiveNodes = config.getInitNumberOfActiveNodes();
         int virtualPhysicalRatio = config.getVirtualPhysicalRatio();
 
-        int lastDot = startIp.lastIndexOf(".") + 1;
-        String ipPrefix = startIp.substring(0, lastDot);
-        int intStartIp = Integer.valueOf(startIp.substring(lastDot));
-
-        int totalNodes = numberOfPhysicalNodes * virtualPhysicalRatio;
-        Queue<Integer> ipPool = MathX.nonrepeatRandom(ipRange, numberOfPhysicalNodes);
-        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfPhysicalNodes);
+        int totalNodes = numberOfActiveNodes * virtualPhysicalRatio;
+        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfActiveNodes);
         Queue<Integer> hashPool = MathX.nonrepeatRandom(numberOfHashSlots, totalNodes);
 
-        while (!ipPool.isEmpty()){
-            Integer ip = ipPool.poll();
+        for (String ip : nodes){
             Integer port = portPool.poll();
             assert port != null;
 
             PhysicalNode node = new PhysicalNode();
-            node.setAddress(ipPrefix + (intStartIp + ip));
+            node.setAddress(ip);
             node.setPort(startPort + port);
             table.getPhysicalNodeMap().put(node.getId(), node);
 
