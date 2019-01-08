@@ -5,6 +5,7 @@ import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import util.URIHelper;
 
 public class RingTerminal implements Terminal {
 
@@ -40,6 +41,7 @@ public class RingTerminal implements Terminal {
     public Response process(String[] args) throws InvalidRequestException {
         try {
             RingCommand cmd = RingCommand.valueOf(args[0].toUpperCase());
+            URIHelper.verifyAddress(args);
             Request request = cmd.convertToRequest(args);
             return cmd.execute(request);
         }
@@ -58,6 +60,7 @@ public class RingTerminal implements Terminal {
     public Request translate(String[] args) throws InvalidRequestException {
         try {
             RingCommand cmd = RingCommand.valueOf(args[0].toUpperCase());
+            URIHelper.verifyAddress(args);
             return cmd.convertToRequest(args);
         }
         catch (IllegalArgumentException e) {

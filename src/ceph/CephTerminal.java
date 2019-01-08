@@ -5,6 +5,7 @@ import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import util.URIHelper;
 
 public class CephTerminal implements Terminal {
     @Override
@@ -38,6 +39,7 @@ public class CephTerminal implements Terminal {
     public Response process(String[] args) throws InvalidRequestException {
         try {
             CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
+            URIHelper.verifyAddress(args);
             Request request = cmd.convertToRequest(args);
             return cmd.execute(request);
         }
@@ -56,6 +58,7 @@ public class CephTerminal implements Terminal {
     public Request translate(String[] args) throws InvalidRequestException {
         try {
             CephCommand cmd = CephCommand.valueOf(args[0].toUpperCase());
+            URIHelper.verifyAddress(args);
             return cmd.convertToRequest(args);
         }
         catch (IllegalArgumentException e) {

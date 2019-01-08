@@ -37,10 +37,11 @@ public class SingleNodeClient {
 
             try {
                 Response response = terminal.process(cmdLine);
-                System.out.println(response.toString());
+                //System.out.println(response.toString());
             }
             catch (Exception e) {
-                System.out.println(e.getMessage());
+                //System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         }
     }
