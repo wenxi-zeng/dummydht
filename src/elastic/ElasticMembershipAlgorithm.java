@@ -24,18 +24,20 @@ public class ElasticMembershipAlgorithm {
         int numberOfActiveNodes = config.getInitNumberOfActiveNodes();
         int numberOfReplicas = config.getNumberOfReplicas();
 
-        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfActiveNodes);
-
         List<PhysicalNode> pnodes = new ArrayList<>(); // use for reference when generate table
-        for (String ip : nodes){
-            Integer port = portPool.poll();
-            assert port != null;
+        int counter = 0;
+        outerloop:
+        for (int port = startPort; port < startPort + portRange; port++) {
+            for (String ip : nodes) {
+                PhysicalNode node = new PhysicalNode();
+                node.setAddress(ip);
+                node.setPort(port);
+                table.getPhysicalNodeMap().put(node.getId(), node);
+                pnodes.add(node);
 
-            PhysicalNode node = new PhysicalNode();
-            node.setAddress(ip);
-            node.setPort(startPort + port);
-            table.getPhysicalNodeMap().put(node.getId(), node);
-            pnodes.add(node);
+                if (counter++ >= numberOfActiveNodes)
+                    break outerloop;
+            }
         }
 
         // generate table

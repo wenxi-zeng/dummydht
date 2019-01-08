@@ -26,27 +26,31 @@ public class RingMembershipAlgorithm {
         int virtualPhysicalRatio = config.getVirtualPhysicalRatio();
 
         int totalNodes = numberOfActiveNodes * virtualPhysicalRatio;
-        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfActiveNodes);
         Queue<Integer> hashPool = MathX.nonrepeatRandom(numberOfHashSlots, totalNodes);
 
-        for (String ip : nodes){
-            Integer port = portPool.poll();
-            assert port != null;
+        int counter = 0;
+        outerloop:
+        for (int port = startPort; port < startPort + portRange; port++) {
+            for (String ip : nodes){
+                PhysicalNode node = new PhysicalNode();
+                node.setAddress(ip);
+                node.setPort(port);
+                table.getPhysicalNodeMap().put(node.getId(), node);
 
-            PhysicalNode node = new PhysicalNode();
-            node.setAddress(ip);
-            node.setPort(startPort + port);
-            table.getPhysicalNodeMap().put(node.getId(), node);
+                for (int i = 0; i < virtualPhysicalRatio; i++) {
+                    Integer hash = hashPool.poll();
+                    assert hash != null;
 
-            for (int i = 0; i < virtualPhysicalRatio; i++) {
-                Integer hash = hashPool.poll();
-                assert hash != null;
+                    VirtualNode vnode = new VirtualNode(hash, node.getId());
+                    node.getVirtualNodes().add(vnode);
+                    table.getTable().add(vnode);
 
-                VirtualNode vnode = new VirtualNode(hash, node.getId());
-                node.getVirtualNodes().add(vnode);
-                table.getTable().add(vnode);
+                    if (counter++ >= totalNodes)
+                        break outerloop;
+                }
             }
         }
+
 
         SimpleLog.i("Allocating files...");
         LocalFileManager.getInstance().generateFileBuckets(numberOfHashSlots);

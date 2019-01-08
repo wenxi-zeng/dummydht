@@ -6,7 +6,6 @@ import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import filemanagement.LocalFileManager;
 import util.Config;
-import util.MathX;
 import util.SimpleLog;
 
 import java.util.LinkedList;
@@ -45,24 +44,30 @@ public class CephMembershipAlgorithm {
         }
         int avgPhysicalNodesPerCluster = (int)Math.ceil(numberOfActiveNodes / Math.pow(clusterCapacity, numberOfRushLevel - 2));
 
-        LinkedList<String> ipPool = new LinkedList<>();
-        int portPerNode = numberOfActiveNodes / nodes.length;
-        for (int i = 0; i <numberOfActiveNodes; i++) {
-            ipPool.add(nodes[i / portPerNode]);
+        Queue<PhysicalNode> pnodes = new LinkedList<>(); // use for reference when generate table
+        int counter = 0;
+        outerloop:
+        for (int port = startPort; port < startPort + portRange; port++) {
+            for (String ip : nodes) {
+                PhysicalNode node = new PhysicalNode();
+                node.setAddress(ip);
+                node.setPort(port);
+                pnodes.add(node);
+
+                if (counter++ >= numberOfActiveNodes)
+                    break outerloop;
+            }
         }
 
-        Queue<Integer> portPool = MathX.nonrepeatRandom(portRange, numberOfActiveNodes);
         generateMap(
                 map,
                 map.getRoot(),
+                pnodes,
                 1,
-                ipPool,
-                portPool,
                 rushLevelNames,
                 numberOfRushLevel,
                 initialWeight,
                 clusterCapacity,
-                startPort,
                 avgPhysicalNodesPerCluster,
                 (int)Math.pow(clusterCapacity, numberOfRushLevel - 1));
 
@@ -77,10 +82,10 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Map initialized...");
     }
 
-    private void generateMap(ClusterMap map, Clusterable cluster, int currentLevel,
-                            Queue<String> ipPool, Queue<Integer> portPool,
+    private void generateMap(ClusterMap map, Clusterable cluster,
+                            Queue<PhysicalNode> nodePool, int currentLevel,
                             String[] rushLevelNames, int numberOfRushLevel,
-                            float initialWeight, int clusterCapacity, int startPort,
+                            float initialWeight, int clusterCapacity,
                             int avgPhysicalNodesPerCluster, int id) {
         cluster.setId(rushLevelNames[currentLevel - 1] + id);
         cluster.setStatus(STATUS_ACTIVE);
@@ -93,14 +98,12 @@ public class CephMembershipAlgorithm {
                 generateMap(
                         map,
                         cluster.getSubClusters()[i],
+                        nodePool,
                         currentLevel + 1,
-                        ipPool,
-                        portPool,
                         rushLevelNames,
                         numberOfRushLevel,
                         initialWeight,
                         clusterCapacity,
-                        startPort,
                         avgPhysicalNodesPerCluster,
                         --id);
 
@@ -108,15 +111,10 @@ public class CephMembershipAlgorithm {
                     cluster.setWeight(cluster.getWeight() + cluster.getSubClusters()[i].getWeight());
             }
             else {
-                if (i >= avgPhysicalNodesPerCluster || ipPool.peek() == null || portPool.peek() == null)
+                if (i >= avgPhysicalNodesPerCluster || nodePool.peek() == null)
                     return;
 
-                String ip = ipPool.poll();
-                Integer port = portPool.poll();
-                PhysicalNode node = new PhysicalNode();
-                node.setAddress(ip);
-                node.setPort(startPort + port);
-                node.setWeight(initialWeight);
+                PhysicalNode node = nodePool.poll();
                 cluster.getSubClusters()[clusterCapacity - i - 1] = node;
                 cluster.setWeight(cluster.getWeight() + initialWeight);
                 map.getPhysicalNodeMap().put(node.getId(), node);
