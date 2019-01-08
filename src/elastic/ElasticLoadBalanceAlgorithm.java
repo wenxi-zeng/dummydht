@@ -60,6 +60,19 @@ public class ElasticLoadBalanceAlgorithm {
             lookupTable.getLoadBalancingCallBack().onFinished();
     }
 
+    public void transferBucket(LookupTable lookupTable, BucketNode node, PhysicalNode to) {
+        Random random = new Random();
+        int index = random.nextInt(node.getPhysicalNodes().size());
+        requestTransfer(node,
+                lookupTable.getPhysicalNodeMap().get(node.getPhysicalNodes().get(index)),
+                to);
+        node.getPhysicalNodes().remove(index);
+        node.getPhysicalNodes().add(to.getId());
+
+        if (lookupTable.getLoadBalancingCallBack() != null)
+            lookupTable.getLoadBalancingCallBack().onFinished();
+    }
+
     public void onTableExpand(LookupTable table) {
         SimpleLog.i("Expanding table...");
 

@@ -84,10 +84,9 @@ public class ElasticMembershipAlgorithm {
         int[] bucketPool = generateSpareBuckets(table);
         for (int bucket : bucketPool) {
             BucketNode bucketNode = table.getTable()[bucket];
-            bucketNode.getPhysicalNodes().add(node.getId());
             node.getVirtualNodes().add(bucketNode);
 
-            table.copyBucket(bucketNode, node);
+            table.transferBucket(bucketNode, node);
         }
 
         SimpleLog.i("Physical node added...");
@@ -109,10 +108,9 @@ public class ElasticMembershipAlgorithm {
 
         for (int bucket: buckets) {
             BucketNode bucketNode = table.getTable()[bucket];
-            bucketNode.getPhysicalNodes().add(node.getId());
             node.getVirtualNodes().add(bucketNode);
 
-            table.copyBucket(bucketNode, node);
+            table.transferBucket(bucketNode, node);
         }
 
         SimpleLog.i("Physical node added...");
