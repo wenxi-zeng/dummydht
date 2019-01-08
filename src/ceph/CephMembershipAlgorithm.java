@@ -54,7 +54,7 @@ public class CephMembershipAlgorithm {
                 node.setPort(port);
                 pnodes.add(node);
 
-                if (counter++ >= numberOfActiveNodes)
+                if (++counter >= numberOfActiveNodes)
                     break outerloop;
             }
         }

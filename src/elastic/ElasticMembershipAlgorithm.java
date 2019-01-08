@@ -7,6 +7,7 @@ import util.MathX;
 import util.SimpleLog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 
@@ -35,13 +36,17 @@ public class ElasticMembershipAlgorithm {
                 table.getPhysicalNodeMap().put(node.getId(), node);
                 pnodes.add(node);
 
-                if (counter++ >= numberOfActiveNodes)
+                if (++counter >= numberOfActiveNodes)
                     break outerloop;
             }
         }
+        PhysicalNode[] pnodesArray = new PhysicalNode[pnodes.size()];
+        pnodes.toArray(pnodesArray);
+        MathX.shuffle(pnodesArray);
+        pnodes = Arrays.asList(pnodesArray);
 
         // generate table
-        int[] array = new int[numberOfHashSlots];
+        Integer[] array = new Integer[numberOfHashSlots];
         table.createTable(numberOfHashSlots);
         for (int i = 0; i < numberOfHashSlots; i++) {
             array[i] = i;
