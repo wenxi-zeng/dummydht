@@ -1,5 +1,9 @@
 package filemanagement;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.io.Serializable;
 
 public class FileBucket implements Serializable {
@@ -53,5 +57,27 @@ public class FileBucket implements Serializable {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append("key", key).append("numberOfFiles", numberOfFiles).append("size", size).append("locked", locked).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(numberOfFiles).append(locked).append(key).append(size).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof FileBucket) == false) {
+            return false;
+        }
+        FileBucket rhs = ((FileBucket) other);
+        return new EqualsBuilder().append(numberOfFiles, rhs.numberOfFiles).append(locked, rhs.locked).append(key, rhs.key).append(size, rhs.size).isEquals();
     }
 }

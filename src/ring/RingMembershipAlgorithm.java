@@ -45,7 +45,7 @@ public class RingMembershipAlgorithm {
                     node.getVirtualNodes().add(vnode);
                     table.getTable().add(vnode);
 
-                    if (counter++ >= totalNodes)
+                    if (++counter >= totalNodes)
                         break outerloop;
                 }
             }

@@ -2,47 +2,45 @@ package entries;
 
 import ceph.CephTerminal;
 import commonmodels.Terminal;
+import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
 import ring.RingTerminal;
+import util.Config;
 
 import java.util.Scanner;
 
 public class SingleNodeClient {
     public static void main(String args[]) {
-        System.out.println("Select DHT type:\n" +
-                "1. Ring\n" +
-                "2. Elastic\n" +
-                "3. Ceph\n");
-        Scanner in = new Scanner(System.in);
-        int type = in.nextInt();
-        in.nextLine();
-
+        String scheme = Config.getInstance().getScheme();
         Terminal terminal;
-        if (type == 1) {
-            terminal = new RingTerminal();
-        }
-        else if (type == 2) {
-            terminal = new ElasticTerminal();
-        }
-        else if (type == 3) {
-            terminal = new CephTerminal();
-        }
-        else {
-            System.out.println("Unknown type\n");
-            return;
+
+        switch (scheme) {
+            case Config.SCHEME_RING:
+                terminal = new RingTerminal();
+                break;
+            case Config.SCHEME_ELASTIC:
+                terminal = new ElasticTerminal();
+                break;
+            case Config.SCHEME_CEPH:
+                terminal = new CephTerminal();
+                break;
+            default:
+                System.out.println("Unknown type\n");
+                return;
         }
 
+        Scanner in = new Scanner(System.in);
         terminal.initialize();
         while (true){
             terminal.printInfo();
             String cmdLine[] = in.nextLine().split("\\s+");
 
             try {
-                terminal.process(cmdLine);
+                Response response = terminal.process(cmdLine);
+                System.out.println(response.toString());
             }
             catch (Exception e) {
-                System.out.println("Command not found");
-                e.printStackTrace();
+                System.out.println(e.getMessage());
             }
         }
     }
