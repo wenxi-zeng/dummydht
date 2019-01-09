@@ -1,6 +1,8 @@
 package ceph;
 
 import commonmodels.Indexable;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class PlacementGroup implements Indexable {
 
@@ -38,7 +40,7 @@ public class PlacementGroup implements Indexable {
 
     @Override
     public String getDisplayId() {
-        return id;
+        return id + "[r" + index + "]";
     }
 
     public String getId() {
@@ -52,5 +54,22 @@ public class PlacementGroup implements Indexable {
     @Override
     public int compareTo(Indexable o) {
         return Integer.compare(getHash(), o.getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(id).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof PlacementGroup) == false) {
+            return false;
+        }
+        PlacementGroup rhs = ((PlacementGroup) other);
+        return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
 }

@@ -53,6 +53,7 @@ public class CephMembershipAlgorithm {
                 node.setAddress(ip);
                 node.setPort(port);
                 pnodes.add(node);
+                node.setWeight(initialWeight);
 
                 if (++counter >= numberOfActiveNodes)
                     break outerloop;
@@ -135,8 +136,11 @@ public class CephMembershipAlgorithm {
                         node.getStatus().equals(STATUS_ACTIVE) &&
                         (node instanceof PhysicalNode)) {
                     PhysicalNode pnode = (PhysicalNode)node;
-                    pnode.getVirtualNodes().add(new PlacementGroup(pgid, r));
-                    count++;
+                    PlacementGroup pg = new PlacementGroup(pgid, r);
+                    if (!pnode.getVirtualNodes().contains(pg)) {
+                        pnode.getVirtualNodes().add(pg);
+                        count++;
+                    }
                 }
 
                 r += 1;
@@ -172,7 +176,8 @@ public class CephMembershipAlgorithm {
 
         map.getPhysicalNodeMap().put(node.getId(), node);
         map.getWeightDistributeStrategy().onNodeAddition(map, cluster, node);
-        map.loadBalancing(cluster);
+        //map.loadBalancing(cluster);
+        map.loadBalancing(map.getRoot());
 
         SimpleLog.i("Physical node added...");
     }

@@ -7,10 +7,7 @@ import filemanagement.FileTransferManager;
 import util.Config;
 import util.SimpleLog;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static util.Config.STATUS_ACTIVE;
@@ -19,6 +16,7 @@ import static util.Config.STATUS_INACTIVE;
 public class CephLoadBalanceAlgorithm {
 
     public void loadBalancing(ClusterMap map, Clusterable clusterable) {
+        List<Tuple> transferTupleList = new ArrayList<>();
         List<Clusterable> leaves = clusterable.getLeaves();
 
         // This is for single node test, thus we have to iterate every physical node.
@@ -38,7 +36,10 @@ public class CephLoadBalanceAlgorithm {
             for (Indexable placementGroup : pnode.getVirtualNodes()) {
                 int r = placementGroup.getIndex();
                 PlacementGroup pg = (PlacementGroup) placementGroup;
-                Clusterable replica = map.rush(pg.getId(), r);
+                Clusterable replica;
+                do {
+                    replica = map.rush(pg.getId(), r++);
+                } while (replica.getStatus().equals(STATUS_INACTIVE));
 
                 // if a placement group is determined that it is not
                 // in the current node, we need to transfer it to the replica.
@@ -50,21 +51,27 @@ public class CephLoadBalanceAlgorithm {
 
             // batch processing transfer.
             for (Map.Entry<String, List<Indexable>> replica : transferList.entrySet()) {
-                pnode.getVirtualNodes().removeAll(replica.getValue());
                 PhysicalNode to = map.getPhysicalNodeMap().get(replica.getKey());
-                to.getVirtualNodes().addAll(replica.getValue());
-                requestTransfer(replica.getValue(), pnode, to);
+                Tuple tuple = new Tuple(pnode, to, replica.getValue());
+                transferTupleList.add(tuple);
             }
-
-            if (map.getLoadBalancingCallBack() != null)
-                map.getLoadBalancingCallBack().onFinished();
         }
+
+        for (Tuple tuple : transferTupleList) {
+            tuple.from.getVirtualNodes().removeAll(tuple.placementGroup);
+            tuple.to.getVirtualNodes().addAll(tuple.placementGroup);
+            requestTransfer(tuple.placementGroup, tuple.from, tuple.to);
+        }
+
+        if (map.getLoadBalancingCallBack() != null)
+            map.getLoadBalancingCallBack().onFinished();
     }
 
     public void failureRecovery(ClusterMap map, Clusterable failedNode) {
         // This is for single node test, thus we have to iterate every physical node.
         // In realistic solution, iteration is not needed, since the content of the
         // the loop will run in each individual data node.
+        List<Tuple> replicationTupleList = new ArrayList<>();
         for (Map.Entry<String, PhysicalNode> entry : map.getPhysicalNodeMap().entrySet()) {
             PhysicalNode pnode = entry.getValue();
             if (pnode.getStatus().equals(STATUS_INACTIVE)) continue;
@@ -81,9 +88,10 @@ public class CephLoadBalanceAlgorithm {
                 int r = 0;
                 boolean replicatePG = false;
                 PlacementGroup pg = (PlacementGroup) placementGroup;
+                Clusterable replica = null;
 
                 while (count < Config.getInstance().getNumberOfReplicas()) {
-                    Clusterable replica = map.rush(pg.getId(), r++);
+                    replica = map.rush(pg.getId(), r++);
 
                     // if replicatePG = false, we need to keep checking if the replica
                     // is the failure node.
@@ -93,39 +101,44 @@ public class CephLoadBalanceAlgorithm {
                     if (!replicatePG && replica.getId().equals(failedNode.getId())) {
                         replicatePG = true;
                     }
-
-                    count++;
+                    // ignore the failure nodes
+                    if (replica.getStatus().equals(STATUS_ACTIVE) && !replica.getId().equals(failedNode.getId())){
+                        count++;
+                    }
                 }
 
                 // if this PG has been determined that it has replica in the failure node,
                 // find a new replica for it.
                 if (replicatePG) {
-                    // we need this do-while loop to make sure the new replica node is active.
-                    Clusterable replica;
-                    do {
+                    // we need this do-while loop to make sure the new replica is active and not itself.
+                    while (replica.getStatus().equals(STATUS_INACTIVE) || replica.getId().equals(pnode.getId())) {
                         replica = map.rush(pg.getId(), r++);
                     }
-                    while (!replica.getStatus().equals(STATUS_ACTIVE));
 
                     // add the replica to replication list, we will copy the
                     // placement group to it later.
-                    pg.setIndex(r - 1);
                     replicationList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
-                    replicationList.get(replica.getId()).add(pg);
-                    break;
+                    replicationList.get(replica.getId()).add(new PlacementGroup(pg.getId(), r - 1));
                 }
             }
 
             // batch processing replications.
             for (Map.Entry<String, List<Indexable>> replica : replicationList.entrySet()) {
                 PhysicalNode to = map.getPhysicalNodeMap().get(replica.getKey());
-                to.getVirtualNodes().addAll(replica.getValue());
-                requestReplication(replica.getValue(), pnode, map.getPhysicalNodeMap().get(replica.getKey()));
+                Tuple tuple = new Tuple(pnode, to, replica.getValue());
+                replicationTupleList.add(tuple);
             }
-
-            if (map.getLoadBalancingCallBack() != null)
-                map.getLoadBalancingCallBack().onFinished();
         }
+
+        for (Tuple tuple : replicationTupleList) {
+            Set<Indexable> merged = new HashSet<>(tuple.placementGroup);
+            merged.addAll(tuple.to.getVirtualNodes());
+            tuple.to.setVirtualNodes(new ArrayList<>(merged));
+            requestReplication(tuple.placementGroup, tuple.from, tuple.to);
+        }
+
+        if (map.getLoadBalancingCallBack() != null)
+            map.getLoadBalancingCallBack().onFinished();
     }
 
     public void changeWeight(ClusterMap map, PhysicalNode node, float deltaWeight) {
@@ -173,5 +186,20 @@ public class CephLoadBalanceAlgorithm {
                 placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
                 fromNode,
                 toNode);
+    }
+
+    // Private class
+    // A compromise of single node computation
+    // Not necessary for realistic case
+    private class Tuple {
+        PhysicalNode from;
+        PhysicalNode to;
+        List<Indexable> placementGroup;
+
+        public Tuple(PhysicalNode from, PhysicalNode to, List<Indexable> placementGroup) {
+            this.from = from;
+            this.to = to;
+            this.placementGroup = placementGroup;
+        }
     }
 }
