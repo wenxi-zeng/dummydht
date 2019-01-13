@@ -15,4 +15,5 @@ public interface Daemon extends SocketServer.EventHandler, SocketClient.ServerCa
     Response processCommonCommand(Request o);
     Response processDataNodeCommand(Request o);
     void send(String address, int port, Request request, SocketClient.ServerCallBack callBack);
+    void send(String address, Request request, SocketClient.ServerCallBack callBack);
 }

@@ -16,6 +16,7 @@ public class Response implements Serializable
 
     public final static short STATUS_SUCCESS = 0;
     public final static short STATUS_FAILED = 1;
+    public final static short STATUS_INVALID_REQUEST = 2;
 
     /**
      * No args constructor for use in serialization

@@ -53,7 +53,7 @@ public class ElasticDataNode extends DataNode {
         String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
         return new Request()
                 .withHeader(ElasticCommand.ADDNODE.name())
-                .withAttachments(ip + ":" + port, buckets);
+                .withAttachments(nodeIp + ":" + nodePort, buckets);
     }
 
     @Override

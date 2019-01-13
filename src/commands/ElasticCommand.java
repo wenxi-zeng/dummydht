@@ -227,7 +227,7 @@ public enum ElasticCommand implements Command {
                 LookupTable.getInstance().addNode(pnode);
             }
             else {
-                String[] hashVal = args[2].split(",");
+                String[] hashVal = args[1].split(",");
                 LookupTable.getInstance().addNode(pnode, Arrays.stream(hashVal).mapToInt(Integer::parseInt).toArray());
             }
 
@@ -430,18 +430,12 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return ElasticCommand.LISTPHYSICALNODES.name() + " %s";
-            else
-                return ElasticCommand.LISTPHYSICALNODES.name();
+            return ElasticCommand.LISTPHYSICALNODES.name() + " %s";
         }
 
         @Override
         public String getHelpString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return String.format(getParameterizedString(), "[ip:port]");
-            else
-                return getParameterizedString();
+            return String.format(getParameterizedString(), "[ip:port]");
         }
     },
 
@@ -465,18 +459,12 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return ElasticCommand.PRINTLOOKUPTABLE.name() + " %s";
-            else
-                return ElasticCommand.PRINTLOOKUPTABLE.name();
+            return ElasticCommand.PRINTLOOKUPTABLE.name() + " %s";
         }
 
         @Override
         public String getHelpString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return String.format(getParameterizedString(), "[ip:port]");
-            else
-                return getParameterizedString();
+            return String.format(getParameterizedString(), "[ip:port]");
         }
     },
 

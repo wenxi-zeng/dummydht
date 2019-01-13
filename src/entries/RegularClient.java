@@ -107,6 +107,8 @@ public class RegularClient {
             default:
                 throw new Exception("Invalid DHT type");
         }
+
+        terminal.initialize();
     }
 
     private void connect(InetSocketAddress address) {

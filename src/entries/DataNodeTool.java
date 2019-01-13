@@ -95,6 +95,8 @@ public class DataNodeTool {
             default:
                 throw new Exception("Invalid DHT type");
         }
+        dataNode.createTerminal();
+        dataNode.getTerminal().initialize();
     }
 
     private void generateRequest() {
@@ -124,7 +126,8 @@ public class DataNodeTool {
         Config config = Config.getInstance();
         if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
             if (config.getSeeds().size() > 0) {
-                request.setReceiver(config.getSeeds().get(0));
+                if (request.getReceiver() == null)
+                    request.setReceiver(config.getSeeds().get(0));
             }
             else {
                 throw new Exception("Proxy not specified.");

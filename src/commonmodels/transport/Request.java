@@ -14,7 +14,7 @@ import java.io.Serializable;
         "header",
         "sender",
         "receiver",
-        "forward_to",
+        "followup",
         "attachment",
         "epoch"
 })
@@ -27,8 +27,8 @@ public class Request implements Serializable
     private String sender;
     @JsonProperty("receiver")
     private String receiver;
-    @JsonProperty("forward_to")
-    private String forwardTo;
+    @JsonProperty("followup")
+    private String followup;
     @JsonProperty("attachment")
     private String attachment;
     @JsonProperty("epoch")
@@ -51,15 +51,15 @@ public class Request implements Serializable
      * @param receiver
      * @param epoch
      * @param attachment
-     * @param forwardTo
+     * @param followup
      * @param header
      */
-    public Request(String header, String sender, String receiver, String forwardTo, String attachment, long epoch) {
+    public Request(String header, String sender, String receiver, String followup, String attachment, long epoch) {
         super();
         this.header = header;
         this.sender = sender;
         this.receiver = receiver;
-        this.forwardTo = forwardTo;
+        this.followup = followup;
         this.attachment = attachment;
         this.epoch = epoch;
     }
@@ -109,18 +109,18 @@ public class Request implements Serializable
         return this;
     }
 
-    @JsonProperty("forward_to")
-    public String getForwardTo() {
-        return forwardTo;
+    @JsonProperty("followup")
+    public String getFollowup() {
+        return followup;
     }
 
-    @JsonProperty("forward_to")
-    public void setForwardTo(String forwardTo) {
-        this.forwardTo = forwardTo;
+    @JsonProperty("followup")
+    public void setFollowup(String followup) {
+        this.followup = followup;
     }
 
-    public Request withForwardTo(String forwardTo) {
-        this.forwardTo = forwardTo;
+    public Request withFollowup(String followup) {
+        this.followup = followup;
         return this;
     }
 
@@ -179,12 +179,12 @@ public class Request implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("header", header).append("sender", sender).append("receiver", receiver).append("forwardTo", forwardTo).append("attachment", attachment).append("epoch", epoch).toString();
+        return new ToStringBuilder(this).append("header", header).append("sender", sender).append("receiver", receiver).append("followup", followup).append("attachment", attachment).append("epoch", epoch).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sender).append(receiver).append(epoch).append(attachment).append(forwardTo).append(header).toHashCode();
+        return new HashCodeBuilder().append(sender).append(receiver).append(epoch).append(attachment).append(followup).append(header).toHashCode();
     }
 
     @Override
@@ -196,7 +196,7 @@ public class Request implements Serializable
             return false;
         }
         Request rhs = ((Request) other);
-        return new EqualsBuilder().append(sender, rhs.sender).append(receiver, rhs.receiver).append(epoch, rhs.epoch).append(attachment, rhs.attachment).append(forwardTo, rhs.forwardTo).append(header, rhs.header).isEquals();
+        return new EqualsBuilder().append(sender, rhs.sender).append(receiver, rhs.receiver).append(epoch, rhs.epoch).append(attachment, rhs.attachment).append(followup, rhs.followup).append(header, rhs.header).isEquals();
     }
 
     public String toCommand() {

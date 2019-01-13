@@ -362,7 +362,7 @@ public enum ProxyCommand implements Command {
         public Response execute(Request request) {
             Request followupRequest = new Request()
                                 .withHeader(ProxyCommand.START.name())
-                                .withAttachment(request.getAttachment());
+                                .withReceiver(request.getAttachment());
             return new Response(request)
                     .withStatus(Response.STATUS_SUCCESS)
                     .withAttachment(followupRequest);
@@ -395,7 +395,7 @@ public enum ProxyCommand implements Command {
         public Response execute(Request request) {
             Request followupRequest = new Request()
                     .withHeader(ProxyCommand.STOP.name())
-                    .withAttachment(request.getAttachment());
+                    .withReceiver(request.getAttachment());
             return new Response(request)
                     .withStatus(Response.STATUS_SUCCESS)
                     .withAttachment(followupRequest);

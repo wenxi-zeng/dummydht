@@ -80,9 +80,9 @@ public class SocketClient {
                 callBack.onFailure("The asynchronous socket channel cannot be opened!");
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
-            callBack.onFailure(e.getMessage());
+            callBack.onFailure("Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " throws "  + e.getMessage());
         } catch (TimeoutException e) {
-            callBack.onFailure("Remote time out");
+            callBack.onFailure("Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " time out");
         }
     }
 
@@ -132,6 +132,7 @@ public class SocketClient {
             message = ex.getMessage();
         } finally {
             try {
+                asynchronousSocketChannel.shutdownInput();
                 asynchronousSocketChannel.close();
 
                 if (success && o instanceof Response)

@@ -14,7 +14,6 @@ import util.Config;
 import util.ObjectConverter;
 import util.SimpleLog;
 
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
@@ -39,6 +38,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     private Proxy() {
         Config config = Config.getInstance();
         daemon = DataNodeDaemon.newInstance(config.getSeeds().get(0));
+        daemon.setSocketEventHandler(this);
     }
 
     public static Proxy getInstance() {
@@ -64,6 +64,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
 
     @Override
     public void exec() throws Exception {
+        startDataNodeServer();
         daemon.exec();
     }
 
@@ -89,7 +90,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
             return command.execute(o);
         }
         catch (IllegalArgumentException e) {
-            return new Response(o).withStatus(Response.STATUS_FAILED)
+            return new Response(o).withStatus(Response.STATUS_INVALID_REQUEST)
                     .withMessage(e.getMessage());
         }
     }
@@ -102,6 +103,11 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     @Override
     public void send(String address, int port, Request request, SocketClient.ServerCallBack callBack) {
         daemon.send(address, port, request, callBack);
+    }
+
+    @Override
+    public void send(String address, Request request, SocketClient.ServerCallBack callBack) {
+        daemon.send(address, request, callBack);
     }
 
     @Override
@@ -122,16 +128,12 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     @Override
     public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
         Response response = processCommonCommand(o);
-        if (response.getStatus() == Response.STATUS_FAILED)
+        if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
-
-        InetSocketAddress address = (InetSocketAddress)out.getRemoteAddress();
-        String ip = address.getHostName();
-        int port = address.getPort();
 
         ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
         out.write(buffer).get();
-        followup(ip, port, response);
+        startFollowupTask(o.getFollowup(), response);
     }
 
     @Override
@@ -144,7 +146,26 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         SimpleLog.i(error);
     }
 
-    private void followup(String candidateIp, int candidatePort, Response response) {
+    private void startFollowupTask(String followupAddress, Response response) {
+        Thread t = new Thread(() -> followup(followupAddress, response));
+        t.start();
+    }
+
+    // follow up sequence:
+    //      Proxy               Data Node               Control Client
+    // 1                                                send ADD/REMOVE NODE
+    // 2    receive
+    // 3    send START/STOP
+    // 4                        receive
+    // 5                        send FETCH
+    // 6    receive
+    // 7    send ADD/REMOVE NODE
+    //          to self
+    // 8    send PROPAGATE
+    //          to self
+    // 9    send UPDATE to nodes
+    // 10                       receive
+    private void followup(String followupAddress, Response response) {
         if (response.getStatus() == Response.STATUS_FAILED) return;
 
         if (response.getHeader().equals(ProxyCommand.PROPAGATE.name())) {
@@ -155,13 +176,19 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         }
         else if (response.getHeader().equals(ProxyCommand.ADDNODE.name()) ||
                 response.getHeader().equals(ProxyCommand.REMOVENODE.name())) {
-            processCommonCommand((Request) response.getAttachment());
+            Request request = (Request) response.getAttachment();
+            send(request.getReceiver(), request, this);
         }
         else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
+            if (followupAddress == null) {
+                SimpleLog.i("Could not find the address to follow up");
+                return;
+            }
             Request request = daemon.getDataNodeServer()
                                     .getDataNode()
-                                    .prepareAddNodeCommand(candidateIp, candidatePort);
+                                    .prepareAddNodeCommand(followupAddress);
             processDataNodeCommand(request);
+            followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
         }
     }
 }

@@ -102,6 +102,10 @@ public class DataNodeDaemon implements Daemon {
         return port;
     }
 
+    public void setSocketEventHandler(SocketServer.EventHandler handler) {
+        socketServer.setEventHandler(handler);
+    }
+
     @Override
     public void exec() throws Exception {
         socketServer.start();
@@ -175,7 +179,7 @@ public class DataNodeDaemon implements Daemon {
     @Override
     public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
         Response response = processCommonCommand(o);
-        if (response.getStatus() == Response.STATUS_FAILED)
+        if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
 
         ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
@@ -189,7 +193,7 @@ public class DataNodeDaemon implements Daemon {
             return command.execute(o);
         }
         catch (IllegalArgumentException e) {
-            return new Response(o).withStatus(Response.STATUS_FAILED)
+            return new Response(o).withStatus(Response.STATUS_INVALID_REQUEST)
                     .withMessage(e.getMessage());
         }
     }
@@ -208,6 +212,11 @@ public class DataNodeDaemon implements Daemon {
     @Override
     public void send(String address, int port, Request request, SocketClient.ServerCallBack callBack) {
         socketClient.send(address, port, request, callBack);
+    }
+
+    @Override
+    public void send(String address, Request request, SocketClient.ServerCallBack callBack) {
+        socketClient.send(address, request, callBack);
     }
 
     @Override

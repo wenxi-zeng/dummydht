@@ -4,6 +4,7 @@ import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import util.ObjectConverter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -29,6 +30,10 @@ public class SocketServer {
         this.eventHandler = eventHandler;
     }
 
+    public void setEventHandler(EventHandler eventHandler) {
+        this.eventHandler = eventHandler;
+    }
+
     public void start() throws Exception {
         ExecutorService connectPool = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
         AsynchronousChannelGroup group = AsynchronousChannelGroup.withCachedThreadPool(connectPool, 1);
@@ -41,7 +46,6 @@ public class SocketServer {
                 channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                 channel.bind(new InetSocketAddress(port));
                 channel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
-                    ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 1024);
 
                     @Override
                     public void completed(AsynchronousSocketChannel result, Void attachment) {
@@ -50,12 +54,12 @@ public class SocketServer {
 
                         if ((result != null) && (result.isOpen())) {
                             try {
+                                final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
                                 while (result.read(buffer).get() != -1) {
                                     buffer.flip();
-                                    Object o = ObjectConverter.getObject(buffer);
-                                    if (o instanceof Request) {
-                                        eventHandler.onReceived(result, (Request) o);
-                                    }
+                                    bos.write(ObjectConverter.getBytes(buffer));
 
                                     if (buffer.hasRemaining()) {
                                         buffer.compact();
@@ -63,6 +67,11 @@ public class SocketServer {
                                         buffer.clear();
                                         break;
                                     }
+                                }
+
+                                Object o = ObjectConverter.getObject(bos.toByteArray());
+                                if (o instanceof Request) {
+                                    eventHandler.onReceived(result, (Request) o);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

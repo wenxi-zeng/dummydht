@@ -226,7 +226,7 @@ public enum RingCommand implements Command {
                 LookupTable.getInstance().addNode(pnode);
             }
             else {
-                String[] hashVal = args[2].split(",");
+                String[] hashVal = args[1].split(",");
                 LookupTable.getInstance().addNode(pnode, Arrays.stream(hashVal).mapToInt(Integer::parseInt).toArray());
             }
 
@@ -377,18 +377,12 @@ public enum RingCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return RingCommand.LISTPHYSICALNODES.name() + " %s";
-            else
-                return RingCommand.LISTPHYSICALNODES.name();
+            return RingCommand.LISTPHYSICALNODES.name() + " %s";
         }
 
         @Override
         public String getHelpString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return String.format(getParameterizedString(), "[ip:port]");
-            else
-                return getParameterizedString();
+            return String.format(getParameterizedString(), "[ip:port]");
         }
 
     },
@@ -413,18 +407,12 @@ public enum RingCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return RingCommand.PRINTLOOKUPTABLE.name() + " %s";
-            else
-                return RingCommand.PRINTLOOKUPTABLE.name();
+            return RingCommand.PRINTLOOKUPTABLE.name() + " %s";
         }
 
         @Override
         public String getHelpString() {
-            if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return String.format(getParameterizedString(), "[ip:port]");
-            else
-                return getParameterizedString();
+            return String.format(getParameterizedString(), "[ip:port]");
         }
 
     },

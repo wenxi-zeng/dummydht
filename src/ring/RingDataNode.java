@@ -51,7 +51,7 @@ public class RingDataNode extends DataNode {
         String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
         return new Request()
                 .withHeader(RingCommand.ADDNODE.name())
-                .withAttachments(ip + ":" + port, buckets);
+                .withAttachments(nodeIp + ":" + nodePort, buckets);
     }
 
     @Override
