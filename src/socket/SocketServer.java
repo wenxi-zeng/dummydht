@@ -65,7 +65,6 @@ public class SocketServer {
                                         buffer.compact();
                                     } else {
                                         buffer.clear();
-                                        break;
                                     }
                                 }
 
@@ -77,6 +76,7 @@ public class SocketServer {
                                 e.printStackTrace();
                             } finally {
                                 try {
+                                    result.shutdownOutput();
                                     result.close();
                                 } catch (IOException e) {
                                     e.printStackTrace();

@@ -111,6 +111,7 @@ public class SocketClient {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
             // transmitting data
             asynchronousSocketChannel.write(sendBuffer).get();
+            asynchronousSocketChannel.shutdownOutput();
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             // read response
@@ -132,7 +133,7 @@ public class SocketClient {
             message = ex.getMessage();
         } finally {
             try {
-                asynchronousSocketChannel.shutdownInput();
+                asynchronousSocketChannel.shutdownOutput();
                 asynchronousSocketChannel.close();
 
                 if (success && o instanceof Response)
