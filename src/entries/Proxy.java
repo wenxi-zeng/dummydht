@@ -17,10 +17,14 @@ import util.SimpleLog;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Proxy implements Daemon, LoadBalancingCallBack {
 
     private DataNodeDaemon daemon;
+
+    private ExecutorService pool = Executors.newFixedThreadPool(1);
 
     private static volatile Proxy instance = null;
 
@@ -147,8 +151,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     }
 
     private void startFollowupTask(String followupAddress, Response response) {
-        Thread t = new Thread(() -> followup(followupAddress, response));
-        t.start();
+        pool.execute(() -> followup(followupAddress, response));
     }
 
     // follow up sequence:
