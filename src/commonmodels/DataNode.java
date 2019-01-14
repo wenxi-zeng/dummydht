@@ -117,6 +117,11 @@ public abstract class DataNode {
         return prepareAddNodeCommand(addressStr[0], Integer.valueOf(addressStr[1]));
     }
 
+    public Request prepareRemoveNodeCommand(String address) {
+        String[] addressStr = address.split(":");
+        return prepareRemoveNodeCommand(addressStr[0], Integer.valueOf(addressStr[1]));
+    }
+
     public abstract void createTerminal();
     public abstract Object getTable();
     public abstract String updateTable(Object o);

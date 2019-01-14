@@ -201,6 +201,10 @@ public class DataNodeDaemon implements Daemon {
     @Override
     public Response processDataNodeCommand(Request o) {
         try {
+            if (dataNodeServer == null)
+                return new Response(o).withStatus(Response.STATUS_FAILED)
+                        .withMessage("Node not started");
+
             return dataNodeServer.processCommand(o);
         }
         catch (InvalidRequestException e) {

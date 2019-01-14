@@ -154,44 +154,84 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         pool.execute(() -> followup(followupAddress, response));
     }
 
+    private void followup(String followupAddress, Response response) {
+        if (response.getStatus() == Response.STATUS_FAILED) return;
+
+        if (response.getHeader().equals(ProxyCommand.PROPAGATE.name())) {
+            onFollowupPropagate(followupAddress, response);
+        }
+        else if (response.getHeader().equals(ProxyCommand.ADDNODE.name())) {
+            onFollowupAddNode(followupAddress, response);
+        }
+        else if (response.getHeader().equals(ProxyCommand.REMOVENODE.name())) {
+            onFollowupRemoveNode(followupAddress, response);
+        }
+        else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
+            onFollowupFetch(followupAddress, response);
+        }
+    }
+
+    private void onFollowupPropagate(String followupAddress, Response response) {
+        Request request = new Request()
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
+        propagateTable(request);
+    }
+
     // follow up sequence:
     //      Proxy               Data Node               Control Client
-    // 1                                                send ADD/REMOVE NODE
+    // 1                                                send ADD NODE
     // 2    receive
-    // 3    send START/STOP
+    // 3    send START
     // 4                        receive
     // 5                        send FETCH
     // 6    receive
-    // 7    send ADD/REMOVE NODE
+    // 7    send ADD NODE
     //          to self
     // 8    send PROPAGATE
     //          to self
     // 9    send UPDATE to nodes
     // 10                       receive
-    private void followup(String followupAddress, Response response) {
-        if (response.getStatus() == Response.STATUS_FAILED) return;
+    private void onFollowupAddNode(String followupAddress, Response response) {
+        Request request = (Request) response.getAttachment();
+        send(request.getReceiver(), request, this);
+    }
 
-        if (response.getHeader().equals(ProxyCommand.PROPAGATE.name())) {
-            Request request = new Request()
-                    .withHeader(DaemonCommand.UPDATE.name())
-                    .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
-            propagateTable(request);
+    // follow up sequence:
+    //      Proxy               Data Node               Control Client
+    // 1                                                send REMOVE NODE
+    // 2    receive
+    // 3    send STOP
+    // 4                        receive
+    // 7    send REMOVE NODE
+    //          to self
+    // 8    send PROPAGATE
+    //          to self
+    // 9    send UPDATE to nodes
+    // 10                       receive
+    private void onFollowupRemoveNode(String followupAddress, Response response) {
+        Request request = (Request) response.getAttachment();
+        send(request.getReceiver(), request, this);
+        if (followupAddress == null) {
+            SimpleLog.i("Could not find the address to follow up");
+            return;
         }
-        else if (response.getHeader().equals(ProxyCommand.ADDNODE.name()) ||
-                response.getHeader().equals(ProxyCommand.REMOVENODE.name())) {
-            Request request = (Request) response.getAttachment();
-            send(request.getReceiver(), request, this);
+        Request followRequest = daemon.getDataNodeServer()
+                .getDataNode()
+                .prepareRemoveNodeCommand(followupAddress);
+        processDataNodeCommand(followRequest);
+        followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
+    }
+
+    private void onFollowupFetch(String followupAddress, Response response) {
+        if (followupAddress == null) {
+            SimpleLog.i("Could not find the address to follow up");
+            return;
         }
-        else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
-            if (followupAddress == null) {
-                SimpleLog.i("Could not find the address to follow up");
-                return;
-            }
-            Request request = daemon.getDataNodeServer()
-                                    .getDataNode()
-                                    .prepareAddNodeCommand(followupAddress);
-            processDataNodeCommand(request);
-            followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
-        }
+        Request request = daemon.getDataNodeServer()
+                .getDataNode()
+                .prepareAddNodeCommand(followupAddress);
+        processDataNodeCommand(request);
+        followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
     }
 }

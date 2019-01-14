@@ -254,7 +254,8 @@ public enum RingCommand implements Command {
             }
 
             return new Request().withHeader(RingCommand.REMOVENODE.name())
-                    .withAttachment(args[1]);
+                    .withAttachment(args[1])
+                    .withFollowup(args[1]);
         }
 
         @Override
@@ -347,7 +348,7 @@ public enum RingCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return RingCommand.INITIALIZE.name() + " %s:%s";
+            return RingCommand.DECREASELOAD.name() + " %s:%s";
         }
 
         @Override

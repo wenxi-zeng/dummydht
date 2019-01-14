@@ -52,6 +52,7 @@ public class DataNodeTool {
         DataNodeTool dataNodeTool;
 
         try{
+            SimpleLog.with("ControlClient", 1);
             dataNodeTool = new DataNodeTool();
 
             if (args.length == 0){

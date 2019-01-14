@@ -55,6 +55,7 @@ public class RegularClient {
         RegularClient regularClient;
 
         try {
+            SimpleLog.with("RegularClient", 1);
             regularClient = new RegularClient();
         } catch (Exception e) {
             e.printStackTrace();
