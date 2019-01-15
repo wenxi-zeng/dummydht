@@ -300,8 +300,13 @@ public enum CephCommand implements Command {
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
             ClusterMap.getInstance().changeWeight(pnode, deltaWeight);
 
+            Request followupRequest = new Request()
+                    .withHeader(ElasticCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+
             result = "Weight changed";
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
         @Override
@@ -388,6 +393,28 @@ public enum CephCommand implements Command {
         @Override
         public String getParameterizedString() {
             return CephCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    PROPAGATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.PROPAGATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            return null;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CephCommand.PROPAGATE.name();
         }
 
         @Override

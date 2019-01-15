@@ -330,7 +330,7 @@ public enum ProxyCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ProxyCommand.STATUS.name();
+            return ProxyCommand.PROPAGATE.name();
         }
 
         @Override

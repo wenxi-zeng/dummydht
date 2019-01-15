@@ -305,8 +305,15 @@ public enum RingCommand implements Command {
             pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().increaseLoad(pnode);
 
+            Request followupRequest = new Request()
+                    .withHeader(RingCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+
             result = "Load increased";
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS)
+                    .withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
         @Override
@@ -342,8 +349,15 @@ public enum RingCommand implements Command {
             pnode.setPort(Integer.valueOf(address[1]));
             LookupTable.getInstance().decreaseLoad(pnode);
 
+            Request followupRequest = new Request()
+                    .withHeader(RingCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+
             result = "Load decreased";
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS)
+                    .withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
         @Override
@@ -433,6 +447,28 @@ public enum RingCommand implements Command {
         @Override
         public String getParameterizedString() {
             return RingCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    PROPAGATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(RingCommand.PROPAGATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            return null;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return RingCommand.PROPAGATE.name();
         }
 
         @Override

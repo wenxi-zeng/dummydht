@@ -316,8 +316,13 @@ public enum ElasticCommand implements Command {
             PhysicalNode to = new PhysicalNode(address2[0], Integer.valueOf(address2[1]));
             LookupTable.getInstance().moveBucket(bucketNode, from , to);
 
+            Request followupRequest = new Request()
+                    .withHeader(ElasticCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+
             result = "Bucket moved";
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
         @Override
@@ -350,7 +355,11 @@ public enum ElasticCommand implements Command {
             LookupTable.getInstance().expand();
             String result = "Table expanded";
 
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            Request followupRequest = new Request()
+                    .withHeader(ElasticCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
         @Override
@@ -389,7 +398,11 @@ public enum ElasticCommand implements Command {
             LookupTable.getInstance().shrink();
             String result = "Table shrunk";
 
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            Request followupRequest = new Request()
+                    .withHeader(ElasticCommand.PROPAGATE.name())
+                    .withReceiver(request.getAttachment());
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result)
+                    .withAttachment(followupRequest);
         }
 
 
@@ -484,6 +497,28 @@ public enum ElasticCommand implements Command {
         @Override
         public String getParameterizedString() {
             return ElasticCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    PROPAGATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(ElasticCommand.PROPAGATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            return null;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return ElasticCommand.PROPAGATE.name();
         }
 
         @Override

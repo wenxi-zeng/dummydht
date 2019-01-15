@@ -169,6 +169,11 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
             onFollowupFetch(followupAddress, response);
         }
+        else if (response.getAttachment() instanceof Request) {
+            Request request = (Request) response.getAttachment();
+            if (request.getHeader().equals(ProxyCommand.PROPAGATE.name()))
+                onFollowupPropagate(followupAddress, response);
+        }
     }
 
     private void onFollowupPropagate(String followupAddress, Response response) {
