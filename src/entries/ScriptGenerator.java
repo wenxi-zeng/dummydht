@@ -24,6 +24,8 @@ public class ScriptGenerator {
 
     private final static String FILE_MKDIR_ALL = "mkdir-all.sh";
 
+    private final static String FILE_AUTH_ALL = "auth-all.sh";
+
     private static String SELF;
 
     public static void main(String args[]) {
@@ -33,6 +35,7 @@ public class ScriptGenerator {
         generateUpdateAll();
         generateConfigAll();
         generateMakeDirAll();
+        generateAuthorizeAll();
     }
 
     private static void generateStartAll() {
@@ -154,6 +157,34 @@ public class ScriptGenerator {
         }
 
         return file;
+    }
+
+    private static void generateAuthorizeAll() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_AUTH_ALL);
+        Config config = Config.getInstance();
+        int startPort = config.getStartPort();
+        int portRange = config.getPortRange();
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : config.getNodes()) {
+            StringBuilder command = new StringBuilder();
+            for (int i = 0; i < portRange; i++) {
+                command.append("firewall-cmd --zone=public --permanent --add-port=").append(startPort + i).append("/tcp\n")
+                        .append("firewall-cmd --zone=public --permanent --add-port=").append(startPort + i).append("/udp\n");
+            }
+
+            command.append("systemctl restart firewalld\n");
+            if (node.contains(SELF))
+                stringBuilder.append(command);
+            else
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static String getAddress() {
