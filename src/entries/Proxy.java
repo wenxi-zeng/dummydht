@@ -43,6 +43,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         Config config = Config.getInstance();
         daemon = DataNodeDaemon.newInstance(config.getSeeds().get(0));
         daemon.setSocketEventHandler(this);
+
     }
 
     public static Proxy getInstance() {
@@ -62,13 +63,17 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
 
     @Override
     public void onFinished() {
-        // TODO: propagate table when load balancing is done
-        //propagateTable();
+        // propagate table when load balancing is done
+        Request request = new Request()
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
+        propagateTable(request);
     }
 
     @Override
     public void exec() throws Exception {
         startDataNodeServer();
+        daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         daemon.exec();
     }
 
@@ -157,10 +162,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     private void followup(String followupAddress, Response response) {
         if (response.getStatus() == Response.STATUS_FAILED) return;
 
-        if (response.getHeader().equals(ProxyCommand.PROPAGATE.name())) {
-            onFollowupPropagate(followupAddress, response);
-        }
-        else if (response.getHeader().equals(ProxyCommand.ADDNODE.name())) {
+        if (response.getHeader().equals(ProxyCommand.ADDNODE.name())) {
             onFollowupAddNode(followupAddress, response);
         }
         else if (response.getHeader().equals(ProxyCommand.REMOVENODE.name())) {
@@ -169,18 +171,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
             onFollowupFetch(followupAddress, response);
         }
-        else if (response.getAttachment() instanceof Request) {
-            Request request = (Request) response.getAttachment();
-            if (request.getHeader().equals(ProxyCommand.PROPAGATE.name()))
-                onFollowupPropagate(followupAddress, response);
-        }
-    }
-
-    private void onFollowupPropagate(String followupAddress, Response response) {
-        Request request = new Request()
-                .withHeader(DaemonCommand.UPDATE.name())
-                .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
-        propagateTable(request);
     }
 
     // follow up sequence:
@@ -193,8 +183,8 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     // 6    receive
     // 7    send ADD NODE
     //          to self
-    // 8    send PROPAGATE
-    //          to self
+    // 8    load balancing
+    //          & propagate table
     // 9    send UPDATE to nodes
     // 10                       receive
     private void onFollowupAddNode(String followupAddress, Response response) {
@@ -210,8 +200,8 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     // 4                        receive
     // 7    send REMOVE NODE
     //          to self
-    // 8    send PROPAGATE
-    //          to self
+    // 8    load balancing
+    //          & propagate table
     // 9    send UPDATE to nodes
     // 10                       receive
     private void onFollowupRemoveNode(String followupAddress, Response response) {
@@ -225,7 +215,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
                 .getDataNode()
                 .prepareRemoveNodeCommand(followupAddress);
         processDataNodeCommand(followRequest);
-        followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
     }
 
     private void onFollowupFetch(String followupAddress, Response response) {
@@ -237,6 +226,5 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
                 .getDataNode()
                 .prepareAddNodeCommand(followupAddress);
         processDataNodeCommand(request);
-        followup(followupAddress, new Response().withHeader(ProxyCommand.PROPAGATE.name()));
     }
 }

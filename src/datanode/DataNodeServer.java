@@ -2,6 +2,7 @@ package datanode;
 
 import ceph.CephDataNode;
 import commonmodels.DataNode;
+import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -92,5 +93,9 @@ public class DataNodeServer {
 
     public DataNode getDataNode() {
         return dataNode;
+    }
+
+    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
+        dataNode.setLoadBalancingCallBack(callBack);
     }
 }
