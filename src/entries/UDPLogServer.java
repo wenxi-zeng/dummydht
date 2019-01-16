@@ -1,6 +1,7 @@
 package entries;
 
 import socket.UDPServer;
+import util.Config;
 import util.SimpleLog;
 
 import java.net.SocketException;
@@ -15,7 +16,7 @@ public class UDPLogServer implements UDPServer.EventHandler {
             return;
         }
 
-        int daemonPort = 5999;
+        int daemonPort = Integer.valueOf(Config.getInstance().getLogServer().split(":")[1]);
         if (args.length > 0)
         {
             try

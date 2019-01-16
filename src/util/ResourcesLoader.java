@@ -32,9 +32,9 @@ public class ResourcesLoader {
 
     public static String getRelativeFileName(String filename) {
         if (runInJar())
-            return getProgramPath() + File.separator + filename;
+            return filename == null ? getProgramPath() : getProgramPath() + File.separator + filename;
         else
-            return File.separator + filename;
+            return filename == null ? "" : File.separator + filename;
     }
 
     public static String getProgramPath() {
