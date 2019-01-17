@@ -23,7 +23,8 @@ public abstract class MembershipStrategy {
     public abstract Response getMembersStatus();
 
     public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException, InvalidRequestException {
-        bootstrap();
+        // in case bootstrap takes a long time to response, wrap it with a thread
+        new Thread(this::bootstrap).start();
     }
 
     public void onNodeStopped() {
