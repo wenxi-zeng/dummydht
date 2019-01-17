@@ -92,6 +92,9 @@ public class SocketServer {
                     }
                 });
 
+                if (eventHandler != null)
+                    eventHandler.onBound();
+
                 await();
             } else {
                 throw new Exception("The asynchronous server-socket channel cannot be opened!");
@@ -118,5 +121,6 @@ public class SocketServer {
 
     public interface EventHandler {
         void onReceived(AsynchronousSocketChannel out, Request o) throws Exception;
+        void onBound();
     }
 }

@@ -73,14 +73,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
 
     @Override
     public void exec() throws Exception {
-        // use another thread, since start a data node might invoke communication to proxy
-        pool.execute(() -> {
-            try {
-                startDataNodeServer();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
         daemon.exec();
     }
 
@@ -163,6 +155,18 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
         ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
         out.write(buffer).get();
         startFollowupTask(o.getFollowup(), response);
+    }
+
+    @Override
+    public void onBound() {
+        // use another thread, since start a data node might invoke communication to proxy
+        pool.execute(() -> {
+            try {
+                startDataNodeServer();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override

@@ -62,4 +62,9 @@ public class LogServer implements SocketServer.EventHandler {
             SimpleLog.v("[NIO error]: " + o);
         }
     }
+
+    @Override
+    public void onBound() {
+
+    }
 }

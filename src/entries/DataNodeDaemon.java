@@ -192,6 +192,11 @@ public class DataNodeDaemon implements Daemon {
     }
 
     @Override
+    public void onBound() {
+
+    }
+
+    @Override
     public Response processCommonCommand(Request o) {
         try {
             DaemonCommand command = DaemonCommand.valueOf(o.getHeader());
