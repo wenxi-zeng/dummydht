@@ -26,6 +26,8 @@ public class ScriptGenerator {
 
     private final static String FILE_AUTH_ALL = "auth-all.sh";
 
+    private final static String FILE_DISABLE_FIERWALL_ALL = "disable-firewall-all.sh";
+
     private static String SELF;
 
     public static void main(String args[]) {
@@ -36,6 +38,7 @@ public class ScriptGenerator {
         generateConfigAll();
         generateMakeDirAll();
         generateAuthorizeAll();
+        generateDisableFirewallAll();
     }
 
     private static void generateStartAll() {
@@ -174,6 +177,27 @@ public class ScriptGenerator {
             }
 
             command.append("systemctl restart firewalld\n");
+            if (node.contains(SELF))
+                stringBuilder.append(command);
+            else
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateDisableFirewallAll() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_DISABLE_FIERWALL_ALL);
+        Config config = Config.getInstance();
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : config.getNodes()) {
+            StringBuilder command = new StringBuilder();
+            command.append("systemctl stop firewalld\n");
             if (node.contains(SELF))
                 stringBuilder.append(command);
             else
