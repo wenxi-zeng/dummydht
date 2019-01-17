@@ -116,13 +116,13 @@ public class LookupTable implements Serializable {
     }
 
     public void addNode(Indexable node) {
-        Indexable index = table.find(node); // where the new node is inserted to
+        Indexable index = table.findIndex(node); // where the new node is inserted to
         table.add(index.getIndex(), node); // only add the node to table, not gossiping the change yet
         loadBalanceAlgorithm.nodeJoin(this, index);
     }
 
     public void removeNode(Indexable node) {
-        Indexable index = table.find(node); // where the new node is inserted to
+        Indexable index = table.findIndex(node); // where the new node is inserted to
         table.remove(index.getIndex()); // only remove from table, not gossiping the change yet
         loadBalanceAlgorithm.nodeLeave(this, index);
     }

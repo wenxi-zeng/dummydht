@@ -12,7 +12,7 @@ public class RingReadWriteAlgorithm {
         List<PhysicalNode> pnodes = new ArrayList<>();
 
         int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfHashSlots();
-        VirtualNode node = (VirtualNode)table.getTable().find(new VirtualNode(hash));
+        VirtualNode node = (VirtualNode)table.getTable().findNode(new VirtualNode(hash));
 
         int i = 0;
         do {

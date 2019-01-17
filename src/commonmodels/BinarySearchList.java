@@ -37,6 +37,35 @@ public class BinarySearchList extends ArrayList<Indexable> implements Serializab
 
     /**
      * @param node dummy node with hash
+     * @return the index where the hash is hosted.
+     *
+     *          This function uses binary search {@see Collections.binarySearch} to locate the
+     *          host node of the given hash.
+     *
+     *          Collections.binarySearch returns non-negative index if the node is found.
+     *          Otherwise, returns -(insertion point) - 1.
+     *
+     *          If the index is negative, -(index + 1) is the index of host node.
+     *          If the index is greater than the size of list, the host is the first node in list.
+     *          Otherwise, the index is the actual index of the host
+     *
+     *
+     *          Time Complexity O(log n)
+     */
+    public Indexable findIndex(Indexable node) {
+        int index = Collections.binarySearch(this, node);
+
+        if (index < 0)
+            index = -(index + 1);
+        else if (index >= size())
+            index = 0;
+
+        node.setIndex(get(index).getIndex());
+        return node;
+    }
+
+    /**
+     * @param node dummy node with hash
      * @return the node where the hash is hosted.
      *
      *          This function uses binary search {@see Collections.binarySearch} to locate the
@@ -52,7 +81,7 @@ public class BinarySearchList extends ArrayList<Indexable> implements Serializab
      *
      *          Time Complexity O(log n)
      */
-    public Indexable find(Indexable node) {
+    public Indexable findNode(Indexable node) {
         int index = Collections.binarySearch(this, node);
 
         if (index < 0)
@@ -60,8 +89,7 @@ public class BinarySearchList extends ArrayList<Indexable> implements Serializab
         else if (index >= size())
             index = 0;
 
-        node.setIndex(get(index).getIndex());
-        return node;
+        return get(index);
     }
 
     /**
