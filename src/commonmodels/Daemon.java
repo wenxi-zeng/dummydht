@@ -9,6 +9,7 @@ import socket.SocketServer;
 
 public interface Daemon extends SocketServer.EventHandler, SocketClient.ServerCallBack, FileTransferManager.FileTransferRequestCallBack{
     void exec() throws Exception;
+    void initDataNodeServer() throws Exception;
     void startDataNodeServer() throws Exception;
     void stopDataNodeServer() throws Exception;
     DataNodeServer getDataNodeServer();

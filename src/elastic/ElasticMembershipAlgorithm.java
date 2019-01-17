@@ -70,6 +70,9 @@ public class ElasticMembershipAlgorithm {
         SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Table initialized...");
+
+        if (table.getMembershipCallBack() != null)
+            table.getMembershipCallBack().onInitialized();
     }
 
     public void addPhysicalNode(LookupTable table, PhysicalNode node) {

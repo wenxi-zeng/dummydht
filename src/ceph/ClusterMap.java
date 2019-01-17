@@ -3,6 +3,7 @@ package ceph;
 import ceph.strategies.WeightDistributeStrategy;
 import commonmodels.Clusterable;
 import commonmodels.LoadBalancingCallBack;
+import commonmodels.MembershipCallBack;
 import commonmodels.PhysicalNode;
 import util.Config;
 import util.MathX;
@@ -27,6 +28,8 @@ public class ClusterMap implements Serializable {
     private transient WeightDistributeStrategy weightDistributeStrategy;
 
     private transient LoadBalancingCallBack loadBalancingCallBack;
+
+    private transient MembershipCallBack membershipCallBack;
 
     private static volatile ClusterMap instance = null;
 
@@ -98,6 +101,14 @@ public class ClusterMap implements Serializable {
 
     public void setLoadBalancingCallBack(LoadBalancingCallBack loadBalancingCallBack) {
         this.loadBalancingCallBack = loadBalancingCallBack;
+    }
+
+    public MembershipCallBack getMembershipCallBack() {
+        return membershipCallBack;
+    }
+
+    public void setMembershipCallBack(MembershipCallBack membershipCallBack) {
+        this.membershipCallBack = membershipCallBack;
     }
 
     public Clusterable findCluster(String id) {

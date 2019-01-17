@@ -112,11 +112,16 @@ public class DataNodeDaemon implements Daemon {
     }
 
     @Override
+    public void initDataNodeServer() throws Exception {
+        dataNodeServer = new DataNodeServer(ip, port);
+        FileTransferManager.getInstance().subscribe(this);
+    }
+
+    @Override
     public void startDataNodeServer() throws Exception {
         if (dataNodeServer == null) {
-            dataNodeServer = new DataNodeServer(ip, port);
+            initDataNodeServer();
             dataNodeServer.start();
-            FileTransferManager.getInstance().subscribe(this);
         }
         else {
             throw new Exception("Data node is already started");

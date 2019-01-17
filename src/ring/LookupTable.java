@@ -1,9 +1,6 @@
 package ring;
 
-import commonmodels.BinarySearchList;
-import commonmodels.Indexable;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -25,6 +22,8 @@ public class LookupTable implements Serializable {
     private transient RingReadWriteAlgorithm readWriteAlgorithm;
 
     private transient LoadBalancingCallBack loadBalancingCallBack;
+
+    private transient MembershipCallBack membershipCallBack;
 
     private static volatile LookupTable instance = null;
 
@@ -102,6 +101,14 @@ public class LookupTable implements Serializable {
 
     public void setLoadBalancingCallBack(LoadBalancingCallBack loadBalancingCallBack) {
         this.loadBalancingCallBack = loadBalancingCallBack;
+    }
+
+    public MembershipCallBack getMembershipCallBack() {
+        return membershipCallBack;
+    }
+
+    public void setMembershipCallBack(MembershipCallBack membershipCallBack) {
+        this.membershipCallBack = membershipCallBack;
     }
 
     public void update() {

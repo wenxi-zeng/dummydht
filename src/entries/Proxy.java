@@ -4,6 +4,7 @@ import commands.DaemonCommand;
 import commands.ProxyCommand;
 import commonmodels.Daemon;
 import commonmodels.LoadBalancingCallBack;
+import commonmodels.MembershipCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -20,11 +21,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Proxy implements Daemon, LoadBalancingCallBack {
+public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack {
 
     private DataNodeDaemon daemon;
 
-    private ExecutorService pool = Executors.newFixedThreadPool(1);
+    private ExecutorService pool = Executors.newFixedThreadPool(2);
 
     private static volatile Proxy instance = null;
 
@@ -72,14 +73,33 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
 
     @Override
     public void exec() throws Exception {
-        startDataNodeServer();
-        daemon.getDataNodeServer().setLoadBalancingCallBack(this);
+        // use another thread, since start a data node might invoke communication to proxy
+        pool.execute(() -> {
+            try {
+                startDataNodeServer();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         daemon.exec();
     }
 
     @Override
+    public void initDataNodeServer() throws Exception {
+        daemon.initDataNodeServer();
+        daemon.getDataNodeServer().setLoadBalancingCallBack(this);
+        daemon.getDataNodeServer().setMembershipCallBack(this);
+    }
+
+    @Override
     public void startDataNodeServer() throws Exception {
-        daemon.startDataNodeServer();
+        if (daemon.getDataNodeServer() == null) {
+            initDataNodeServer();
+            daemon.getDataNodeServer().start();
+        }
+        else {
+            throw new Exception("Proxy is already started");
+        }
     }
 
     @Override
@@ -226,5 +246,16 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
                 .getDataNode()
                 .prepareAddNodeCommand(followupAddress);
         processDataNodeCommand(request);
+    }
+
+    @Override
+    public void onInitialized() {
+        // start nodes in table when initialization is done
+        Request request = new Request()
+                .withHeader(DaemonCommand.START.name());
+
+        for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
+            send(node.getAddress(), node.getPort(), request, this);
+        }
     }
 }

@@ -3,6 +3,7 @@ package elastic;
 import commands.ElasticCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
+import commonmodels.MembershipCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import org.apache.commons.lang3.StringUtils;
@@ -74,6 +75,11 @@ public class ElasticDataNode extends DataNode {
     @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         LookupTable.getInstance().setLoadBalancingCallBack(callBack);
+    }
+
+    @Override
+    public void setMembershipCallBack(MembershipCallBack callBack) {
+        LookupTable.getInstance().setMembershipCallBack(callBack);
     }
 
 }

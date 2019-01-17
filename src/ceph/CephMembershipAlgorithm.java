@@ -81,6 +81,9 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Map initialized...");
+
+        if (map.getMembershipCallBack() != null)
+            map.getMembershipCallBack().onInitialized();
     }
 
     private void generateMap(ClusterMap map, Clusterable cluster,

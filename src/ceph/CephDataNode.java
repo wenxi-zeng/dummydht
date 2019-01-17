@@ -3,6 +3,7 @@ package ceph;
 import commands.CephCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadBalancingCallBack;
+import commonmodels.MembershipCallBack;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import util.MathX;
@@ -67,6 +68,11 @@ public class CephDataNode extends DataNode {
     @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         ClusterMap.getInstance().setLoadBalancingCallBack(callBack);
+    }
+
+    @Override
+    public void setMembershipCallBack(MembershipCallBack callBack) {
+        ClusterMap.getInstance().setMembershipCallBack(callBack);
     }
 
 }
