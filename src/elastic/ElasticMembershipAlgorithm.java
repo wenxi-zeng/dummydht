@@ -65,10 +65,6 @@ public class ElasticMembershipAlgorithm {
             }
         }
 
-        SimpleLog.i("Allocating files...");
-        LocalFileManager.getInstance().generateFileBuckets(numberOfHashSlots);
-        SimpleLog.i("Files allocated...");
-
         SimpleLog.i("Table initialized...");
 
         if (table.getMembershipCallBack() != null)

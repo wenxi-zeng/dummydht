@@ -21,7 +21,6 @@ public class CephMembershipAlgorithm {
 
         Config config = Config.getInstance();
 
-        int numberOfPlacementGroups = config.getNumberOfPlacementGroups();
         String[] nodes = config.getNodes();
         int startPort = config.getStartPort();
         int portRange = config.getPortRange();
@@ -75,10 +74,6 @@ public class CephMembershipAlgorithm {
         SimpleLog.i("Allocating placement groups...");
         allocatePlacementGroups(map);
         SimpleLog.i("Placement groups allocated...");
-
-        SimpleLog.i("Allocating files...");
-        LocalFileManager.getInstance().generateFileBuckets(numberOfPlacementGroups);
-        SimpleLog.i("Files allocated...");
 
         SimpleLog.i("Map initialized...");
 
