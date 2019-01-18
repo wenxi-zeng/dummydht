@@ -79,6 +79,10 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     @Override
     public void initDataNodeServer() throws Exception {
         daemon.initDataNodeServer();
+    }
+
+    @Override
+    public void initSubscriptions() {
         daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         daemon.getDataNodeServer().setMembershipCallBack(this);
     }
@@ -87,6 +91,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     public void startDataNodeServer() throws Exception {
         if (daemon.getDataNodeServer() == null) {
             initDataNodeServer();
+            initSubscriptions();
             daemon.getDataNodeServer().start();
         }
         else {

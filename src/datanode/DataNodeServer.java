@@ -1,10 +1,7 @@
 package datanode;
 
 import ceph.CephDataNode;
-import commonmodels.DataNode;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -102,5 +99,9 @@ public class DataNodeServer {
 
     public void setMembershipCallBack(MembershipCallBack callBack) {
         dataNode.setMembershipCallBack(callBack);
+    }
+
+    public void setReadWriteCallBack(ReadWriteCallBack callBack) {
+        dataNode.setReadWriteCallBack(callBack);
     }
 }

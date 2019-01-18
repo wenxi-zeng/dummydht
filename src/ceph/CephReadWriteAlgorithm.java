@@ -2,7 +2,10 @@ package ceph;
 
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
+import filemanagement.FileBucket;
+import filemanagement.LocalFileManager;
 import util.Config;
+import util.MathX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,5 +27,33 @@ public class CephReadWriteAlgorithm {
         }
 
         return pnodes;
+    }
+
+    public FileBucket writeAndReplicate(ClusterMap map, String file) {
+        FileBucket fileBucket = writeOnly(map, file);
+
+        if (fileBucket != null && !fileBucket.isLocked() && map.getReadWriteCallBack() != null) {
+            List<PhysicalNode> replicas = lookup(map, file);
+            map.getReadWriteCallBack().onFileWritten(file, replicas);
+        }
+
+        return fileBucket;
+    }
+
+    public FileBucket writeOnly(ClusterMap map, String file) {
+        String[] temp = file.split(" ");
+
+        String filename = temp[0];
+        int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfPlacementGroups();
+        FileBucket fileBucket;
+        if (temp.length == 2) {
+            long filesize = Long.valueOf(temp[1]);
+            fileBucket = LocalFileManager.getInstance().write(hash, filesize);
+        }
+        else {
+            fileBucket = LocalFileManager.getInstance().write(hash);
+        }
+
+        return fileBucket;
     }
 }

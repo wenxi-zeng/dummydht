@@ -126,18 +126,9 @@ public enum ElasticCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            String[] temp = request.getAttachment().split(" ");
-
-            String filename = temp[0];
-            int hash = MathX.positiveHash(filename.hashCode()) % LookupTable.getInstance().getTable().length;
-            FileBucket fileBucket;
-            if (temp.length == 2) {
-                long filesize = Long.valueOf(temp[1]);
-                fileBucket = LocalFileManager.getInstance().write(hash, filesize);
-            }
-            else {
-                fileBucket = LocalFileManager.getInstance().write(hash);
-            }
+            FileBucket fileBucket = LookupTable.getInstance().write(
+                    request.getAttachment(),
+                    request.getEpoch() != Long.MAX_VALUE);
 
             Response response = new Response(request);
             if (fileBucket.isLocked())

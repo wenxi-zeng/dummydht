@@ -3,6 +3,8 @@ package elastic;
 import commonmodels.LoadBalancingCallBack;
 import commonmodels.MembershipCallBack;
 import commonmodels.PhysicalNode;
+import commonmodels.ReadWriteCallBack;
+import filemanagement.FileBucket;
 import util.Config;
 
 import java.io.Serializable;
@@ -25,6 +27,8 @@ public class LookupTable implements Serializable {
     private transient LoadBalancingCallBack loadBalancingCallBack;
 
     private transient MembershipCallBack membershipCallBack;
+
+    private transient ReadWriteCallBack readWriteCallBack;
 
     private static volatile LookupTable instance = null;
 
@@ -123,6 +127,14 @@ public class LookupTable implements Serializable {
         this.membershipCallBack = membershipCallBack;
     }
 
+    public ReadWriteCallBack getReadWriteCallBack() {
+        return readWriteCallBack;
+    }
+
+    public void setReadWriteCallBack(ReadWriteCallBack readWriteCallBack) {
+        this.readWriteCallBack = readWriteCallBack;
+    }
+
     public List<PhysicalNode> getOrderedPhysicalNodeList() {
         List<PhysicalNode> physicalNodes = new ArrayList<>(physicalNodeMap.values());
         physicalNodes.sort(Comparator.comparingInt(o -> o.getVirtualNodes().size()));
@@ -164,6 +176,13 @@ public class LookupTable implements Serializable {
 
     public List<PhysicalNode> lookup(String filename) {
         return readWriteAlgorithm.lookup(this, filename);
+    }
+
+    public FileBucket write(String file, boolean replicate) {
+        if (replicate)
+            return readWriteAlgorithm.writeAndReplicate(this, file);
+        else
+            return readWriteAlgorithm.writeOnly(this, file);
     }
 
     public void expand() {

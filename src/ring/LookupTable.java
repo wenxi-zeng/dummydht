@@ -1,6 +1,7 @@
 package ring;
 
 import commonmodels.*;
+import filemanagement.FileBucket;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -24,6 +25,8 @@ public class LookupTable implements Serializable {
     private transient LoadBalancingCallBack loadBalancingCallBack;
 
     private transient MembershipCallBack membershipCallBack;
+
+    private transient ReadWriteCallBack readWriteCallBack;
 
     private static volatile LookupTable instance = null;
 
@@ -111,6 +114,14 @@ public class LookupTable implements Serializable {
         this.membershipCallBack = membershipCallBack;
     }
 
+    public ReadWriteCallBack getReadWriteCallBack() {
+        return readWriteCallBack;
+    }
+
+    public void setReadWriteCallBack(ReadWriteCallBack readWriteCallBack) {
+        this.readWriteCallBack = readWriteCallBack;
+    }
+
     public void update() {
         epoch = System.currentTimeMillis();
     }
@@ -154,6 +165,13 @@ public class LookupTable implements Serializable {
 
     public List<PhysicalNode> lookup(String filename) {
         return readWriteAlgorithm.lookup(this, filename);
+    }
+
+    public FileBucket write(String file, boolean replicate) {
+        if (replicate)
+            return readWriteAlgorithm.writeAndReplicate(this, file);
+        else
+            return readWriteAlgorithm.writeOnly(this, file);
     }
 
     public String listPhysicalNodes() {

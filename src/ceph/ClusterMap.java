@@ -1,10 +1,8 @@
 package ceph;
 
 import ceph.strategies.WeightDistributeStrategy;
-import commonmodels.Clusterable;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
+import filemanagement.FileBucket;
 import util.Config;
 import util.MathX;
 
@@ -30,6 +28,8 @@ public class ClusterMap implements Serializable {
     private transient LoadBalancingCallBack loadBalancingCallBack;
 
     private transient MembershipCallBack membershipCallBack;
+
+    private transient ReadWriteCallBack readWriteCallBack;
 
     private static volatile ClusterMap instance = null;
 
@@ -109,6 +109,14 @@ public class ClusterMap implements Serializable {
 
     public void setMembershipCallBack(MembershipCallBack membershipCallBack) {
         this.membershipCallBack = membershipCallBack;
+    }
+
+    public ReadWriteCallBack getReadWriteCallBack() {
+        return readWriteCallBack;
+    }
+
+    public void setReadWriteCallBack(ReadWriteCallBack readWriteCallBack) {
+        this.readWriteCallBack = readWriteCallBack;
     }
 
     public Clusterable findCluster(String id) {
@@ -226,6 +234,13 @@ public class ClusterMap implements Serializable {
 
     public List<PhysicalNode> lookup(String filename) {
         return readWriteAlgorithm.lookup(this, filename);
+    }
+
+    public FileBucket write(String file, boolean replicate) {
+        if (replicate)
+            return readWriteAlgorithm.writeAndReplicate(this, file);
+        else
+            return readWriteAlgorithm.writeOnly(this, file);
     }
 
     public String listPhysicalNodes() {

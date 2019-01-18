@@ -1,10 +1,7 @@
 package ring;
 
 import commands.RingCommand;
-import commonmodels.DataNode;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 import commonmodels.transport.Request;
 import org.apache.commons.lang3.StringUtils;
 import util.MathX;
@@ -84,5 +81,10 @@ public class RingDataNode extends DataNode {
     @Override
     public void setMembershipCallBack(MembershipCallBack callBack) {
         LookupTable.getInstance().setMembershipCallBack(callBack);
+    }
+
+    @Override
+    public void setReadWriteCallBack(ReadWriteCallBack callBack) {
+        LookupTable.getInstance().setReadWriteCallBack(callBack);
     }
 }

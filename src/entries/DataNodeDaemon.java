@@ -1,8 +1,10 @@
 package entries;
 
 import commands.DaemonCommand;
+import commands.RingCommand;
 import commonmodels.Daemon;
 import commonmodels.PhysicalNode;
+import commonmodels.ReadWriteCallBack;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -23,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class DataNodeDaemon implements Daemon {
+public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     private SocketServer socketServer;
 
@@ -114,6 +116,11 @@ public class DataNodeDaemon implements Daemon {
     @Override
     public void initDataNodeServer() throws Exception {
         dataNodeServer = new DataNodeServer(ip, port);
+    }
+
+    @Override
+    public void initSubscriptions() {
+        dataNodeServer.setReadWriteCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
     }
 
@@ -121,6 +128,7 @@ public class DataNodeDaemon implements Daemon {
     public void startDataNodeServer() throws Exception {
         if (dataNodeServer == null) {
             initDataNodeServer();
+            initSubscriptions();
             dataNodeServer.start();
         }
         else {
@@ -158,6 +166,7 @@ public class DataNodeDaemon implements Daemon {
 
     @Override
     public void onTransferring(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        // send request to the "from" node, ask "from" to transfer the buckets
         Request request = new Request()
                 .withHeader(DaemonCommand.TRANSFER.name())
                 .withSender(from.getFullAddress())
@@ -168,6 +177,7 @@ public class DataNodeDaemon implements Daemon {
 
     @Override
     public void onReplicating(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
+        // send request to the "from" node, ask "from" to copy the buckets
         Request request = new Request()
                 .withHeader(DaemonCommand.COPY.name())
                 .withSender(from.getFullAddress())
@@ -178,7 +188,14 @@ public class DataNodeDaemon implements Daemon {
 
     @Override
     public void onTransmitted(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
+        // send request to the "toNode" node, ask "toNode" to receive the buckets
+        Request request = new Request()
+                .withHeader(DaemonCommand.RECEIVED.name())
+                .withSender(from.getFullAddress())
+                .withReceiver(toNode.getFullAddress())
+                .withLargeAttachment(buckets);
 
+        send(toNode.getAddress(), toNode.getPort(), request, this);
     }
 
     @Override
@@ -241,5 +258,18 @@ public class DataNodeDaemon implements Daemon {
     @Override
     public void onFailure(String error) {
         SimpleLog.i(error);
+    }
+
+    @Override
+    public void onFileWritten(String file, List<PhysicalNode> replicas) {
+        // replicate file to other replicas
+        Request request = new Request().withHeader(RingCommand.WRITE.name())
+                .withEpoch(Long.MAX_VALUE)
+                .withAttachment(file);
+
+        for (PhysicalNode node : replicas) {
+            if (!node.getFullAddress().equals(dataNodeServer.getDataNode().getAddress()))
+                send(node.getAddress(), node.getPort(), request, this);
+        }
     }
 }

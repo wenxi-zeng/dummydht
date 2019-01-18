@@ -6,6 +6,7 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import entries.Proxy;
+import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 
 import java.util.List;
@@ -277,14 +278,14 @@ public enum ProxyCommand implements Command {
                 result = "Proxy not started";
                 return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
             }
+            else if (request.getLargeAttachment() == null){
+                result = "No file buckets found";
+                return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
+            }
             else {
-                Pattern pattern = Pattern.compile(",");
-                List<Integer> buckets = pattern.splitAsStream(request.getAttachment())
-                        .map(Integer::valueOf)
-                        .collect(Collectors.toList());
-
-                result = FileTransferManager.getInstance().copy(
-                        buckets,
+                //noinspection unchecked
+                result = FileTransferManager.getInstance().received(
+                        (List<FileBucket>) request.getLargeAttachment(),
                         new PhysicalNode(request.getSender()),
                         new PhysicalNode(request.getReceiver())
                 );
