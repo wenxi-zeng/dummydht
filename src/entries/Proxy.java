@@ -25,8 +25,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
 
     private DataNodeDaemon daemon;
 
-    private ExecutorService pool = Executors.newFixedThreadPool(2);
-
     private static volatile Proxy instance = null;
 
     public static void main(String[] args){
@@ -165,7 +163,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     @Override
     public void onBound() {
         // use another thread, since start a data node might invoke communication to proxy
-        pool.execute(() -> {
+        daemon.getExecutor().execute(() -> {
             try {
                 startDataNodeServer();
             } catch (Exception e) {
@@ -185,7 +183,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     }
 
     private void startFollowupTask(String followupAddress, Response response) {
-        pool.execute(() -> followup(followupAddress, response));
+        daemon.getExecutor().execute(() -> followup(followupAddress, response));
     }
 
     private void followup(String followupAddress, Response response) {

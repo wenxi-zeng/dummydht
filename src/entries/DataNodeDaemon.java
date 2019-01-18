@@ -24,6 +24,8 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
@@ -36,6 +38,8 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     private String ip;
 
     private int port;
+
+    private ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public static void main(String[] args){
         if (args.length > 1)
@@ -106,6 +110,10 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     public void setSocketEventHandler(SocketServer.EventHandler handler) {
         socketServer.setEventHandler(handler);
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     @Override
@@ -263,6 +271,10 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     @Override
     public void onFileWritten(String file, List<PhysicalNode> replicas) {
         // replicate file to other replicas
+        executor.execute(() -> backupFile(file, replicas));
+    }
+
+    private void backupFile(String file, List<PhysicalNode> replicas) {
         Request request = new Request().withHeader(RingCommand.WRITE.name())
                 .withEpoch(Long.MAX_VALUE)
                 .withAttachment(file);
