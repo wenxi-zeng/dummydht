@@ -10,6 +10,7 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
+import filemanagement.FileTransferManager;
 import socket.SocketClient;
 import util.Config;
 import util.ObjectConverter;
@@ -18,8 +19,6 @@ import util.SimpleLog;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack {
 
@@ -83,6 +82,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     public void initSubscriptions() {
         daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         daemon.getDataNodeServer().setMembershipCallBack(this);
+        FileTransferManager.getInstance().subscribe(this);
     }
 
     @Override

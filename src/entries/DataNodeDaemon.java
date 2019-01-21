@@ -276,7 +276,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     private void backupFile(String file, List<PhysicalNode> replicas) {
         Request request = new Request().withHeader(RingCommand.WRITE.name())
-                .withEpoch(Long.MAX_VALUE)
+                .withEpoch(-1)
                 .withAttachment(file);
 
         for (PhysicalNode node : replicas) {

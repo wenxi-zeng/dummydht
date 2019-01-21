@@ -154,9 +154,10 @@ public enum RingCommand implements Command {
 
         @Override
         public Response execute(Request request) {
+            boolean shouldReplicate = request.getEpoch() >= 0;
             FileBucket fileBucket = LookupTable.getInstance().write(
                     request.getAttachment(),
-                    request.getEpoch() != Long.MAX_VALUE);
+                    shouldReplicate);
 
             Response response = new Response(request);
             if (fileBucket.isLocked())
@@ -166,7 +167,7 @@ public enum RingCommand implements Command {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
 
-            if (request.getEpoch() < LookupTable.getInstance().getEpoch())
+            if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
                 response.setAttachment(LookupTable.getInstance().getTable());
 
             return response;

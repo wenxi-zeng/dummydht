@@ -124,9 +124,10 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
+            boolean shouldReplicate = request.getEpoch() >= 0;
             FileBucket fileBucket = ClusterMap.getInstance().write(
                     request.getAttachment(),
-                    request.getEpoch() != Long.MAX_VALUE);
+                    shouldReplicate);
 
             Response response = new Response(request);
             if (fileBucket.isLocked())
@@ -136,7 +137,7 @@ public enum CephCommand implements Command {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
 
-            if (request.getEpoch() < ClusterMap.getInstance().getEpoch())
+            if (!shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch())
                 response.setAttachment(ClusterMap.getInstance().getRoot());
 
             return response;
