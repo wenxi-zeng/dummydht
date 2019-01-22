@@ -16,6 +16,7 @@ import req.StaticTree;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
+import util.MathX;
 import util.SimpleLog;
 
 import java.io.IOException;
@@ -207,7 +208,7 @@ public class RegularClient {
 
         @SuppressWarnings("unchecked")
         List<PhysicalNode> pnodes = (List<PhysicalNode>) response.getAttachment();
-        return pnodes.get(0);
+        return pnodes.get(MathX.nextInt(pnodes.size()));
     }
 
     public class ClientRequestGenerator extends RequestGenerator {
