@@ -109,14 +109,12 @@ public class ScriptGenerator {
 
     private static void generateConfigAll() {
         StringBuilder stringBuilder = new StringBuilder();
-        String configFile = ResourcesLoader.getRelativeFileName("res" + File.separator + "config.properties");
+        String resFolder = ResourcesLoader.getRelativeFileName("res");
 
         for (String node : Config.getInstance().getNodes()) {
             if (!node.contains(SELF))
-                stringBuilder.append("sshpass -p alien1 scp -r root@")
-                        .append(node).append(":")
-                        .append(configFile).append(" ")
-                        .append(configFile).append("\n");
+                stringBuilder.append("sshpass -p alien1 scp -rp ").append(resFolder).append(File.separator).append("config.properties").append(" root@")
+                        .append(node).append(":").append(resFolder).append("\n");
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_CONFIG_ALL);
