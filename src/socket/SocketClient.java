@@ -3,6 +3,7 @@ package socket;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.ObjectConverter;
+import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -105,8 +106,6 @@ public class SocketClient {
         String message = "Unknown server connection error";
 
         try {
-            System.out.println("Successfully connected at: " + asynchronousSocketChannel.getRemoteAddress());
-
             final ByteBuffer sendBuffer = ObjectConverter.getByteBuffer(data);
             final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
             // transmitting data
@@ -136,6 +135,7 @@ public class SocketClient {
                 asynchronousSocketChannel.shutdownOutput();
                 asynchronousSocketChannel.close();
 
+                SimpleLog.i(String.valueOf(data));
                 if (success && o instanceof Response)
                     callBack.onResponse((Response) o);
                 else
