@@ -179,7 +179,14 @@ public class Request implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("header", header).append("sender", sender).append("receiver", receiver).append("followup", followup).append("attachment", attachment).append("epoch", epoch).toString();
+        return new ToStringBuilder(this)
+                        .append("        \n").append("header", header)
+                        .append("        \n").append("sender", sender)
+                        .append("        \n").append("receiver", receiver)
+                        .append("        \n").append("followup", followup)
+                        .append("        \n").append("attachment", attachment)
+                        .append("        \n").append("epoch", epoch)
+                        .append("        \n").toString();
     }
 
     @Override

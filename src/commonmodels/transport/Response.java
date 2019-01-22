@@ -14,8 +14,8 @@ public class Response implements Serializable
     private Object attachment;
     private final static long serialVersionUID = 7313299026043073913L;
 
-    public final static short STATUS_SUCCESS = 0;
-    public final static short STATUS_FAILED = 1;
+    public final static short STATUS_SUCCESS = 1;
+    public final static short STATUS_FAILED = 0;
     public final static short STATUS_INVALID_REQUEST = 2;
 
     /**
@@ -98,7 +98,12 @@ public class Response implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("header", header).append("status", status).append("message", message).append("attachment", attachment).toString();
+        return new ToStringBuilder(this)
+                .append("        \n").append("header", header)
+                .append("        \n").append("status", status)
+                .append("        \n").append("message", message)
+                .append("        \n").append("attachment", attachment)
+                .append("        \n").toString();
     }
 
     @Override
