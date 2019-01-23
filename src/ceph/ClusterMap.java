@@ -2,6 +2,7 @@ package ceph;
 
 import ceph.strategies.WeightDistributeStrategy;
 import commonmodels.*;
+import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import util.Config;
 import util.MathX;
@@ -236,7 +237,7 @@ public class ClusterMap implements Serializable {
         return readWriteAlgorithm.lookup(this, filename);
     }
 
-    public FileBucket write(String file, boolean replicate) {
+    public FileBucket write(DummyFile file, boolean replicate) {
         if (replicate)
             return readWriteAlgorithm.writeAndReplicate(this, file);
         else

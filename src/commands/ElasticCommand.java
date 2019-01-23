@@ -7,8 +7,10 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.BucketNode;
 import elastic.LookupTable;
+import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
+import loadmanagement.LoadInfoManager;
 import util.Config;
 import util.MathX;
 import util.SimpleLog;
@@ -83,16 +85,21 @@ public enum ElasticCommand implements Command {
 
             Response response = new Response(request);
 
-            if (fileBucket == null)
+            if (fileBucket == null) {
                 response.withStatus(Response.STATUS_FAILED)
                         .withMessage("Bucket not found in this node.");
-            else
+                LoadInfoManager.getInstance().incrementNumberOfMiss();
+            }
+            else {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
+                LoadInfoManager.getInstance().incrementNumberOfHits();
+            }
 
             if (request.getEpoch() < LookupTable.getInstance().getEpoch())
                 response.setAttachment(LookupTable.getInstance().getTable());
 
+            LoadInfoManager.getInstance().incrementNumberOfRead();
             return response;
         }
 
@@ -127,21 +134,27 @@ public enum ElasticCommand implements Command {
         @Override
         public Response execute(Request request) {
             boolean shouldReplicate = request.getEpoch() >= 0;
+            DummyFile file = new DummyFile(request.getAttachment());
             FileBucket fileBucket = LookupTable.getInstance().write(
-                    request.getAttachment(),
+                    file,
                     shouldReplicate);
 
             Response response = new Response(request);
-            if (fileBucket.isLocked())
+            if (fileBucket.isLocked()) {
                 response.withStatus(Response.STATUS_FAILED)
                         .withMessage("Bucket is locked.");
-            else
+                LoadInfoManager.getInstance().incrementNumberOfMiss();
+            }
+            else {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
+                LoadInfoManager.getInstance().incrementNumberOfHits();
+            }
 
             if (!shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
                 response.setAttachment(LookupTable.getInstance().getTable());
 
+            LoadInfoManager.getInstance().increaseWriteLoad(file.getSize());
             return response;
         }
 

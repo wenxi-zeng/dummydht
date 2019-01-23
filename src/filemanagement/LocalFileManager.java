@@ -1,10 +1,12 @@
 package filemanagement;
 
+import loadmanagement.LoadInfo;
 import util.MathX;
 import util.SimpleLog;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class LocalFileManager {
 
@@ -65,5 +67,28 @@ public class LocalFileManager {
 
         SimpleLog.i("File written to bucket [" + bucket + "], file size:" + fileSize);
         return fileBucket;
+    }
+
+    public FileBucket write(DummyFile file, Function<String, Integer> func) {
+        int bucket = func.apply(file.getName());
+
+        if (file.getSize() < 0) {
+            file.setSize(MathX.nextInt(Integer.MAX_VALUE));
+        }
+
+        return write(bucket, file.getSize());
+    }
+
+    public LoadInfo updateLoadInfo(LoadInfo loadInfo) {
+        long fileCount = 0;
+        long fileSize = 0;
+
+        for (FileBucket bucket : localBuckets.values()) {
+            fileCount += bucket.getNumberOfFiles();
+            fileSize += bucket.getSize();
+        }
+
+        loadInfo.updateLoad(fileCount, fileSize);
+        return loadInfo;
     }
 }

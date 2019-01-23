@@ -2,6 +2,7 @@ package ring;
 
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Response;
+import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
 import util.Config;
@@ -27,31 +28,19 @@ public class RingReadWriteAlgorithm {
         return pnodes;
     }
 
-    public FileBucket writeAndReplicate(LookupTable table, String file) {
+    public FileBucket writeAndReplicate(LookupTable table, DummyFile file) {
         FileBucket fileBucket = writeOnly(table, file);
 
         if (fileBucket != null && !fileBucket.isLocked() && table.getReadWriteCallBack() != null) {
-            List<PhysicalNode> replicas = lookup(table, file);
-            table.getReadWriteCallBack().onFileWritten(file, replicas);
+            List<PhysicalNode> replicas = lookup(table, file.getName());
+            table.getReadWriteCallBack().onFileWritten(file.toAttachment(), replicas);
         }
 
         return fileBucket;
     }
 
-    public FileBucket writeOnly(LookupTable table, String file) {
-        String[] temp = file.split(" ");
-        String filename = temp[0];
-        int hash = MathX.positiveHash(filename.hashCode()) % Config.getInstance().getNumberOfHashSlots();
-
-        FileBucket fileBucket;
-        if (temp.length == 2) {
-            long filesize = Long.valueOf(temp[1]);
-            fileBucket = LocalFileManager.getInstance().write(hash, filesize);
-        }
-        else {
-            fileBucket = LocalFileManager.getInstance().write(hash);
-        }
-
-        return fileBucket;
+    public FileBucket writeOnly(LookupTable table, DummyFile file) {
+        return LocalFileManager.getInstance().write(file,
+                (String str) -> MathX.positiveHash(str.hashCode()) % Config.getInstance().getNumberOfHashSlots());
     }
 }

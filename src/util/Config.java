@@ -35,6 +35,7 @@ public class Config {
     private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
     private final static String PROPERTY_REQUEST_EXP_LAMDA = "lamda";
     private final static String PROPERTY_REQUEST_NUMBER_OF_THREADS = "number_threads";
+    private final static String PROPERTY_READ_FACTOR = "read_factor";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -225,5 +226,9 @@ public class Config {
 
     public int getNumberOfThreads() {
         return Integer.valueOf(rb.getString(PROPERTY_REQUEST_NUMBER_OF_THREADS));
+    }
+
+    public float getReadFactor() {
+        return Float.valueOf(rb.getString(PROPERTY_READ_FACTOR));
     }
 }
