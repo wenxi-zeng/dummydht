@@ -7,11 +7,17 @@ public class LoadInfoManager {
 
     private LoadInfo loadInfo;
 
+    private LoadInfoReporter reporter;
+
     private static volatile LoadInfoManager instance = null;
+
+    private static String nodeId;
 
     private LoadInfoManager() {
         loadInfo = new LoadInfo();
+        loadInfo.setNodeId(nodeId);
         loadInfo.setReadFactor(Config.getInstance().getReadFactor());
+        reporter = new LoadInfoReporter(this);
     }
 
     public static LoadInfoManager getInstance() {
@@ -24,6 +30,11 @@ public class LoadInfoManager {
         }
 
         return instance;
+    }
+
+    public static void with(String id) {
+        nodeId =id;
+        getInstance().reporter.start();
     }
 
     public LoadInfo getLoadInfo() {

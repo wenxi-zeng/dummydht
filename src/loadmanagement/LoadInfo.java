@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+        "node_id",
         "file_load",
         "size_of_files",
         "read_load",
@@ -21,6 +22,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class LoadInfo implements Serializable
 {
 
+    @JsonProperty("node_id")
+    private String nodeId;
     @JsonProperty("file_load")
     private long fileLoad;
     @JsonProperty("size_of_files")
@@ -48,6 +51,7 @@ public class LoadInfo implements Serializable
 
     /**
      *
+     * @param nodeId
      * @param numberOfMiss
      * @param sizeOfFiles
      * @param fileLoad
@@ -56,8 +60,9 @@ public class LoadInfo implements Serializable
      * @param numberOfLockConflicts
      * @param writeLoad
      */
-    public LoadInfo(long fileLoad, long sizeOfFiles, long readLoad, long writeLoad, long numberOfMiss, long numberOfLockConflicts, long numberOfHits) {
+    public LoadInfo(String nodeId, long fileLoad, long sizeOfFiles, long readLoad, long writeLoad, long numberOfMiss, long numberOfLockConflicts, long numberOfHits) {
         super();
+        this.nodeId = nodeId;
         this.fileLoad = fileLoad;
         this.sizeOfFiles = sizeOfFiles;
         this.readLoad = readLoad;
@@ -65,6 +70,21 @@ public class LoadInfo implements Serializable
         this.numberOfMiss = numberOfMiss;
         this.numberOfLockConflicts = numberOfLockConflicts;
         this.numberOfHits = numberOfHits;
+    }
+
+    @JsonProperty("node_id")
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    @JsonProperty("node_id")
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public LoadInfo withNodeId(String nodeId) {
+        this.nodeId = nodeId;
+        return this;
     }
 
     @JsonProperty("file_load")
@@ -208,12 +228,12 @@ public class LoadInfo implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fileLoad", fileLoad).append("sizeOfFiles", sizeOfFiles).append("readLoad", readLoad).append("writeLoad", writeLoad).append("numberOfMiss", numberOfMiss).append("numberOfLockConflicts", numberOfLockConflicts).append("numberOfHits", numberOfHits).toString();
+        return new ToStringBuilder(this).append("nodeId", nodeId).append("fileLoad", fileLoad).append("sizeOfFiles", sizeOfFiles).append("readLoad", readLoad).append("writeLoad", writeLoad).append("numberOfMiss", numberOfMiss).append("numberOfLockConflicts", numberOfLockConflicts).append("numberOfHits", numberOfHits).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numberOfMiss).append(sizeOfFiles).append(fileLoad).append(readLoad).append(numberOfHits).append(numberOfLockConflicts).append(writeLoad).toHashCode();
+        return new HashCodeBuilder().append(nodeId).append(numberOfMiss).append(sizeOfFiles).append(fileLoad).append(readLoad).append(numberOfHits).append(numberOfLockConflicts).append(writeLoad).toHashCode();
     }
 
     @Override
@@ -225,7 +245,7 @@ public class LoadInfo implements Serializable
             return false;
         }
         LoadInfo rhs = ((LoadInfo) other);
-        return new EqualsBuilder().append(numberOfMiss, rhs.numberOfMiss).append(sizeOfFiles, rhs.sizeOfFiles).append(fileLoad, rhs.fileLoad).append(readLoad, rhs.readLoad).append(numberOfHits, rhs.numberOfHits).append(numberOfLockConflicts, rhs.numberOfLockConflicts).append(writeLoad, rhs.writeLoad).isEquals();
+        return new EqualsBuilder().append(nodeId, rhs.nodeId).append(numberOfMiss, rhs.numberOfMiss).append(sizeOfFiles, rhs.sizeOfFiles).append(fileLoad, rhs.fileLoad).append(readLoad, rhs.readLoad).append(numberOfHits, rhs.numberOfHits).append(numberOfLockConflicts, rhs.numberOfLockConflicts).append(writeLoad, rhs.writeLoad).isEquals();
     }
 
 }

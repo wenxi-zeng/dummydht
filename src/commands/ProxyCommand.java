@@ -8,6 +8,8 @@ import commonmodels.transport.Response;
 import entries.Proxy;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.GlobalLoadInfoManager;
+import loadmanagement.LoadInfo;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -410,6 +412,30 @@ public enum ProxyCommand implements Command {
         @Override
         public String getHelpString() {
             return String.format(getParameterizedString(), "<ip>", "<port>");
+        }
+    },
+
+    UPDATELOAD{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            return new Request().withHeader(ProxyCommand.UPDATELOAD.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            GlobalLoadInfoManager.getInstance().update((LoadInfo) request.getLargeAttachment());
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return ProxyCommand.UPDATELOAD.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
         }
     }
 }

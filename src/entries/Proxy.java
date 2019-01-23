@@ -11,6 +11,7 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.GlobalLoadInfoManager;
 import socket.SocketClient;
 import util.Config;
 import util.ObjectConverter;
@@ -57,6 +58,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
         for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
             send(node.getAddress(), node.getPort(), request, this);
         }
+        GlobalLoadInfoManager.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
     }
 
     @Override

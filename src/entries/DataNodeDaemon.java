@@ -11,6 +11,7 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
@@ -130,6 +131,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     public void initSubscriptions() {
         dataNodeServer.setReadWriteCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
+        LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
     }
 
     @Override
