@@ -3,6 +3,7 @@ package ceph;
 import commands.CephCommand;
 import commonmodels.*;
 import commonmodels.transport.Request;
+import util.Config;
 import util.MathX;
 
 import java.util.ArrayList;
@@ -45,7 +46,18 @@ public class CephDataNode extends DataNode {
 
     @Override
     public Request prepareAddNodeCommand(String nodeIp, int nodePort) {
-        return null;
+        List<Clusterable> edges = ClusterMap.getInstance().getSpareEdges();
+
+        String clusterId = "";
+        if (edges.size() > 0) {
+            int index = MathX.nextInt(edges.size());
+            clusterId = edges.get(index).getId();
+        }
+
+        String attachment = nodeIp + ":" + nodePort + " " + clusterId;
+        return new Request()
+                .withHeader(CephCommand.ADDNODE.name())
+                .withAttachment(attachment.trim());
     }
 
     @Override

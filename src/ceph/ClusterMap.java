@@ -272,4 +272,27 @@ public class ClusterMap implements Serializable {
             return "Invalid map type.";
         }
     }
+
+    public List<Clusterable> getSpareEdges() {
+        List<Clusterable> spareEdges = new ArrayList<>();
+        Queue<Clusterable> frontier = new LinkedList<>();
+        frontier.add(root);
+
+        while (!frontier.isEmpty()) {
+            Clusterable cluster = frontier.poll();
+
+            for (int i = 0; i < cluster.getSubClusters().length; i++) {
+                Clusterable subCluster = cluster.getSubClusters()[i];
+                if (subCluster == null) {
+                    spareEdges.add(cluster);
+                    break;
+                }
+                else if (!(subCluster instanceof PhysicalNode)){
+                    frontier.add(subCluster);
+                }
+            }
+        }
+
+        return spareEdges;
+    }
 }
