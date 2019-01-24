@@ -51,6 +51,11 @@ public class SimpleLog {
         System.out.println(message);
     }
 
+    public static synchronized void r(String message) {
+        System.out.print(String.format("\033[2J"));
+        System.out.print(message);
+    }
+
     public static synchronized void l(String message) {
         System.out.println(message);
     }

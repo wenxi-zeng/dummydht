@@ -56,4 +56,8 @@ public class LoadInfoManager {
     public void incrementNumberOfMiss() {
         loadInfo.incrementNumberOfMiss();
     }
+
+    public void incrementNumberOfLockConflicts() {
+        loadInfo.incrementNumberOfLockConflicts();
+    }
 }

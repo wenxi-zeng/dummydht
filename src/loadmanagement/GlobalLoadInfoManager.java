@@ -1,9 +1,9 @@
 package loadmanagement;
 
 import commonmodels.PhysicalNode;
+import util.SimpleLog;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class GlobalLoadInfoManager {
 
@@ -40,6 +40,7 @@ public class GlobalLoadInfoManager {
 
     public void update(LoadInfo info) {
         globalLoadInfo.put(info.getNodeId(), info);
+        print();
     }
 
     public void update(List<PhysicalNode> nodes) {
@@ -48,6 +49,7 @@ public class GlobalLoadInfoManager {
             nodeIdList.remove(node.getFullAddress());
         }
         consolidate(nodeIdList);
+        print();
     }
 
     private void consolidate(Set<String> nodeIdList) {
@@ -60,5 +62,19 @@ public class GlobalLoadInfoManager {
         LoadInfo info = globalLoadInfo.remove(nodeId);
         if (info != null)
             historicalLoadInfo.add(info);
+    }
+
+    public void print() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Global load info\n");
+        for (LoadInfo info : globalLoadInfo.values()) {
+            builder.append(info.toString()).append('\n');
+        }
+        builder.append("\nHistorical load info\n");
+        for (LoadInfo info : historicalLoadInfo) {
+            builder.append(info.toString()).append('\n');
+        }
+
+        SimpleLog.r(builder.toString());
     }
 }
