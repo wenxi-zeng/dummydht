@@ -2,6 +2,7 @@ package socket;
 
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import statmanagement.StatInfoManager;
 import util.ObjectConverter;
 import util.SimpleLog;
 
@@ -41,15 +42,18 @@ public class SocketClient {
 
                     @Override
                     public void failed(Throwable exc, Void attachment) {
+                        StatInfoManager.getInstance().statRoundTripFailure(data);
                         callBack.onFailure(data, "Connection cannot be established!");
                     }
                 });
             } else {
+                StatInfoManager.getInstance().statRoundTripFailure(data);
                 callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
             }
 
         } catch (IOException ex) {
             ex.printStackTrace();
+            StatInfoManager.getInstance().statRoundTripFailure(data);
             callBack.onFailure(data, "An error occurred");
         }
     }
@@ -81,8 +85,10 @@ public class SocketClient {
                 callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
+            StatInfoManager.getInstance().statRoundTripFailure(data);
             callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " throws "  + e.getMessage());
         } catch (TimeoutException e) {
+            StatInfoManager.getInstance().statRoundTripFailure(data);
             callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " time out");
         }
     }
@@ -136,10 +142,15 @@ public class SocketClient {
                 asynchronousSocketChannel.close();
 
                 SimpleLog.i(String.valueOf(data));
-                if (success && o instanceof Response)
-                    callBack.onResponse(data, (Response) o);
-                else
+                if (success && o instanceof Response) {
+                    Response resp = (Response) o;
+                    StatInfoManager.getInstance().statResponse(data, resp);
+                    callBack.onResponse(data, resp);
+                }
+                else {
+                    StatInfoManager.getInstance().statRoundTripFailure(data);
                     callBack.onFailure(data, message);
+                }
 
             } catch (IOException ex) {
                 ex.printStackTrace();

@@ -15,7 +15,7 @@ public class UDPClient {
         this.address = new InetSocketAddress(address1[0], Integer.valueOf(address1[1]));
     }
 
-    public void send(String msg) throws IOException {
+    public void send(Object msg) throws IOException {
         if (!socket.isConnected())
             socket.connect(address);
 

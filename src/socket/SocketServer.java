@@ -2,6 +2,7 @@ package socket;
 
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
+import statmanagement.StatInfoManager;
 import util.ObjectConverter;
 
 import java.io.ByteArrayOutputStream;
@@ -70,7 +71,11 @@ public class SocketServer {
 
                                 Object o = ObjectConverter.getObject(bos.toByteArray());
                                 if (o instanceof Request) {
-                                    eventHandler.onReceived(result, (Request) o);
+                                    Request req = (Request) o;
+                                    long stamp = StatInfoManager.getInstance().getStamp();
+                                    StatInfoManager.getInstance().statRequest(req, stamp);
+                                    eventHandler.onReceived(result, req);
+                                    StatInfoManager.getInstance().statExecution(req, stamp);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

@@ -37,6 +37,7 @@ public class Config {
     private final static String PROPERTY_REQUEST_NUMBER_OF_THREADS = "number_threads";
     private final static String PROPERTY_READ_FACTOR = "read_factor";
     private final static String PROPERTY_LOAD_INFO_REPORT_INTERVAL = "load_info_report_interval";
+    private final static String PROPERTY_STAT_SERVER = "stat_server";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -235,5 +236,9 @@ public class Config {
 
     public long getLoadInfoReportInterval() {
         return Long.valueOf(rb.getString(PROPERTY_LOAD_INFO_REPORT_INTERVAL));
+    }
+
+    public String getStatServer() {
+        return rb.getString(PROPERTY_STAT_SERVER);
     }
 }
