@@ -1,13 +1,14 @@
 package commonmodels.transport;
 
+import java.io.Serializable;
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -16,7 +17,9 @@ import java.io.Serializable;
         "receiver",
         "followup",
         "attachment",
-        "epoch"
+        "epoch",
+        "token",
+        "timestamp"
 })
 public class Request implements Serializable
 {
@@ -33,28 +36,36 @@ public class Request implements Serializable
     private String attachment;
     @JsonProperty("epoch")
     private long epoch;
+    @JsonProperty("token")
+    private String token;
+    @JsonProperty("timestamp")
+    private long timestamp;
 
     private Object largeAttachment;
 
-    private final static long serialVersionUID = 2464827715445932636L;
+    private final static long serialVersionUID = -2162237185763801887L;
 
     /**
      * No args constructor for use in serialization
      *
      */
     public Request() {
+        token = UUID.randomUUID().toString();
+        timestamp = System.currentTimeMillis();
     }
 
     /**
      *
+     * @param timestamp
      * @param sender
+     * @param followup
      * @param receiver
+     * @param token
      * @param epoch
      * @param attachment
-     * @param followup
      * @param header
      */
-    public Request(String header, String sender, String receiver, String followup, String attachment, long epoch) {
+    public Request(String header, String sender, String receiver, String followup, String attachment, long epoch, String token, long timestamp) {
         super();
         this.header = header;
         this.sender = sender;
@@ -62,6 +73,8 @@ public class Request implements Serializable
         this.followup = followup;
         this.attachment = attachment;
         this.epoch = epoch;
+        this.token = token;
+        this.timestamp = timestamp;
     }
 
     @JsonProperty("header")
@@ -139,6 +152,51 @@ public class Request implements Serializable
         return this;
     }
 
+    @JsonProperty("epoch")
+    public long getEpoch() {
+        return epoch;
+    }
+
+    @JsonProperty("epoch")
+    public void setEpoch(long epoch) {
+        this.epoch = epoch;
+    }
+
+    public Request withEpoch(long epoch) {
+        this.epoch = epoch;
+        return this;
+    }
+
+    @JsonProperty("token")
+    public String getToken() {
+        return token;
+    }
+
+    @JsonProperty("token")
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Request withToken(String token) {
+        this.token = token;
+        return this;
+    }
+
+    @JsonProperty("timestamp")
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    @JsonProperty("timestamp")
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Request withTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+        return this;
+    }
+
     public Request withAttachments(Object... attachments) {
         StringBuilder result = new StringBuilder();
         for (Object str : attachments) {
@@ -162,25 +220,12 @@ public class Request implements Serializable
         return this;
     }
 
-    @JsonProperty("epoch")
-    public long getEpoch() {
-        return epoch;
-    }
-
-    @JsonProperty("epoch")
-    public void setEpoch(long epoch) {
-        this.epoch = epoch;
-    }
-
-    public Request withEpoch(long epoch) {
-        this.epoch = epoch;
-        return this;
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                         .append("        \n").append("header", header)
+                        .append("        \n").append("token", token)
+                        .append("        \n").append("timestamp", timestamp)
                         .append("        \n").append("sender", sender)
                         .append("        \n").append("receiver", receiver)
                         .append("        \n").append("followup", followup)
@@ -191,7 +236,7 @@ public class Request implements Serializable
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sender).append(receiver).append(epoch).append(attachment).append(followup).append(header).toHashCode();
+        return new HashCodeBuilder().append(timestamp).append(sender).append(followup).append(receiver).append(token).append(epoch).append(attachment).append(header).toHashCode();
     }
 
     @Override
@@ -203,7 +248,7 @@ public class Request implements Serializable
             return false;
         }
         Request rhs = ((Request) other);
-        return new EqualsBuilder().append(sender, rhs.sender).append(receiver, rhs.receiver).append(epoch, rhs.epoch).append(attachment, rhs.attachment).append(followup, rhs.followup).append(header, rhs.header).isEquals();
+        return new EqualsBuilder().append(timestamp, rhs.timestamp).append(sender, rhs.sender).append(followup, rhs.followup).append(receiver, rhs.receiver).append(token, rhs.token).append(epoch, rhs.epoch).append(attachment, rhs.attachment).append(header, rhs.header).isEquals();
     }
 
     public String toCommand() {

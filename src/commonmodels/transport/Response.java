@@ -11,6 +11,8 @@ public class Response implements Serializable
     private String header;
     private short status;
     private String message;
+    private String token;
+    private long timestamp;
     private Object attachment;
     private final static long serialVersionUID = 7313299026043073913L;
 
@@ -26,8 +28,12 @@ public class Response implements Serializable
     }
 
     public Response(Request request) {
-        if (request != null)
+        if (request != null) {
             this.header = request.getHeader();
+            this.token = request.getToken();
+        }
+
+        this.timestamp = System.currentTimeMillis();
     }
 
     /**
@@ -80,6 +86,32 @@ public class Response implements Serializable
 
     public Response withMessage(String message) {
         this.message = message;
+        return this;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Response withToken(String token) {
+        this.token = token;
+        return this;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Response withTimestamp(long timestamp) {
+        this.timestamp = timestamp;
         return this;
     }
 
