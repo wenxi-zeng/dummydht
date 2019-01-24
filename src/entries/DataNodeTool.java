@@ -28,15 +28,12 @@ public class DataNodeTool {
 
     private SocketClient socketClient = new SocketClient();
 
-    private CountDownLatch latch;
-
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
 
         @Override
         public void onResponse(Request request, Response o) {
             if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
                 onTableFetched(o.getAttachment());
-                latch.countDown();
             }
             SimpleLog.v(String.valueOf(o));
         }
@@ -114,8 +111,6 @@ public class DataNodeTool {
         if (Config.getInstance().getSeeds().size() > 0) {
             Request request = new Request().withHeader(DaemonCommand.FETCH.name());
             socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
-            latch = new CountDownLatch(1);
-            latch.await();
         }
         else {
             SimpleLog.v("No seed/proxy info found!");

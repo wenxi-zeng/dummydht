@@ -67,7 +67,8 @@ public class SocketClient {
     }
 
     public void send(String address, Request data, ServerCallBack callBack) {
-        String[] address1 = address.split(":");
+        String[] args = address.split(" ");
+        String[] address1 = args[0].split(":");
         send(new InetSocketAddress(address1[0], Integer.valueOf(address1[1])), data, callBack);
     }
 
