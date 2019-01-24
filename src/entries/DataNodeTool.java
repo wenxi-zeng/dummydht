@@ -20,6 +20,7 @@ import util.Config;
 import util.SimpleLog;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 public class DataNodeTool {
 
@@ -27,10 +28,16 @@ public class DataNodeTool {
 
     private SocketClient socketClient = new SocketClient();
 
+    private CountDownLatch latch;
+
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
 
         @Override
         public void onResponse(Response o) {
+            if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
+                onTableFetched(o.getAttachment());
+                latch.countDown();
+            }
             SimpleLog.v(String.valueOf(o));
         }
 
@@ -54,6 +61,7 @@ public class DataNodeTool {
         try{
             SimpleLog.with("ControlClient", 1);
             dataNodeTool = new DataNodeTool();
+            dataNodeTool.run();
 
             if (args.length == 0){
                 Scanner in = new Scanner(System.in);
@@ -98,6 +106,29 @@ public class DataNodeTool {
         }
         dataNode.createTerminal();
         dataNode.getTerminal().initialize();
+    }
+
+    private void run() throws InterruptedException {
+        SimpleLog.v("Fetching table...");
+
+        if (Config.getInstance().getSeeds().size() > 0) {
+            Request request = new Request().withHeader(DaemonCommand.FETCH.name());
+            socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
+            latch = new CountDownLatch(1);
+            latch.await();
+        }
+        else {
+            SimpleLog.v("No seed/proxy info found!");
+        }
+    }
+
+    private void onTableFetched(Object table) {
+        Request request = new Request()
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(table);
+
+        Response response = dataNode.execute(request);
+        SimpleLog.v(String.valueOf(response));
     }
 
     private void generateRequest() {
