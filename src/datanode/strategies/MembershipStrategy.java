@@ -36,11 +36,11 @@ public abstract class MembershipStrategy {
         SocketClient socketClient = new SocketClient();
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
-            public void onResponse(Response o) {
+            public void onResponse(Request request, Response o) {
                 SimpleLog.i(String.valueOf(o));
 
                 if (o.getStatus() == Response.STATUS_FAILED) {
-                    onFailure(o.getMessage());
+                    onFailure(request, o.getMessage());
                 }
                 else {
                     dataNode.updateTable(o.getAttachment());
@@ -49,7 +49,7 @@ public abstract class MembershipStrategy {
             }
 
             @Override
-            public void onFailure(String error) {
+            public void onFailure(Request request, String error) {
                 SimpleLog.i(error);
             }
         };

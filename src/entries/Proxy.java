@@ -175,12 +175,12 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     }
 
     @Override
-    public void onResponse(Response o) {
+    public void onResponse(Request request, Response o) {
         SimpleLog.i(String.valueOf(o));
     }
 
     @Override
-    public void onFailure(String error) {
+    public void onFailure(Request request, String error) {
         SimpleLog.i(error);
     }
 

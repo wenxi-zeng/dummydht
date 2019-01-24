@@ -261,12 +261,12 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     }
 
     @Override
-    public void onResponse(Response o) {
+    public void onResponse(Request request, Response o) {
         SimpleLog.i(String.valueOf(o));
     }
 
     @Override
-    public void onFailure(String error) {
+    public void onFailure(Request request, String error) {
         SimpleLog.i(error);
     }
 

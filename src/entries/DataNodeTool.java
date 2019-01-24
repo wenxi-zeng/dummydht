@@ -33,7 +33,7 @@ public class DataNodeTool {
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
 
         @Override
-        public void onResponse(Response o) {
+        public void onResponse(Request request, Response o) {
             if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
                 onTableFetched(o.getAttachment());
                 latch.countDown();
@@ -42,7 +42,7 @@ public class DataNodeTool {
         }
 
         @Override
-        public void onFailure(String error) {
+        public void onFailure(Request request, String error) {
             SimpleLog.v(error);
         }
     };

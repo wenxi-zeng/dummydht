@@ -49,12 +49,12 @@ public class LoadInfoReporter implements SocketClient.ServerCallBack {
     }
 
     @Override
-    public void onResponse(Response o) {
+    public void onResponse(Request request, Response o) {
 
     }
 
     @Override
-    public void onFailure(String error) {
+    public void onFailure(Request request, String error) {
 
     }
 }

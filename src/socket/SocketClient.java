@@ -41,16 +41,16 @@ public class SocketClient {
 
                     @Override
                     public void failed(Throwable exc, Void attachment) {
-                        callBack.onFailure("Connection cannot be established!");
+                        callBack.onFailure(data, "Connection cannot be established!");
                     }
                 });
             } else {
-                callBack.onFailure("The asynchronous socket channel cannot be opened!");
+                callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
             }
 
         } catch (IOException ex) {
             ex.printStackTrace();
-            callBack.onFailure("An error occurred");
+            callBack.onFailure(data, "An error occurred");
         }
     }
 
@@ -75,15 +75,15 @@ public class SocketClient {
                 if (connect == null)
                     onServerConnected(asynchronousSocketChannel, data, callBack);
                 else
-                    callBack.onFailure("Connection cannot be established!");
+                    callBack.onFailure(data, "Connection cannot be established!");
             }
             else {
-                callBack.onFailure("The asynchronous socket channel cannot be opened!");
+                callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
-            callBack.onFailure("Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " throws "  + e.getMessage());
+            callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " throws "  + e.getMessage());
         } catch (TimeoutException e) {
-            callBack.onFailure("Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " time out");
+            callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " time out");
         }
     }
 
@@ -137,9 +137,9 @@ public class SocketClient {
 
                 SimpleLog.i(String.valueOf(data));
                 if (success && o instanceof Response)
-                    callBack.onResponse((Response) o);
+                    callBack.onResponse(data, (Response) o);
                 else
-                    callBack.onFailure(message);
+                    callBack.onFailure(data, message);
 
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -148,7 +148,7 @@ public class SocketClient {
     }
 
     public interface ServerCallBack {
-        void onResponse(Response o);
-        void onFailure(String error);
+        void onResponse(Request request, Response response);
+        void onFailure(Request request, String error);
     }
 }
