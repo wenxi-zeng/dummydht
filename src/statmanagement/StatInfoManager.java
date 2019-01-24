@@ -46,7 +46,7 @@ public class StatInfoManager {
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_ROUND_TRIP)
-                .calcElapsed(response.getTimestamp());
+                .calcElapsed(request.getTimestamp());
 
         queue.add(responseStat);
         queue.add(roundTripStat);
