@@ -9,6 +9,7 @@ import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
 import loadmanagement.LoadInfoManager;
+import org.apache.commons.lang3.StringUtils;
 import ring.LookupTable;
 import util.Config;
 import util.MathX;
@@ -204,7 +205,8 @@ public enum RingCommand implements Command {
             String attachment;
 
             if (args.length == 2) {
-                attachment = args[1];
+                String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
+                attachment = args[1] + " " + buckets;
             }
             else if (args.length == 3) {
                 attachment = args[1] + " " + args[2];
@@ -296,19 +298,28 @@ public enum RingCommand implements Command {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
+            int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(new PhysicalNode(args[1]));
             return new Request().withHeader(RingCommand.INCREASELOAD.name())
-                    .withAttachment(args[1]);
+                    .withAttachments(args[1], StringUtils.join(deltaHash, ','));
         }
 
         @Override
         public Response execute(Request request) {
             String result;
 
-            String[] address = request.getAttachment().split(":");
+            String[] args = request.getAttachment().split(" ");
+            String[] address = args[0].split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
-            LookupTable.getInstance().increaseLoad(pnode);
+
+            if (args.length == 1) {
+                LookupTable.getInstance().increaseLoad(pnode);
+            }
+            else {
+                String[] deltaHash = args[1].split(",");
+                LookupTable.getInstance().increaseLoad(pnode, Arrays.stream(deltaHash).mapToInt(Integer::parseInt).toArray());
+            }
 
             result = "Load increased";
             return new Response(request)
@@ -335,19 +346,28 @@ public enum RingCommand implements Command {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
+            int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(args[1]));
             return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                    .withAttachment(args[1]);
+                    .withAttachments(args[1], StringUtils.join(deltaHash, ','));
         }
 
         @Override
         public Response execute(Request request) {
             String result;
 
-            String[] address = request.getAttachment().split(":");
+            String[] args = request.getAttachment().split(" ");
+            String[] address = args[0].split(":");
             PhysicalNode pnode = new PhysicalNode();
             pnode.setAddress(address[0]);
             pnode.setPort(Integer.valueOf(address[1]));
-            LookupTable.getInstance().decreaseLoad(pnode);
+
+            if (args.length == 1) {
+                LookupTable.getInstance().decreaseLoad(pnode);
+            }
+            else {
+                String[] deltaHash = args[1].split(",");
+                LookupTable.getInstance().decreaseLoad(pnode, Arrays.stream(deltaHash).mapToInt(Integer::parseInt).toArray());
+            }
 
             result = "Load decreased";
             return new Response(request)

@@ -64,12 +64,14 @@ public class RingDataNode extends DataNode {
         int coin = MathX.nextInt(0, 1);
 
         if (coin == 0) {
+            int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
             return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                    .withAttachment(addresses[0]);
+                    .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
         }
         else {
+            int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(new PhysicalNode(addresses[0]));
             return new Request().withHeader(RingCommand.INCREASELOAD.name())
-                    .withAttachment(addresses[0]);
+                    .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
         }
     }
 

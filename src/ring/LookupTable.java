@@ -159,8 +159,18 @@ public class LookupTable implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
+    public void increaseLoad(PhysicalNode node, int[] hashVal) {
+        loadBalanceAlgorithm.increaseLoad(this, node, hashVal);
+        update(); // commit the change, gossip to other nodes
+    }
+
     public void decreaseLoad(PhysicalNode node) {
         loadBalanceAlgorithm.decreaseLoad(this, node);
+        update(); // commit the change, gossip to other nodes
+    }
+
+    public void decreaseLoad(PhysicalNode node, int[] hashVal) {
+        loadBalanceAlgorithm.decreaseLoad(this, node, hashVal);
         update(); // commit the change, gossip to other nodes
     }
 
@@ -187,6 +197,14 @@ public class LookupTable implements Serializable {
 
     public int[] getSpareBuckets() {
         return membershipAlgorithm.generateSpareBuckets(this);
+    }
+
+    public int[] randomIncreaseRange(PhysicalNode node) {
+        return loadBalanceAlgorithm.randomIncreaseRange(this, node);
+    }
+
+    public int[] randomDecreaseRange(PhysicalNode node) {
+        return loadBalanceAlgorithm.randomDecreaseRange(this, node);
     }
 
     @Override

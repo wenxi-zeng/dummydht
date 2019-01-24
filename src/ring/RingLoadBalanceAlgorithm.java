@@ -31,6 +31,24 @@ public class RingLoadBalanceAlgorithm {
             table.getLoadBalancingCallBack().onFinished();
     }
 
+    public void increaseLoad(LookupTable table, PhysicalNode node, int[] hashVal) {
+        SimpleLog.i("Increasing load for physical node " + node.toString());
+
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
+            Indexable vnode = pnode.getVirtualNodes().get(i);
+            increaseLoad(table, hashVal[i], vnode);
+        }
+
+        if (table.getLoadBalancingCallBack() != null)
+            table.getLoadBalancingCallBack().onFinished();
+    }
+
     public void decreaseLoad(LookupTable table, PhysicalNode node) {
         SimpleLog.i("Decreasing load for physical node " + node.toString());
 
@@ -51,6 +69,52 @@ public class RingLoadBalanceAlgorithm {
 
         if (table.getLoadBalancingCallBack() != null)
             table.getLoadBalancingCallBack().onFinished();
+    }
+
+    public void decreaseLoad(LookupTable table, PhysicalNode node, int[] hashVal) {
+        SimpleLog.i("Increasing load for physical node " + node.toString());
+
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        if (pnode == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
+            Indexable vnode = pnode.getVirtualNodes().get(i);
+            decreaseLoad(table, hashVal[i], vnode);
+        }
+
+        if (table.getLoadBalancingCallBack() != null)
+            table.getLoadBalancingCallBack().onFinished();
+    }
+
+    public int[] randomIncreaseRange(LookupTable table, PhysicalNode node) {
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        int[] hashVals = new int[pnode.getVirtualNodes().size()];
+
+        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
+            Indexable vnode = pnode.getVirtualNodes().get(i);
+            Indexable successor = table.getTable().next(vnode);
+            int bound = successor.getHash() - vnode.getHash();
+            hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+        }
+
+        return hashVals;
+    }
+
+    public int[] randomDecreaseRange(LookupTable table, PhysicalNode node) {
+        PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
+        int[] hashVals = new int[pnode.getVirtualNodes().size()];
+
+        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
+            Indexable vnode = pnode.getVirtualNodes().get(i);
+            Indexable predecessor = table.getTable().pre(vnode);
+            int bound = vnode.getHash() - predecessor.getHash();
+            hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+        }
+
+        return hashVals;
     }
 
     public void decreaseLoad(LookupTable table, int dh, Indexable node) {
