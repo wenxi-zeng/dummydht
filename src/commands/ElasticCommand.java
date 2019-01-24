@@ -11,6 +11,7 @@ import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
 import loadmanagement.LoadInfoManager;
+import org.apache.commons.lang3.StringUtils;
 import util.Config;
 import util.MathX;
 import util.SimpleLog;
@@ -205,7 +206,8 @@ public enum ElasticCommand implements Command {
             String attachment;
 
             if (args.length == 2) {
-                attachment = args[1];
+                String buckets = StringUtils.join(LookupTable.getInstance().getSpareBuckets(), ',');
+                attachment = args[1] + " " + buckets;
             }
             else if (args.length == 3) {
                 attachment = args[1] + " " + args[2];
