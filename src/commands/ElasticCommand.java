@@ -144,7 +144,7 @@ public enum ElasticCommand implements Command {
             if (fileBucket.isLocked()) {
                 response.withStatus(Response.STATUS_FAILED)
                         .withMessage("Bucket is locked.");
-                LoadInfoManager.getInstance().incrementNumberOfMiss();
+                LoadInfoManager.getInstance().incrementNumberOfLockConflicts();
             }
             else {
                 response.withStatus(Response.STATUS_SUCCESS)
