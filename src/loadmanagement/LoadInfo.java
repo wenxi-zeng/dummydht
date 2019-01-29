@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+        "report_time",
         "node_id",
         "file_load",
         "size_of_files",
@@ -21,7 +22,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class LoadInfo implements Serializable
 {
-
+    @JsonProperty("report_time")
+    private long reportTime;
     @JsonProperty("node_id")
     private String nodeId;
     @JsonProperty("file_load")
@@ -51,6 +53,7 @@ public class LoadInfo implements Serializable
 
     /**
      *
+     * @param reportTime
      * @param nodeId
      * @param numberOfMiss
      * @param sizeOfFiles
@@ -60,8 +63,9 @@ public class LoadInfo implements Serializable
      * @param numberOfLockConflicts
      * @param writeLoad
      */
-    public LoadInfo(String nodeId, long fileLoad, long sizeOfFiles, long readLoad, long writeLoad, long numberOfMiss, long numberOfLockConflicts, long numberOfHits) {
+    public LoadInfo(long reportTime, String nodeId, long fileLoad, long sizeOfFiles, long readLoad, long writeLoad, long numberOfMiss, long numberOfLockConflicts, long numberOfHits) {
         super();
+        this.reportTime = reportTime;
         this.nodeId = nodeId;
         this.fileLoad = fileLoad;
         this.sizeOfFiles = sizeOfFiles;
@@ -70,6 +74,21 @@ public class LoadInfo implements Serializable
         this.numberOfMiss = numberOfMiss;
         this.numberOfLockConflicts = numberOfLockConflicts;
         this.numberOfHits = numberOfHits;
+    }
+
+    @JsonProperty("report_time")
+    public long getReportTime() {
+        return reportTime;
+    }
+
+    @JsonProperty("report_time")
+    public void setReportTime(long reportTime) {
+        this.reportTime = reportTime;
+    }
+
+    public LoadInfo withReportTime(long reportTime) {
+        this.reportTime = reportTime;
+        return this;
     }
 
     @JsonProperty("node_id")
@@ -228,12 +247,12 @@ public class LoadInfo implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("nodeId", nodeId).append("fileLoad", fileLoad).append("sizeOfFiles", sizeOfFiles).append("readLoad", readLoad).append("writeLoad", writeLoad).append("numberOfMiss", numberOfMiss).append("numberOfLockConflicts", numberOfLockConflicts).append("numberOfHits", numberOfHits).toString();
+        return new ToStringBuilder(this).append("reportTime", reportTime).append("nodeId", nodeId).append("fileLoad", fileLoad).append("sizeOfFiles", sizeOfFiles).append("readLoad", readLoad).append("writeLoad", writeLoad).append("numberOfMiss", numberOfMiss).append("numberOfLockConflicts", numberOfLockConflicts).append("numberOfHits", numberOfHits).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(nodeId).append(numberOfMiss).append(sizeOfFiles).append(fileLoad).append(readLoad).append(numberOfHits).append(numberOfLockConflicts).append(writeLoad).toHashCode();
+        return new HashCodeBuilder().append(reportTime).append(nodeId).append(numberOfMiss).append(sizeOfFiles).append(fileLoad).append(readLoad).append(numberOfHits).append(numberOfLockConflicts).append(writeLoad).toHashCode();
     }
 
     @Override
@@ -245,7 +264,7 @@ public class LoadInfo implements Serializable
             return false;
         }
         LoadInfo rhs = ((LoadInfo) other);
-        return new EqualsBuilder().append(nodeId, rhs.nodeId).append(numberOfMiss, rhs.numberOfMiss).append(sizeOfFiles, rhs.sizeOfFiles).append(fileLoad, rhs.fileLoad).append(readLoad, rhs.readLoad).append(numberOfHits, rhs.numberOfHits).append(numberOfLockConflicts, rhs.numberOfLockConflicts).append(writeLoad, rhs.writeLoad).isEquals();
+        return new EqualsBuilder().append(reportTime, rhs.reportTime).append(nodeId, rhs.nodeId).append(numberOfMiss, rhs.numberOfMiss).append(sizeOfFiles, rhs.sizeOfFiles).append(fileLoad, rhs.fileLoad).append(readLoad, rhs.readLoad).append(numberOfHits, rhs.numberOfHits).append(numberOfLockConflicts, rhs.numberOfLockConflicts).append(writeLoad, rhs.writeLoad).isEquals();
     }
 
 }

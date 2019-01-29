@@ -10,6 +10,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+        "start_time",
+        "end_time",
         "header",
         "token",
         "elapsed",
@@ -17,7 +19,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class StatInfo implements Serializable
 {
-
+    @JsonProperty("start_time")
+    private long startTime;
+    @JsonProperty("end_time")
+    private long endTime;
     @JsonProperty("header")
     private String header;
     @JsonProperty("token")
@@ -43,17 +48,51 @@ public class StatInfo implements Serializable
 
     /**
      *
+     * @param startTime
+     * @param endTime
      * @param elapsed
      * @param token
      * @param type
      * @param header
      */
-    public StatInfo(String header, String token, long elapsed, String type) {
+    public StatInfo(long startTime, long endTime, String header, String token, long elapsed, String type) {
         super();
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.header = header;
         this.token = token;
         this.elapsed = elapsed;
         this.type = type;
+    }
+
+    @JsonProperty("start_time")
+    public long getStartTime() {
+        return startTime;
+    }
+
+    @JsonProperty("start_time")
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public StatInfo withStartTime(long startTime) {
+        this.startTime = startTime;
+        return this;
+    }
+
+    @JsonProperty("end_time")
+    public long getEndTime() {
+        return endTime;
+    }
+
+    @JsonProperty("end_time")
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public StatInfo withEndTime(long endTime) {
+        this.endTime = endTime;
+        return this;
     }
 
     @JsonProperty("header")
@@ -101,8 +140,17 @@ public class StatInfo implements Serializable
         return this;
     }
 
-    public StatInfo calcElapsed(long timestamp) {
-        this.elapsed = System.currentTimeMillis() - timestamp;
+    public StatInfo calcElapsed(long startTime) {
+        this.startTime = startTime;
+        this.endTime = System.currentTimeMillis();
+        this.elapsed = this.endTime - this.startTime;
+        return this;
+    }
+
+    public StatInfo calcElapsed(long startTime, long endTime) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.elapsed = this.endTime - this.startTime;
         return this;
     }
 
@@ -123,12 +171,12 @@ public class StatInfo implements Serializable
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("header", header).append("token", token).append("elapsed", elapsed).append("type", type).toString();
+        return new ToStringBuilder(this).append("startTime", startTime).append("endTime", endTime).append("header", header).append("token", token).append("elapsed", elapsed).append("type", type).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(elapsed).append(token).append(type).append(header).toHashCode();
+        return new HashCodeBuilder().append(startTime).append(endTime).append(elapsed).append(token).append(type).append(header).toHashCode();
     }
 
     @Override
@@ -140,7 +188,7 @@ public class StatInfo implements Serializable
             return false;
         }
         StatInfo rhs = ((StatInfo) other);
-        return new EqualsBuilder().append(elapsed, rhs.elapsed).append(token, rhs.token).append(type, rhs.type).append(header, rhs.header).isEquals();
+        return new EqualsBuilder().append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(elapsed, rhs.elapsed).append(token, rhs.token).append(type, rhs.type).append(header, rhs.header).isEquals();
     }
 
 }

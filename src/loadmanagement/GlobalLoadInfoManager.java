@@ -39,6 +39,7 @@ public class GlobalLoadInfoManager {
     }
 
     public void update(LoadInfo info) {
+        info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
         print();
     }
@@ -60,8 +61,10 @@ public class GlobalLoadInfoManager {
 
     private void consolidate(String nodeId) {
         LoadInfo info = globalLoadInfo.remove(nodeId);
-        if (info != null)
+        if (info != null) {
+            info.setReportTime(System.currentTimeMillis());
             historicalLoadInfo.add(info);
+        }
     }
 
     public void print() {

@@ -68,7 +68,7 @@ public class StatInfoManager {
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_REQUEST)
-                .withElapsed(receiveStamp - request.getTimestamp());
+                .calcElapsed(request.getTimestamp(), receiveStamp);
         queue.add(stat);
         reporter.report();
     }
