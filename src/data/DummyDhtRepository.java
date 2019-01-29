@@ -6,6 +6,7 @@ import com.datastax.driver.core.Session;
 import loadmanagement.LoadInfo;
 import statmanagement.StatInfo;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -35,7 +36,7 @@ public class DummyDhtRepository {
                         "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?) IF NOT EXISTS;");
 
         BoundStatement boundStatement = statement.bind(
-                info.getReportTime(),
+                new Date(info.getReportTime()),
                 info.getNodeId(),
                 info.getFileLoad(),
                 info.getNumberOfHits(),
@@ -55,7 +56,7 @@ public class DummyDhtRepository {
                         "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?) IF NOT EXISTS;");
 
         BoundStatement boundStatement = statement.bind(
-                info.getReportTime(),
+                new Date(info.getReportTime()),
                 info.getNodeId(),
                 info.getFileLoad(),
                 info.getNumberOfHits(),
@@ -76,10 +77,10 @@ public class DummyDhtRepository {
 
         BoundStatement boundStatement = statement.bind(
                 info.getToken(),
-                info.getStartTime(),
+                new Date(info.getStartTime()),
                 info.getHeader(),
                 info.getElapsed(),
-                info.getEndTime(),
+                new Date(info.getEndTime()),
                 info.getType()
         );
 

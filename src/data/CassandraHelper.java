@@ -41,13 +41,16 @@ public class CassandraHelper {
         Session session = connector.getSession();
 
         SchemaRepository sr = new SchemaRepository(session);
-        sr.useKeyspace("coogle");
+        sr.useKeyspace("dummydht");
 
         repository = new DummyDhtRepository(session);
     }
 
     public void insertLoadInfo(LoadInfo loadInfo, boolean isHistorical) throws Exception {
-        if (repository == null) throw new Exception("DummyDhtRepository Exception: not opened");
+        if (repository == null) {
+            close();
+            throw new Exception("DummyDhtRepository Exception: not opened");
+        }
 
         if (isHistorical) {
             repository.insertHistoricalLoadInfo(loadInfo);
@@ -58,7 +61,10 @@ public class CassandraHelper {
     }
 
     public void insertStatInfo(StatInfo statInfo) throws Exception {
-        if (repository == null) throw new Exception("DummyDhtRepository Exception: not opened");
+        if (repository == null) {
+            close();
+            throw new Exception("DummyDhtRepository Exception: not opened");
+        }
         repository.insertStatInfo(statInfo);
     }
 
