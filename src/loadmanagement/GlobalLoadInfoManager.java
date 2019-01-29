@@ -1,6 +1,7 @@
 package loadmanagement;
 
 import commonmodels.PhysicalNode;
+import data.CassandraHelper;
 import util.SimpleLog;
 
 import java.util.*;
@@ -41,6 +42,7 @@ public class GlobalLoadInfoManager {
     public void update(LoadInfo info) {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
+        updateToDatabase(info, false);
         print();
     }
 
@@ -64,6 +66,7 @@ public class GlobalLoadInfoManager {
         if (info != null) {
             info.setReportTime(System.currentTimeMillis());
             historicalLoadInfo.add(info);
+            updateToDatabase(info, true);
         }
     }
 
@@ -79,5 +82,16 @@ public class GlobalLoadInfoManager {
         }
 
         SimpleLog.r(builder.toString());
+    }
+
+    private void updateToDatabase(LoadInfo info, boolean isHistorical) {
+        CassandraHelper db = CassandraHelper.getInstance();
+        db.open();
+        try {
+            db.insertLoadInfo(info, isHistorical);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        db.close();
     }
 }

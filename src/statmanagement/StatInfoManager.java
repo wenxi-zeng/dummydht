@@ -3,6 +3,7 @@ package statmanagement;
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import data.CassandraHelper;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -16,7 +17,16 @@ public class StatInfoManager {
     private static volatile StatInfoManager instance = null;
 
     private StatInfoManager() {
-        queue = new LinkedList<>();
+        queue = new LinkedList<StatInfo>() {
+            @Override
+            public boolean add(StatInfo info) {
+                boolean result = super.add(info);
+                reporter.report();
+                updateToDatabase(info);
+
+                return result;
+            }
+        };
         reporter = new StatInfoReporter(this);
     }
 
@@ -50,7 +60,6 @@ public class StatInfoManager {
 
         queue.add(responseStat);
         queue.add(roundTripStat);
-        reporter.report();
     }
 
     public void statRoundTripFailure(@NotNull Request request) {
@@ -60,7 +69,6 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_ROUND_TRIP_FAILURE)
                 .calcElapsed(request.getTimestamp());
         queue.add(stat);
-        reporter.report();
     }
 
     public void statRequest(@NotNull Request request, long receiveStamp) {
@@ -70,7 +78,6 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_REQUEST)
                 .calcElapsed(request.getTimestamp(), receiveStamp);
         queue.add(stat);
-        reporter.report();
     }
 
     public void statExecution(@NotNull Request request, long receiveStamp) {
@@ -80,10 +87,20 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_EXECUTION)
                 .calcElapsed(receiveStamp);
         queue.add(stat);
-        reporter.report();
     }
 
     public long getStamp() {
         return System.currentTimeMillis();
+    }
+
+    private void updateToDatabase(StatInfo info) {
+        CassandraHelper db = CassandraHelper.getInstance();
+        db.open();
+        try {
+            db.insertStatInfo(info);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        db.close();
     }
 }

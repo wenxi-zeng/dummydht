@@ -38,6 +38,7 @@ public class Config {
     private final static String PROPERTY_READ_FACTOR = "read_factor";
     private final static String PROPERTY_LOAD_INFO_REPORT_INTERVAL = "load_info_report_interval";
     private final static String PROPERTY_STAT_SERVER = "stat_server";
+    private final static String PROPERTY_DATA_SERVER = "data_server";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -240,5 +241,9 @@ public class Config {
 
     public String getStatServer() {
         return rb.getString(PROPERTY_STAT_SERVER);
+    }
+
+    public String getDataServer() {
+        return rb.getString(PROPERTY_DATA_SERVER);
     }
 }
