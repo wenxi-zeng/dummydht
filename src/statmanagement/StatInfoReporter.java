@@ -1,5 +1,6 @@
 package statmanagement;
 
+import data.DummyDhtRepository;
 import socket.UDPClient;
 import util.Config;
 
@@ -12,12 +13,15 @@ public class StatInfoReporter {
 
     private final StatInfoManager statInfoManager;
 
+    private final DummyDhtRepository repo;
+
     private ExecutorService executor;
 
     private UDPClient client;
 
     public StatInfoReporter(StatInfoManager statInfoManager) {
         this.statInfoManager = statInfoManager;
+        this.repo = DummyDhtRepository.getInstance();
         this.executor = Executors.newFixedThreadPool(2);
         try {
             this.client = new UDPClient(Config.getInstance().getStatServer());
@@ -35,9 +39,12 @@ public class StatInfoReporter {
             StatInfo info = statInfoManager.getQueue().poll();
             try {
                 client.send(info);
+                repo.open();
+                repo.insertStatInfo(info);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        repo.close();
     }
 }

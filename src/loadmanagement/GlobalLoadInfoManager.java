@@ -1,7 +1,7 @@
 package loadmanagement;
 
 import commonmodels.PhysicalNode;
-import data.CassandraHelper;
+import data.DummyDhtRepository;
 import util.SimpleLog;
 
 import java.util.*;
@@ -85,13 +85,13 @@ public class GlobalLoadInfoManager {
     }
 
     private void updateToDatabase(LoadInfo info, boolean isHistorical) {
-        CassandraHelper db = CassandraHelper.getInstance();
-        db.open();
+        DummyDhtRepository repo = DummyDhtRepository.getInstance();
+        repo.open();
         try {
-            db.insertLoadInfo(info, isHistorical);
+            repo.insertLoadInfo(info, isHistorical);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        db.close();
+        repo.close();
     }
 }

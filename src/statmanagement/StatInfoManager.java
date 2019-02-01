@@ -3,7 +3,6 @@ package statmanagement;
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
-import data.CassandraHelper;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -22,7 +21,6 @@ public class StatInfoManager {
             public boolean add(StatInfo info) {
                 boolean result = super.add(info);
                 reporter.report();
-                updateToDatabase(info);
 
                 return result;
             }
@@ -91,16 +89,5 @@ public class StatInfoManager {
 
     public long getStamp() {
         return System.currentTimeMillis();
-    }
-
-    private void updateToDatabase(StatInfo info) {
-        CassandraHelper db = CassandraHelper.getInstance();
-        db.open();
-        try {
-            db.insertStatInfo(info);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        db.close();
     }
 }
