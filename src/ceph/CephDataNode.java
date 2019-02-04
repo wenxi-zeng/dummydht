@@ -75,6 +75,20 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
+    public Request prepareIncreaseLoadCommand(String... addresses) {
+        int weight = MathX.nextInt((int)ClusterMap.getInstance().getRoot().getWeight());
+        return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                .withAttachment(addresses[0] + " " + weight);
+    }
+
+    @Override
+    public Request prepareDecreaseLoadCommand(String... addresses) {
+        int weight = -1 * MathX.nextInt((int)ClusterMap.getInstance().getRoot().getWeight());
+        return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                .withAttachment(addresses[0] + " " + weight);
+    }
+
+    @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         ClusterMap.getInstance().setLoadBalancingCallBack(callBack);
     }

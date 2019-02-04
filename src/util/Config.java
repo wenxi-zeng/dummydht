@@ -39,6 +39,8 @@ public class Config {
     private final static String PROPERTY_LOAD_INFO_REPORT_INTERVAL = "load_info_report_interval";
     private final static String PROPERTY_STAT_SERVER = "stat_server";
     private final static String PROPERTY_DATA_SERVER = "data_server";
+    private final static String PROPERTY_LB_UPPER_BOUND = "lb_upper_bound";
+    private final static String PROPERTY_LB_LOWER_BOUND = "lb_lower_bound";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -245,5 +247,13 @@ public class Config {
 
     public String getDataServer() {
         return rb.getString(PROPERTY_DATA_SERVER);
+    }
+
+    public long getLoadBalancingUpperBound() {
+        return Long.valueOf(rb.getString(PROPERTY_LB_UPPER_BOUND));
+    }
+
+    public long getLoadBalancingLowerBound() {
+        return Long.valueOf(rb.getString(PROPERTY_LB_LOWER_BOUND));
     }
 }

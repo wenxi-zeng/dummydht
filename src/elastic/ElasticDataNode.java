@@ -70,6 +70,22 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
+    public Request prepareIncreaseLoadCommand(String... addresses) {
+        int bucket = MathX.nextInt(Config.getInstance().getNumberOfHashSlots());
+
+        return new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
+                .withAttachment(addresses[1] + " " + addresses[0] + " " + bucket);
+    }
+
+    @Override
+    public Request prepareDecreaseLoadCommand(String... addresses) {
+        int bucket = MathX.nextInt(Config.getInstance().getNumberOfHashSlots());
+
+        return new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
+                .withAttachment(addresses[0] + " " + addresses[1] + " " + bucket);
+    }
+
+    @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         LookupTable.getInstance().setLoadBalancingCallBack(callBack);
     }

@@ -1,7 +1,9 @@
 package loadmanagement;
 
+import commonmodels.GlobalLoadListener;
 import commonmodels.PhysicalNode;
 import data.DummyDhtRepository;
+import util.Config;
 import util.SimpleLog;
 
 import java.util.*;
@@ -14,12 +16,18 @@ public class GlobalLoadInfoManager {
 
     private final DummyDhtRepository repo;
 
+    private final long lbUpperBound;
+
+    private List<GlobalLoadListener> callBacks;
+
     private static volatile GlobalLoadInfoManager instance = null;
 
     private GlobalLoadInfoManager() {
         globalLoadInfo = new HashMap<>();
         historicalLoadInfo = new ArrayList<>();
         repo = DummyDhtRepository.getInstance();
+        lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
+        callBacks = new ArrayList<>();
     }
 
     public static GlobalLoadInfoManager getInstance() {
@@ -32,6 +40,14 @@ public class GlobalLoadInfoManager {
         }
 
         return instance;
+    }
+
+    public void subscribe(GlobalLoadListener callBack) {
+        callBacks.add(callBack);
+    }
+
+    public void unsubscribe(GlobalLoadListener callBack) {
+        callBacks.remove(callBack);
     }
 
     public List<LoadInfo> getGlobalLoadInfo() {
@@ -47,6 +63,7 @@ public class GlobalLoadInfoManager {
         globalLoadInfo.put(info.getNodeId(), info);
         repo.insertLoadInfo(info, false);
         print();
+        observe();
     }
 
     public void update(List<PhysicalNode> nodes) {
@@ -56,6 +73,7 @@ public class GlobalLoadInfoManager {
         }
         consolidate(nodeIdList);
         print();
+        observe();
     }
 
     private void consolidate(Set<String> nodeIdList) {
@@ -85,5 +103,46 @@ public class GlobalLoadInfoManager {
         }
 
         SimpleLog.r(builder.toString());
+    }
+
+    private void observe() {
+        LoadInfo lightestNode = null;
+        for (LoadInfo info : globalLoadInfo.values()) {
+            if (info.getSizeOfFiles() < lbUpperBound) {
+
+                if (lightestNode == null ||
+                        lightestNode.getSizeOfFiles() >= info.getSizeOfFiles())
+                    lightestNode = info;
+            }
+        }
+
+        if (lightestNode == null) {
+            SimpleLog.v("Nodes are all overloaded, no need to balance");
+        }
+        else {
+            boolean needTwoNodes = Config.getInstance().getScheme().equals(Config.SCHEME_ELASTIC);
+            for (LoadInfo info : globalLoadInfo.values()) {
+                if (info.getSizeOfFiles() > lbUpperBound) {
+                    if (needTwoNodes)
+                        onOverLoad(info, lightestNode);
+                    else
+                        onOverLoad(info);
+                }
+            }
+        }
+    }
+
+    private void onOverLoad(LoadInfo loadInfo) {
+        if (callBacks != null)
+            for (GlobalLoadListener callBack : callBacks) {
+                callBack.onOverload(loadInfo);
+            }
+    }
+
+    private void onOverLoad(LoadInfo heavyNode, LoadInfo lightNode) {
+        if (callBacks != null)
+            for (GlobalLoadListener callBack : callBacks) {
+                callBack.onOverLoad(heavyNode, lightNode);
+            }
     }
 }

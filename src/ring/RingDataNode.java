@@ -64,15 +64,25 @@ public class RingDataNode extends DataNode {
         int coin = MathX.nextInt(0, 1);
 
         if (coin == 0) {
-            int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
-            return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                    .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
+            return prepareDecreaseLoadCommand(addresses);
         }
         else {
-            int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(new PhysicalNode(addresses[0]));
-            return new Request().withHeader(RingCommand.INCREASELOAD.name())
-                    .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
+            return prepareIncreaseLoadCommand(addresses);
         }
+    }
+
+    @Override
+    public Request prepareIncreaseLoadCommand(String... addresses) {
+        int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(new PhysicalNode(addresses[0]));
+        return new Request().withHeader(RingCommand.INCREASELOAD.name())
+                .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
+    }
+
+    @Override
+    public Request prepareDecreaseLoadCommand(String... addresses) {
+        int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
+        return new Request().withHeader(RingCommand.DECREASELOAD.name())
+                .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
     }
 
     @Override

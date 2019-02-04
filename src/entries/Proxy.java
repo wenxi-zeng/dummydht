@@ -2,16 +2,14 @@ package entries;
 
 import commands.DaemonCommand;
 import commands.ProxyCommand;
-import commonmodels.Daemon;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import loadmanagement.GlobalLoadInfoManager;
+import loadmanagement.LoadInfo;
 import socket.SocketClient;
 import util.Config;
 import util.ObjectConverter;
@@ -21,7 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack {
+public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, GlobalLoadListener {
 
     private DataNodeDaemon daemon;
 
@@ -85,6 +83,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
         daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         daemon.getDataNodeServer().setMembershipCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
+        GlobalLoadInfoManager.getInstance().subscribe(this);
     }
 
     @Override
@@ -267,4 +266,21 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
             send(node.getAddress(), node.getPort(), request, this);
         }
     }
+
+    @Override
+    public void onOverload(LoadInfo loadInfo) {
+        Request request = daemon.getDataNodeServer()
+                .getDataNode()
+                .prepareDecreaseLoadCommand(loadInfo.getNodeId());
+        processDataNodeCommand(request);
+    }
+
+    @Override
+    public void onOverLoad(LoadInfo heavyNode, LoadInfo lightNode) {
+        Request request = daemon.getDataNodeServer()
+                .getDataNode()
+                .prepareDecreaseLoadCommand(heavyNode.getNodeId(), lightNode.getNodeId());
+        processDataNodeCommand(request);
+    }
+
 }
