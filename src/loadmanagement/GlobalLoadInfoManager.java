@@ -12,11 +12,14 @@ public class GlobalLoadInfoManager {
 
     private List<LoadInfo> historicalLoadInfo;
 
+    private final DummyDhtRepository repo;
+
     private static volatile GlobalLoadInfoManager instance = null;
 
     private GlobalLoadInfoManager() {
         globalLoadInfo = new HashMap<>();
         historicalLoadInfo = new ArrayList<>();
+        repo = DummyDhtRepository.getInstance();
     }
 
     public static GlobalLoadInfoManager getInstance() {
@@ -42,7 +45,7 @@ public class GlobalLoadInfoManager {
     public void update(LoadInfo info) {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
-        updateToDatabase(info, false);
+        repo.insertLoadInfo(info, false);
         print();
     }
 
@@ -66,7 +69,7 @@ public class GlobalLoadInfoManager {
         if (info != null) {
             info.setReportTime(System.currentTimeMillis());
             historicalLoadInfo.add(info);
-            updateToDatabase(info, true);
+            repo.insertLoadInfo(info, true);
         }
     }
 
@@ -82,16 +85,5 @@ public class GlobalLoadInfoManager {
         }
 
         SimpleLog.r(builder.toString());
-    }
-
-    private void updateToDatabase(LoadInfo info, boolean isHistorical) {
-        DummyDhtRepository repo = DummyDhtRepository.getInstance();
-        repo.open();
-        try {
-            repo.insertLoadInfo(info, isHistorical);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        repo.close();
     }
 }

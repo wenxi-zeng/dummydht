@@ -8,7 +8,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class DummyDhtRepository {
@@ -20,11 +24,25 @@ public class DummyDhtRepository {
 
     private Connection session;
 
+    private ExecutorService executor;
+
+    private Queue<PreparedStatement> queue;
+
     private static volatile DummyDhtRepository instance = null;
 
     private DummyDhtRepository() {
         connector = new Connector();
         connector.setServer(Config.getInstance().getDataServer());
+        executor = Executors.newFixedThreadPool(2);
+        queue = new LinkedList<PreparedStatement>(){
+            @Override
+            public boolean add(PreparedStatement info) {
+                boolean result = super.add(info);
+                process();
+
+                return result;
+            }
+        };
     }
 
     public static DummyDhtRepository getInstance() {
@@ -37,6 +55,23 @@ public class DummyDhtRepository {
         }
 
         return instance;
+    }
+
+    public void process() {
+        executor.execute(this::consume);
+    }
+
+    private void consume() {
+        while (!queue.isEmpty()) {
+            PreparedStatement statement = queue.poll();
+            try {
+                open();
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        close();
     }
 
     public void insertLoadInfoBatch(List<LoadInfo> infoList, boolean isHistorical) {
@@ -68,7 +103,7 @@ public class DummyDhtRepository {
             statement.setLong(8, info.getSizeOfFiles());
             statement.setLong(9, info.getWriteLoad());
 
-            statement.executeUpdate();
+            queue.add(statement);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -90,7 +125,7 @@ public class DummyDhtRepository {
             statement.setLong(8, info.getSizeOfFiles());
             statement.setLong(9, info.getWriteLoad());
 
-            statement.executeUpdate();
+            queue.add(statement);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -109,7 +144,7 @@ public class DummyDhtRepository {
             statement.setTimestamp(5, new Timestamp(info.getEndTime()));
             statement.setString(6, info.getType());
 
-            statement.executeUpdate();
+            queue.add(statement);
         } catch (SQLException e) {
             e.printStackTrace();
         }

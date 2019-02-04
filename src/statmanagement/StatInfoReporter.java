@@ -39,12 +39,10 @@ public class StatInfoReporter {
             StatInfo info = statInfoManager.getQueue().poll();
             try {
                 client.send(info);
-                repo.open();
                 repo.insertStatInfo(info);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        repo.close();
     }
 }
