@@ -7,6 +7,7 @@ import util.Config;
 import util.SimpleLog;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalLoadInfoManager {
 
@@ -23,7 +24,7 @@ public class GlobalLoadInfoManager {
     private static volatile GlobalLoadInfoManager instance = null;
 
     private GlobalLoadInfoManager() {
-        globalLoadInfo = new HashMap<>();
+        globalLoadInfo = new ConcurrentHashMap<>();
         historicalLoadInfo = new ArrayList<>();
         repo = DummyDhtRepository.getInstance();
         lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
