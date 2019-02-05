@@ -23,7 +23,7 @@ public class LoadInfoReporter implements SocketClient.ServerCallBack {
     public LoadInfoReporter(LoadInfoManager loadInfoManager) {
         this.loadInfoManager = loadInfoManager;
         this.reportInterval = Config.getInstance().getLoadInfoReportInterval();
-        scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(8);
         threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
                 new ThreadPoolExecutor.DiscardOldestPolicy());

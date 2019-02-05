@@ -72,7 +72,7 @@ public class RingLoadBalanceAlgorithm {
     }
 
     public void decreaseLoad(LookupTable table, PhysicalNode node, int[] hashVal) {
-        SimpleLog.i("Increasing load for physical node " + node.toString());
+        SimpleLog.i("Decreasing load for physical node " + node.toString());
 
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         if (pnode == null) {

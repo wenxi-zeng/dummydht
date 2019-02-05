@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.TimerTask;
+import java.util.concurrent.*;
 
 
 public class DummyDhtRepository {
@@ -26,14 +26,23 @@ public class DummyDhtRepository {
 
     private ExecutorService executor;
 
+    private ScheduledExecutorService timer;
+
+    private ScheduledFuture task;
+
     private Queue<Queueable> queue;
 
+    private TimerTask disconnectTask;
+
     private static volatile DummyDhtRepository instance = null;
+
+    private static final long TIME_TO_DISCONNECT = 5;
 
     private DummyDhtRepository() {
         connector = new Connector();
         connector.setServer(Config.getInstance().getDataServer());
-        executor = Executors.newFixedThreadPool(1);
+        executor = Executors.newSingleThreadExecutor();
+        timer = Executors.newSingleThreadScheduledExecutor();
         queue = new LinkedList<Queueable>(){
             @Override
             public boolean add(Queueable queueable) {
@@ -41,6 +50,12 @@ public class DummyDhtRepository {
                 process();
 
                 return result;
+            }
+        };
+        disconnectTask = new TimerTask() {
+            @Override
+            public void run() {
+                close();
             }
         };
     }
@@ -61,16 +76,15 @@ public class DummyDhtRepository {
         executor.execute(this::consume);
     }
 
-    private void consume() {
-        open();
+    private synchronized void consume() {
         while (!queue.isEmpty()) {
+            open();
             Queueable queueable = queue.poll();
             if (queueable instanceof StatInfo)
                 insertStatInfo((StatInfo) queueable);
             else if (queueable instanceof LoadInfo)
                 insertLoadInfo((LoadInfo) queueable);
         }
-        close();
     }
 
     public void put(Queueable queueable) {
@@ -118,9 +132,14 @@ public class DummyDhtRepository {
     }
 
     public void open() {
+        if (task != null)
+            task.cancel(false);
+
         if (session == null || !connector.isConnected()) {
             session = connector.reconnect();
         }
+
+        task = timer.schedule(disconnectTask, TIME_TO_DISCONNECT, TimeUnit.SECONDS);
     }
 
     public void close() {

@@ -22,7 +22,7 @@ public class StatInfoReporter {
     public StatInfoReporter(StatInfoManager statInfoManager) {
         this.statInfoManager = statInfoManager;
         this.repo = DummyDhtRepository.getInstance();
-        this.executor = Executors.newFixedThreadPool(2);
+        this.executor = Executors.newSingleThreadExecutor();
         try {
             this.client = new UDPClient(Config.getInstance().getStatServer());
         } catch (SocketException e) {

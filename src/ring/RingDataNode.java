@@ -73,14 +73,16 @@ public class RingDataNode extends DataNode {
 
     @Override
     public Request prepareIncreaseLoadCommand(String... addresses) {
-        int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(new PhysicalNode(addresses[0]));
+        PhysicalNode node = LookupTable.getInstance().getPhysicalNodeMap().get(addresses[0]);
+        int[] deltaHash = LookupTable.getInstance().randomIncreaseRange(node);
         return new Request().withHeader(RingCommand.INCREASELOAD.name())
                 .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
     }
 
     @Override
     public Request prepareDecreaseLoadCommand(String... addresses) {
-        int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
+        PhysicalNode node = LookupTable.getInstance().getPhysicalNodeMap().get(addresses[0]);
+        int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(node);
         return new Request().withHeader(RingCommand.DECREASELOAD.name())
                 .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
     }

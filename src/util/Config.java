@@ -250,7 +250,7 @@ public class Config {
     }
 
     public long getLoadBalancingUpperBound() {
-        return Long.valueOf(rb.getString(PROPERTY_LB_UPPER_BOUND));
+        return Utils.parseLong(rb.getString(PROPERTY_LB_UPPER_BOUND));
     }
 
     public long getLoadBalancingLowerBound() {

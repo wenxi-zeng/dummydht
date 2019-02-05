@@ -68,7 +68,7 @@ public class GlobalLoadInfoManager {
     }
 
     public void update(List<PhysicalNode> nodes) {
-        Set<String> nodeIdList = globalLoadInfo.keySet();
+        List<String> nodeIdList = new ArrayList<>(globalLoadInfo.keySet());
         for (PhysicalNode node : nodes) {
             nodeIdList.remove(node.getFullAddress());
         }
@@ -77,7 +77,7 @@ public class GlobalLoadInfoManager {
         observe();
     }
 
-    private void consolidate(Set<String> nodeIdList) {
+    private void consolidate(List<String> nodeIdList) {
         for (String node  : nodeIdList) {
             consolidate(node);
         }
@@ -125,6 +125,8 @@ public class GlobalLoadInfoManager {
             boolean needTwoNodes = Config.getInstance().getScheme().equals(Config.SCHEME_ELASTIC);
             for (LoadInfo info : globalLoadInfo.values()) {
                 if (info.getSizeOfFiles() > lbUpperBound) {
+                    SimpleLog.v("Node " + info.getNodeId() + " is overloaded. Decreasing its load");
+
                     if (needTwoNodes)
                         onOverLoad(info, lightestNode);
                     else
