@@ -4,6 +4,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import commonmodels.Queueable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,7 +18,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
         "elapsed",
         "type"
 })
-public class StatInfo implements Serializable
+public class StatInfo implements Serializable, Queueable
 {
     @JsonProperty("start_time")
     private long startTime;

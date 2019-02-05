@@ -4,6 +4,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import commonmodels.Queueable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,7 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
         "number_of_lock_conflicts",
         "number_of_hits"
 })
-public class LoadInfo implements Serializable
+public class LoadInfo implements Serializable, Queueable
 {
     @JsonProperty("report_time")
     private long reportTime;
@@ -43,6 +44,8 @@ public class LoadInfo implements Serializable
     private final static long serialVersionUID = -607052110101864782L;
 
     private transient double readFactor = 1;
+
+    private transient boolean consolidated = false;
 
     /**
      * No args constructor for use in serialization
@@ -209,6 +212,14 @@ public class LoadInfo implements Serializable
     public LoadInfo withNumberOfHits(long numberOfHits) {
         this.numberOfHits = numberOfHits;
         return this;
+    }
+
+    public boolean isConsolidated() {
+        return consolidated;
+    }
+
+    public void setConsolidated(boolean consolidated) {
+        this.consolidated = consolidated;
     }
 
     public double getReadFactor() {

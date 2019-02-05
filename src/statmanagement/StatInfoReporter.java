@@ -39,7 +39,7 @@ public class StatInfoReporter {
             StatInfo info = statInfoManager.getQueue().poll();
             try {
                 client.send(info);
-                repo.insertStatInfo(info);
+                repo.put(info);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -8,8 +8,8 @@ public class Connector {
     private String status = "not connected";
     private String server = "localhost";
     private String schema = "dummydht";
-    private String user = "root";
-    private String password = "";
+    private String user = "alien";
+    private String password = "alien1";
 
     private Connection connection = null;
 
@@ -60,6 +60,7 @@ public class Connector {
                 connected = false;
             } catch (SQLException e) {
                 status = e.getMessage();
+                e.printStackTrace();
             }
         }
         return getConnection();
@@ -68,7 +69,7 @@ public class Connector {
     public Connection getConnection() {
         if (!connected) {
             try {
-                Class.forName("com.mysql.jdbc.Driver");
+                Class.forName("com.mysql.cj.jdbc.Driver");
                 String url = "jdbc:mysql://" + server + "/" + schema + "?user="
                         + user + "&password=" + password;
                 connection = (Connection) DriverManager.getConnection(url);

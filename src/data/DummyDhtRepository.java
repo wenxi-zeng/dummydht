@@ -1,5 +1,6 @@
 package data;
 
+import commonmodels.Queueable;
 import loadmanagement.LoadInfo;
 import statmanagement.StatInfo;
 import util.Config;
@@ -9,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,18 +26,18 @@ public class DummyDhtRepository {
 
     private ExecutorService executor;
 
-    private Queue<PreparedStatement> queue;
+    private Queue<Queueable> queue;
 
     private static volatile DummyDhtRepository instance = null;
 
     private DummyDhtRepository() {
         connector = new Connector();
         connector.setServer(Config.getInstance().getDataServer());
-        executor = Executors.newFixedThreadPool(2);
-        queue = new LinkedList<PreparedStatement>(){
+        executor = Executors.newFixedThreadPool(1);
+        queue = new LinkedList<Queueable>(){
             @Override
-            public boolean add(PreparedStatement info) {
-                boolean result = super.add(info);
+            public boolean add(Queueable queueable) {
+                boolean result = super.add(queueable);
                 process();
 
                 return result;
@@ -62,36 +62,26 @@ public class DummyDhtRepository {
     }
 
     private void consume() {
+        open();
         while (!queue.isEmpty()) {
-            PreparedStatement statement = queue.poll();
-            try {
-                open();
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            Queueable queueable = queue.poll();
+            if (queueable instanceof StatInfo)
+                insertStatInfo((StatInfo) queueable);
+            else if (queueable instanceof LoadInfo)
+                insertLoadInfo((LoadInfo) queueable);
         }
         close();
     }
 
-    public void insertLoadInfoBatch(List<LoadInfo> infoList, boolean isHistorical) {
-        for (LoadInfo info : infoList) {
-            insertLoadInfo(info, isHistorical);
-        }
+    public void put(Queueable queueable) {
+        queue.add(queueable);
     }
 
-    public void insertLoadInfo(LoadInfo info, boolean isHistorical) {
-        if (isHistorical)
-            insertHistoricalLoadInfo(info);
-        else
-            insertLoadInfo(info);
-    }
-
-    public void insertLoadInfo(LoadInfo info) {
-        PreparedStatement statement = null;
+    private void insertLoadInfo(LoadInfo info) {
         try {
-            statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_LOAD_INFO + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load) " +
+            String table = info.isConsolidated() ? TABLE_HISTORICAL_LOAD_INFO : TABLE_LOAD_INFO;
+            PreparedStatement statement = session.prepareStatement(
+                    "INSERT INTO " + table + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load) " +
                             "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?)");
             statement.setTimestamp(1, new Timestamp(info.getReportTime()));
             statement.setString(2, info.getNodeId());
@@ -103,38 +93,15 @@ public class DummyDhtRepository {
             statement.setLong(8, info.getSizeOfFiles());
             statement.setLong(9, info.getWriteLoad());
 
-            queue.add(statement);
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void insertHistoricalLoadInfo(LoadInfo info) {
-        PreparedStatement statement = null;
+    private void insertStatInfo(StatInfo info) {
         try {
-            statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_HISTORICAL_LOAD_INFO + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load) " +
-                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?)");
-            statement.setTimestamp(1, new Timestamp(info.getReportTime()));
-            statement.setString(2, info.getNodeId());
-            statement.setLong(3, info.getFileLoad());
-            statement.setLong(4, info.getNumberOfHits());
-            statement.setLong(5, info.getNumberOfLockConflicts());
-            statement.setLong(6, info.getNumberOfMiss());
-            statement.setLong(7, info.getReadLoad());
-            statement.setLong(8, info.getSizeOfFiles());
-            statement.setLong(9, info.getWriteLoad());
-
-            queue.add(statement);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void insertStatInfo(StatInfo info) {
-        PreparedStatement statement = null;
-        try {
-            statement = session.prepareStatement(
+            PreparedStatement statement = session.prepareStatement(
                     "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type) " +
                             "VALUES (?, ?, ?, ? , ? , ?)");
             statement.setString(1, info.getToken());
@@ -144,7 +111,7 @@ public class DummyDhtRepository {
             statement.setTimestamp(5, new Timestamp(info.getEndTime()));
             statement.setString(6, info.getType());
 
-            queue.add(statement);
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }

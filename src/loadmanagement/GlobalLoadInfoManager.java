@@ -61,7 +61,7 @@ public class GlobalLoadInfoManager {
     public void update(LoadInfo info) {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
-        repo.insertLoadInfo(info, false);
+        repo.put(info);
         print();
         observe();
     }
@@ -86,8 +86,9 @@ public class GlobalLoadInfoManager {
         LoadInfo info = globalLoadInfo.remove(nodeId);
         if (info != null) {
             info.setReportTime(System.currentTimeMillis());
+            info.setConsolidated(true);
             historicalLoadInfo.add(info);
-            repo.insertLoadInfo(info, true);
+            repo.put(info);
         }
     }
 
