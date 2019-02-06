@@ -142,7 +142,7 @@ public class SocketClient {
                 asynchronousSocketChannel.shutdownOutput();
                 asynchronousSocketChannel.close();
 
-                SimpleLog.i(String.valueOf(data));
+                SimpleLog.i(data);
                 if (success && o instanceof Response) {
                     Response resp = (Response) o;
                     StatInfoManager.getInstance().statResponse(data, resp);

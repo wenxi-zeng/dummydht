@@ -262,7 +262,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     @Override
     public void onResponse(Request request, Response o) {
-        SimpleLog.i(String.valueOf(o));
+        SimpleLog.i(o);
     }
 
     @Override

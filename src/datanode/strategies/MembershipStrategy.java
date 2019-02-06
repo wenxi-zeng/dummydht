@@ -37,7 +37,7 @@ public abstract class MembershipStrategy {
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response o) {
-                SimpleLog.i(String.valueOf(o));
+                SimpleLog.i(o);
 
                 if (o.getStatus() == Response.STATUS_FAILED) {
                     onFailure(request, o.getMessage());
