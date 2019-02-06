@@ -79,7 +79,7 @@ public class Config {
 
     private float initialWeight;
 
-    private float networkSpeed;
+    private long networkSpeed;
 
     public Config() {
         rb = ResourcesLoader.getBundle(CONFIG_PATH);
@@ -89,7 +89,7 @@ public class Config {
         defaultNumberOfHashSlots = numberOfHashSlots;
         scheme = rb.getString(PROPERTY_SCHEME);
         initialWeight = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
-        networkSpeed = Float.valueOf(rb.getString(PROPERTY_NETWORK_SPEED));
+        networkSpeed = Utils.parseLong(rb.getString(PROPERTY_NETWORK_SPEED));
     }
 
     public static Config getInstance() {
@@ -192,7 +192,7 @@ public class Config {
         return scheme;
     }
 
-    public float getNetworkSpeed() {
+    public long getNetworkSpeed() {
         return networkSpeed;
     }
 
@@ -255,7 +255,7 @@ public class Config {
     }
 
     public long getLoadBalancingLowerBound() {
-        return Long.valueOf(rb.getString(PROPERTY_LB_LOWER_BOUND));
+        return Utils.parseLong(rb.getString(PROPERTY_LB_LOWER_BOUND));
     }
 
     public List<String> getLogFilter() {

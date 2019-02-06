@@ -58,7 +58,7 @@ public class FileTransferManager {
             sizeOfFilesTransferred += fileBucket.getSize();
         }
 
-        float transferTime = (sizeOfFilesTransferred / Config.getInstance().getNetworkSpeed()) * 1000;
+        float transferTime = sizeOfFilesTransferred  * 1.0f / Config.getInstance().getNetworkSpeed();
 
         new Timer().schedule(new TimerTask() {
             @Override
@@ -94,7 +94,7 @@ public class FileTransferManager {
             sizeOfFilesReplicated += fileBucket.getSize();
         }
 
-        float replicateTime = (sizeOfFilesReplicated / Config.getInstance().getNetworkSpeed()) * 1000;
+        float replicateTime = sizeOfFilesReplicated * 1.0f / Config.getInstance().getNetworkSpeed();
 
         new Timer().schedule(new TimerTask() {
             @Override
@@ -133,7 +133,7 @@ public class FileTransferManager {
             sizeOfFilesReceived += bucket.getSize();
         }
 
-        float totalTime = (sizeOfFilesReceived / Config.getInstance().getNetworkSpeed()) * 1000;
+        float totalTime = sizeOfFilesReceived * 1.0f / Config.getInstance().getNetworkSpeed();
         String result = "Message from : " + toNode.getId()
                 + ":\n         File transmitted from " + from.getId()
                 + ".\n         Number of files received: " + numberOfFilesReceived
