@@ -54,6 +54,20 @@ public class LocalFileManager {
         }
     }
 
+    public FileBucket read(int bucket, long filesize) {
+        if (filesize < 0) return read(bucket);
+
+        FileBucket fileBucket = localBuckets.get(bucket);
+
+        if (fileBucket != null) {
+            return fileBucket.read(filesize);
+        }
+        else {
+            numberOfMiss++;
+            return null;
+        }
+    }
+
     public FileBucket read(int bucket) {
         FileBucket fileBucket = localBuckets.get(bucket);
 

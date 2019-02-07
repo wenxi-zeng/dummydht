@@ -70,19 +70,25 @@ public enum ElasticCommand implements Command {
     READ {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            if (args.length != 2) {
+            if (args.length > 3) {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
+            String attachment = args[1];
+            if (args.length == 3)
+                attachment = attachment + " " + args[2];
+
             return new Request().withHeader(ElasticCommand.READ.name())
                     .withEpoch(LookupTable.getInstance().getEpoch())
-                    .withAttachment(args[1]);
+                    .withAttachment(attachment);
         }
 
         @Override
         public Response execute(Request request) {
-            int hash = MathX.positiveHash(request.getAttachment().hashCode()) % LookupTable.getInstance().getTable().length;
-            FileBucket fileBucket = LocalFileManager.getInstance().read(hash);
+            String[] file = request.getAttachment().split(" ");
+            int hash = MathX.positiveHash(file[0].hashCode()) % LookupTable.getInstance().getTable().length;
+            long filesize = file.length == 2 ? Long.valueOf(file[1]) : -1;
+            FileBucket fileBucket = LocalFileManager.getInstance().read(hash, filesize);
 
             Response response = new Response(request);
 
@@ -103,12 +109,12 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.READ.name() + " %s";
+            return ElasticCommand.READ.name() + " %s %s";
         }
 
         @Override
         public String getHelpString() {
-            return String.format(getParameterizedString(), "<filename>");
+            return String.format(getParameterizedString(), "<filename> [filesize]");
         }
 
     },
@@ -184,7 +190,7 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.READ.name() + " %s";
+            return ElasticCommand.LOOKUP.name() + " %s";
         }
 
         @Override

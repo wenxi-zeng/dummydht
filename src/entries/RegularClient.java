@@ -234,7 +234,7 @@ public class RegularClient {
 
         public Request nextRead() {
             StaticTree.RandTreeNode file = tree.getFiles().get(generator.nextInt());
-            String[] args = new String[] { RingCommand.READ.name(),  file.toString() };
+            String[] args = new String[] { RingCommand.READ.name(),  file.toString(), String.valueOf(file.getSize()) };
             Request request = null;
             try {
                 request = terminal.translate(args);
