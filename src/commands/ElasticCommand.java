@@ -89,18 +89,15 @@ public enum ElasticCommand implements Command {
             if (fileBucket == null) {
                 response.withStatus(Response.STATUS_FAILED)
                         .withMessage("Bucket not found in this node.");
-                LoadInfoManager.getInstance().incrementNumberOfMiss();
             }
             else {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
-                LoadInfoManager.getInstance().incrementNumberOfHits();
             }
 
             if (request.getEpoch() < LookupTable.getInstance().getEpoch())
                 response.setAttachment(LookupTable.getInstance().getTable());
 
-            LoadInfoManager.getInstance().incrementNumberOfRead();
             return response;
         }
 
@@ -144,18 +141,15 @@ public enum ElasticCommand implements Command {
             if (fileBucket.isLocked()) {
                 response.withStatus(Response.STATUS_FAILED)
                         .withMessage("Bucket is locked.");
-                LoadInfoManager.getInstance().incrementNumberOfLockConflicts();
             }
             else {
                 response.withStatus(Response.STATUS_SUCCESS)
                         .withMessage(fileBucket.toString());
-                LoadInfoManager.getInstance().incrementNumberOfHits();
             }
 
             if (!shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
                 response.setAttachment(LookupTable.getInstance().getTable());
 
-            LoadInfoManager.getInstance().increaseWriteLoad(file.getSize());
             return response;
         }
 

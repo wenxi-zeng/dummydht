@@ -1,7 +1,6 @@
 package loadmanagement;
 
 import filemanagement.LocalFileManager;
-import util.Config;
 
 public class LoadInfoManager {
 
@@ -16,7 +15,6 @@ public class LoadInfoManager {
     private LoadInfoManager() {
         loadInfo = new LoadInfo();
         loadInfo.setNodeId(nodeId);
-        loadInfo.setReadFactor(Config.getInstance().getReadFactor());
         reporter = new LoadInfoReporter(this);
     }
 
@@ -39,25 +37,5 @@ public class LoadInfoManager {
 
     public LoadInfo getLoadInfo() {
         return LocalFileManager.getInstance().updateLoadInfo(loadInfo);
-    }
-
-    public void incrementNumberOfRead() {
-        loadInfo.incrementNumberOfRead();
-    }
-
-    public void increaseWriteLoad(long write) {
-        loadInfo.increaseWriteLoad(write);
-    }
-
-    public void incrementNumberOfHits() {
-        loadInfo.incrementNumberOfHits();
-    }
-
-    public void incrementNumberOfMiss() {
-        loadInfo.incrementNumberOfMiss();
-    }
-
-    public void incrementNumberOfLockConflicts() {
-        loadInfo.incrementNumberOfLockConflicts();
     }
 }

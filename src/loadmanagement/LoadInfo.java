@@ -1,10 +1,14 @@
 package loadmanagement;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import commonmodels.Queueable;
+import filemanagement.FileBucket;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -43,7 +47,7 @@ public class LoadInfo implements Serializable, Queueable
     private long numberOfHits;
     private final static long serialVersionUID = -607052110101864782L;
 
-    private transient double readFactor = 1;
+    private List<FileBucket> bucketInfoList = new ArrayList<>();
 
     private transient boolean consolidated = false;
 
@@ -214,46 +218,25 @@ public class LoadInfo implements Serializable, Queueable
         return this;
     }
 
+    public List<FileBucket> getBucketInfoList() {
+        return bucketInfoList;
+    }
+
+    public void setBucketInfoList(List<FileBucket> bucketInfoList) {
+        this.bucketInfoList = bucketInfoList;
+    }
+
+    public LoadInfo withBucketInfoList(List<FileBucket> bucketInfoList) {
+        this.bucketInfoList = bucketInfoList;
+        return this;
+    }
+
     public boolean isConsolidated() {
         return consolidated;
     }
 
     public void setConsolidated(boolean consolidated) {
         this.consolidated = consolidated;
-    }
-
-    public double getReadFactor() {
-        return readFactor;
-    }
-
-    public void setReadFactor(double readFactor) {
-        this.readFactor = readFactor;
-    }
-
-    public void incrementNumberOfRead() {
-        this.readLoad += 1;
-    }
-
-    public void increaseWriteLoad(long load) {
-        this.writeLoad += load;
-    }
-
-    public void incrementNumberOfHits() {
-        this.numberOfHits += 1;
-    }
-
-    public void incrementNumberOfMiss() {
-        this.numberOfMiss += 1;
-    }
-
-    public void incrementNumberOfLockConflicts() {
-        this.numberOfLockConflicts += 1;
-    }
-
-    public void updateLoad(long numberOfFiles, long sizeOfFiles) {
-        this.fileLoad = numberOfFiles;
-        this.sizeOfFiles = sizeOfFiles;
-        this.readLoad = (long)(this.readLoad * this.readFactor * this.sizeOfFiles);
     }
 
     @Override

@@ -10,9 +10,15 @@ public class FileBucket implements Serializable {
 
     private int key;
 
-    private int numberOfFiles;
+    private long sizeOfReads;
 
-    private long size;
+    private long sizeOfWrites;
+
+    private long numberOfReads;
+
+    private long numberOfWrites;
+
+    private long numberOfLockConflicts;
 
     private boolean locked;
 
@@ -23,8 +29,36 @@ public class FileBucket implements Serializable {
 
     public FileBucket(int key, int numberOfFiles, long size) {
         this(key);
-        this.numberOfFiles = numberOfFiles;
-        this.size = size;
+        this.numberOfWrites = numberOfFiles;
+        this.sizeOfWrites = size;
+    }
+
+    public void merge(FileBucket bucket) {
+        this.numberOfWrites += bucket.numberOfWrites;
+        this.sizeOfWrites += bucket.sizeOfWrites;
+        this.numberOfReads += bucket.numberOfReads;
+        this.numberOfWrites += bucket.numberOfWrites;
+    }
+
+    public void write(long filesize) {
+        if (locked) {
+            this.numberOfLockConflicts++;
+        }
+        else {
+            this.numberOfWrites++;
+            this.sizeOfWrites += filesize;
+        }
+    }
+
+    public FileBucket read() {
+        this.numberOfReads++;
+        return this;
+    }
+
+    public FileBucket read(long filesize) {
+        this.numberOfReads++;
+        this.sizeOfReads += filesize;
+        return this;
     }
 
     public int getKey() {
@@ -35,14 +69,6 @@ public class FileBucket implements Serializable {
         this.key = key;
     }
 
-    public int getNumberOfFiles() {
-        return numberOfFiles;
-    }
-
-    public void setNumberOfFiles(int numberOfFiles) {
-        this.numberOfFiles = numberOfFiles;
-    }
-
     public boolean isLocked() {
         return locked;
     }
@@ -51,22 +77,54 @@ public class FileBucket implements Serializable {
         this.locked = locked;
     }
 
-    public long getSize() {
-        return size;
+    public long getSizeOfReads() {
+        return sizeOfReads;
     }
 
-    public void setSize(long size) {
-        this.size = size;
+    public void setSizeOfReads(long sizeOfReads) {
+        this.sizeOfReads = sizeOfReads;
+    }
+
+    public long getSizeOfWrites() {
+        return sizeOfWrites;
+    }
+
+    public void setSizeOfWrites(long sizeOfWrites) {
+        this.sizeOfWrites = sizeOfWrites;
+    }
+
+    public long getNumberOfReads() {
+        return numberOfReads;
+    }
+
+    public void setNumberOfReads(long numberOfReads) {
+        this.numberOfReads = numberOfReads;
+    }
+
+    public long getNumberOfWrites() {
+        return numberOfWrites;
+    }
+
+    public void setNumberOfWrites(long numberOfWrites) {
+        this.numberOfWrites = numberOfWrites;
+    }
+
+    public long getNumberOfLockConflicts() {
+        return numberOfLockConflicts;
+    }
+
+    public void setNumberOfLockConflicts(long numberOfLockConflicts) {
+        this.numberOfLockConflicts = numberOfLockConflicts;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("key", key).append("numberOfFiles", numberOfFiles).append("size", size).append("locked", locked).toString();
+        return new ToStringBuilder(this).append("key", key).append("sizeOfWrites", sizeOfWrites).append("sizeOfReads", sizeOfReads).append("locked", locked).append("numberOfReads", numberOfReads).append("numberOfWrites", numberOfWrites).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numberOfFiles).append(locked).append(key).append(size).toHashCode();
+        return new HashCodeBuilder().append(locked).append(key).append(sizeOfWrites).append(sizeOfReads).append(numberOfReads).append(numberOfWrites).toHashCode();
     }
 
     @Override
@@ -78,6 +136,6 @@ public class FileBucket implements Serializable {
             return false;
         }
         FileBucket rhs = ((FileBucket) other);
-        return new EqualsBuilder().append(numberOfFiles, rhs.numberOfFiles).append(locked, rhs.locked).append(key, rhs.key).append(size, rhs.size).isEquals();
+        return new EqualsBuilder().append(locked, rhs.locked).append(key, rhs.key).append(sizeOfWrites, rhs.sizeOfWrites).append(sizeOfReads, rhs.sizeOfReads).append(numberOfReads, rhs.numberOfReads).append(numberOfWrites, rhs.numberOfWrites).isEquals();
     }
 }

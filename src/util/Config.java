@@ -35,7 +35,8 @@ public class Config {
     private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
     private final static String PROPERTY_REQUEST_EXP_LAMDA = "lamda";
     private final static String PROPERTY_REQUEST_NUMBER_OF_THREADS = "number_threads";
-    private final static String PROPERTY_READ_FACTOR = "read_factor";
+    private final static String PROPERTY_READ_OVERHEAD = "read_overhead";
+    private final static String PROPERTY_WRITE_OVERHEAD = "write_overhead";
     private final static String PROPERTY_LOAD_INFO_REPORT_INTERVAL = "load_info_report_interval";
     private final static String PROPERTY_STAT_SERVER = "stat_server";
     private final static String PROPERTY_DATA_SERVER = "data_server";
@@ -234,8 +235,12 @@ public class Config {
         return Integer.valueOf(rb.getString(PROPERTY_REQUEST_NUMBER_OF_THREADS));
     }
 
-    public float getReadFactor() {
-        return Float.valueOf(rb.getString(PROPERTY_READ_FACTOR));
+    public float getReadOverhead() {
+        return Float.valueOf(rb.getString(PROPERTY_READ_OVERHEAD));
+    }
+
+    public float getWriteOverhead() {
+        return Float.valueOf(rb.getString(PROPERTY_WRITE_OVERHEAD));
     }
 
     public long getLoadInfoReportInterval() {

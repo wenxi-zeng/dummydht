@@ -1,6 +1,7 @@
 package filemanagement;
 
 import loadmanagement.LoadInfo;
+import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
@@ -12,10 +13,19 @@ public class LocalFileManager {
 
     private Map<Integer, FileBucket> localBuckets;
 
+    private long numberOfMiss;
+
+    private float readOverhead;
+
+    private float writeOverhead;
+
     private static volatile LocalFileManager instance = null;
 
     private LocalFileManager() {
         localBuckets = new HashMap<>();
+        numberOfMiss = 0;
+        readOverhead = Config.getInstance().getReadOverhead();
+        writeOverhead = Config.getInstance().getWriteOverhead();
     }
 
     public static LocalFileManager getInstance() {
@@ -45,7 +55,15 @@ public class LocalFileManager {
     }
 
     public FileBucket read(int bucket) {
-        return localBuckets.get(bucket);
+        FileBucket fileBucket = localBuckets.get(bucket);
+
+        if (fileBucket != null) {
+            return fileBucket.read();
+        }
+        else {
+            numberOfMiss++;
+            return null;
+        }
     }
 
     public FileBucket write(int bucket) {
@@ -62,8 +80,7 @@ public class LocalFileManager {
             localBuckets.put(bucket, fileBucket);
         }
 
-        fileBucket.setNumberOfFiles(fileBucket.getNumberOfFiles() + 1);
-        fileBucket.setSize(fileBucket.getSize() + fileSize);
+        fileBucket.write(fileSize);
 
         SimpleLog.i("File written to bucket [" + bucket + "], file size:" + fileSize);
         return fileBucket;
@@ -80,15 +97,25 @@ public class LocalFileManager {
     }
 
     public LoadInfo updateLoadInfo(LoadInfo loadInfo) {
-        long fileCount = 0;
-        long fileSize = 0;
+        FileBucket dummyBucket = new FileBucket(-1);
+        loadInfo.getBucketInfoList().clear();
 
         for (FileBucket bucket : localBuckets.values()) {
-            fileCount += bucket.getNumberOfFiles();
-            fileSize += bucket.getSize();
+            dummyBucket.merge(bucket);
+            loadInfo.getBucketInfoList().add(bucket);
         }
 
-        loadInfo.updateLoad(fileCount, fileSize);
+        loadInfo.setSizeOfFiles(dummyBucket.getSizeOfWrites());
+        loadInfo.setWriteLoad((long)(writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()));
+        loadInfo.setReadLoad(dummyBucket.getSizeOfReads() == 0 ?
+                (long)(readOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) :
+                (long)(readOverhead * dummyBucket.getNumberOfReads() + dummyBucket.getSizeOfReads()));
+        loadInfo.setNumberOfMiss(numberOfMiss);
+        loadInfo.setNumberOfLockConflicts(dummyBucket.getNumberOfLockConflicts());
+        loadInfo.setNumberOfHits(dummyBucket.getNumberOfReads() +
+                dummyBucket.getNumberOfWrites() +
+                dummyBucket.getNumberOfLockConflicts() +
+                numberOfMiss);
         return loadInfo;
     }
 }
