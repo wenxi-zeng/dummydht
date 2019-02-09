@@ -89,6 +89,11 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
+    public LoadChangeHandler getLoadChangeHandler() {
+        return new CephLoadChangeHandler();
+    }
+
+    @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         ClusterMap.getInstance().setLoadBalancingCallBack(callBack);
     }

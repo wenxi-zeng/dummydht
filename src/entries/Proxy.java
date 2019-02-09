@@ -10,6 +10,7 @@ import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import loadmanagement.GlobalLoadInfoManager;
 import loadmanagement.LoadInfo;
+import loadmanagement.LoadMonitor;
 import socket.SocketClient;
 import util.Config;
 import util.ObjectConverter;
@@ -19,9 +20,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, GlobalLoadListener {
+public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, LoadMonitor.NotableLoadChangeCallback {
 
     private DataNodeDaemon daemon;
+
+    private LoadMonitor loadMonitor;
 
     private static volatile Proxy instance = null;
 
@@ -40,7 +43,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         Config config = Config.getInstance();
         daemon = DataNodeDaemon.newInstance(config.getSeeds().get(0));
         daemon.setSocketEventHandler(this);
-
     }
 
     public static Proxy getInstance() {
@@ -83,7 +85,9 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         daemon.getDataNodeServer().setMembershipCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
-        GlobalLoadInfoManager.getInstance().subscribe(this);
+        loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
+        GlobalLoadInfoManager.getInstance().subscribe(loadMonitor);
+        loadMonitor.subscribe(this);
     }
 
     @Override
@@ -268,19 +272,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
     }
 
     @Override
-    public void onOverload(LoadInfo loadInfo) {
-        Request request = daemon.getDataNodeServer()
-                .getDataNode()
-                .prepareDecreaseLoadCommand(loadInfo.getNodeId());
+    public void onRequestAvailable(Request request) {
         processDataNodeCommand(request);
     }
-
-    @Override
-    public void onOverLoad(LoadInfo heavyNode, LoadInfo lightNode) {
-        Request request = daemon.getDataNodeServer()
-                .getDataNode()
-                .prepareDecreaseLoadCommand(heavyNode.getNodeId(), lightNode.getNodeId());
-        processDataNodeCommand(request);
-    }
-
 }

@@ -3,10 +3,11 @@ package loadmanagement;
 import commonmodels.GlobalLoadListener;
 import commonmodels.PhysicalNode;
 import data.DummyDhtRepository;
-import util.Config;
 import util.SimpleLog;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalLoadInfoManager {
@@ -17,10 +18,6 @@ public class GlobalLoadInfoManager {
 
     private final DummyDhtRepository repo;
 
-    private final long lbUpperBound;
-
-    private final long lbLowerBound;
-
     private List<GlobalLoadListener> callBacks;
 
     private static volatile GlobalLoadInfoManager instance = null;
@@ -29,8 +26,6 @@ public class GlobalLoadInfoManager {
         globalLoadInfo = new ConcurrentHashMap<>();
         historicalLoadInfo = new ArrayList<>();
         repo = DummyDhtRepository.getInstance();
-        lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
-        lbLowerBound = Config.getInstance().getLoadBalancingLowerBound();
         callBacks = new ArrayList<>();
     }
 
@@ -67,7 +62,7 @@ public class GlobalLoadInfoManager {
         globalLoadInfo.put(info.getNodeId(), info);
         repo.put(info);
         print();
-        observe();
+        announce();
     }
 
     public void update(List<PhysicalNode> nodes) {
@@ -77,7 +72,7 @@ public class GlobalLoadInfoManager {
         }
         consolidate(nodeIdList);
         print();
-        observe();
+        announce();
     }
 
     private void consolidate(List<String> nodeIdList) {
@@ -110,43 +105,9 @@ public class GlobalLoadInfoManager {
         SimpleLog.r(builder.toString());
     }
 
-    private void observe() {
-        List<LoadInfo> lightNodes = new ArrayList<>();
-        for (LoadInfo info : globalLoadInfo.values()) {
-            if (info.getSizeOfFiles() < lbLowerBound) {
-                lightNodes.add(info);
-            }
+    private void announce() {
+        for (GlobalLoadListener callBack : callBacks) {
+            callBack.onLoadUpdated(new ArrayList<>(globalLoadInfo.values()));
         }
-
-        if (lightNodes.size() < 1) {
-            SimpleLog.v("All nodes are higher than load balancing lower bound, no need to balance");
-        }
-        else {
-            boolean needTwoNodes = Config.getInstance().getScheme().equals(Config.SCHEME_ELASTIC);
-            for (LoadInfo info : globalLoadInfo.values()) {
-                if (info.getSizeOfFiles() > lbUpperBound) {
-                    SimpleLog.v("Node " + info.getNodeId() + " is overloaded. Decreasing its load");
-
-                    if (needTwoNodes)
-                        onOverLoad(info, lightNodes.get(0));
-                    else
-                        onOverLoad(info);
-                }
-            }
-        }
-    }
-
-    private void onOverLoad(LoadInfo loadInfo) {
-        if (callBacks != null)
-            for (GlobalLoadListener callBack : callBacks) {
-                callBack.onOverload(loadInfo);
-            }
-    }
-
-    private void onOverLoad(LoadInfo heavyNode, LoadInfo lightNode) {
-        if (callBacks != null)
-            for (GlobalLoadListener callBack : callBacks) {
-                callBack.onOverLoad(heavyNode, lightNode);
-            }
     }
 }

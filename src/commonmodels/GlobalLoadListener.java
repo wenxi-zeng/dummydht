@@ -2,7 +2,8 @@ package commonmodels;
 
 import loadmanagement.LoadInfo;
 
+import java.util.List;
+
 public interface GlobalLoadListener {
-    void onOverload(LoadInfo loadInfo);
-    void onOverLoad(LoadInfo heavyNode, LoadInfo lightNode);
+    void onLoadUpdated(List<LoadInfo> globalLoad);
 }
