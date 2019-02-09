@@ -3,7 +3,6 @@ package ceph;
 import commands.CephCommand;
 import commonmodels.*;
 import commonmodels.transport.Request;
-import util.Config;
 import util.MathX;
 
 import java.util.ArrayList;
@@ -90,7 +89,7 @@ public class CephDataNode extends DataNode {
 
     @Override
     public LoadChangeHandler getLoadChangeHandler() {
-        return new CephLoadChangeHandler();
+        return new CephLoadChangeHandler(ClusterMap.getInstance());
     }
 
     @Override

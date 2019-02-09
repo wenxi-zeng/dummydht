@@ -87,7 +87,7 @@ public class ElasticDataNode extends DataNode {
 
     @Override
     public LoadChangeHandler getLoadChangeHandler() {
-        return new ElasticLoadChangeHandler();
+        return new ElasticLoadChangeHandler(LookupTable.getInstance());
     }
 
     @Override

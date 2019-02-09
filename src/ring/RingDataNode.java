@@ -87,7 +87,7 @@ public class RingDataNode extends DataNode {
 
     @Override
     public LoadChangeHandler getLoadChangeHandler() {
-        return new RingLoadChangeHandler();
+        return new RingLoadChangeHandler(LookupTable.getInstance());
     }
 
     @Override
