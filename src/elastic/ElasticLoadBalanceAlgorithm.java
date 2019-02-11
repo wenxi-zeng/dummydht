@@ -5,6 +5,7 @@ import filemanagement.FileTransferManager;
 import util.Config;
 import util.SimpleLog;
 
+import java.util.List;
 import java.util.Random;
 
 public class ElasticLoadBalanceAlgorithm {
@@ -42,6 +43,49 @@ public class ElasticLoadBalanceAlgorithm {
 
         SimpleLog.i("Moving bucket [" + node.getHash() + "] from " + from.getId() + " to " + to.getId());
         SimpleLog.i("Updated bucket info: " + node.toString());
+        SimpleLog.i("Updated " + fromNode.getId() + " info: " + fromNode.toString());
+        SimpleLog.i("Updated " + toNode.getId() + " info: " + toNode.toString());
+
+        if (lookupTable.getLoadBalancingCallBack() != null)
+            lookupTable.getLoadBalancingCallBack().onFinished();
+    }
+
+    public void moveBuckets(LookupTable lookupTable, List<BucketNode> nodes, PhysicalNode from, PhysicalNode to) {
+        SimpleLog.i("Moving buckets  from " + from.getId() + " to " + to.getId());
+
+        PhysicalNode fromNode = lookupTable.getPhysicalNodeMap().get(from.getId());
+        if (fromNode == null) {
+            SimpleLog.i(from.getId() + " does not exist.");
+            return;
+        }
+
+        PhysicalNode toNode = lookupTable.getPhysicalNodeMap().get(to.getId());
+        if (toNode == null) {
+            SimpleLog.i(to.getId() + " does not exist.");
+            return;
+        }
+
+        for (BucketNode bucketNode : nodes) {
+            if (!fromNode.getVirtualNodes().contains(bucketNode)){
+                SimpleLog.i(from.getId() + " does not have bucket [" + bucketNode.getHash() + "]");
+                continue;
+            }
+            if (toNode.getVirtualNodes().contains(bucketNode)){
+                SimpleLog.i(to.getId() + " already have bucket [" + bucketNode.getHash() + "]");
+                continue;
+            }
+
+            bucketNode = lookupTable.getTable()[bucketNode.getHash()];
+            bucketNode.getPhysicalNodes().remove(fromNode.getId());
+            fromNode.getVirtualNodes().remove(bucketNode);
+            bucketNode.getPhysicalNodes().add(toNode.getId());
+            toNode.getVirtualNodes().add(bucketNode);
+
+            requestTransfer(bucketNode, from ,to);
+        }
+
+        SimpleLog.i("Moving buckets [" + String.valueOf(nodes) + "] from " + from.getId() + " to " + to.getId());
+        SimpleLog.i("Updated buckets info: " + nodes.toString());
         SimpleLog.i("Updated " + fromNode.getId() + " info: " + fromNode.toString());
         SimpleLog.i("Updated " + toNode.getId() + " info: " + toNode.toString());
 

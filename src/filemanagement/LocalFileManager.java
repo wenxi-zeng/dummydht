@@ -120,7 +120,7 @@ public class LocalFileManager {
         }
 
         loadInfo.setSizeOfFiles(dummyBucket.getSizeOfWrites());
-        loadInfo.setFileLoad(dummyBucket.getNumberOfWrites());
+        loadInfo.setFileLoad(dummyBucket.getSizeOfWrites());
         loadInfo.setWriteLoad((long)(writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()));
         loadInfo.setReadLoad(dummyBucket.getSizeOfReads() == 0 ?
                 (long)(readOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) :

@@ -60,6 +60,11 @@ public class LoadMonitor implements GlobalLoadListener {
     private void onOverload(List<LoadInfo> globalLoad, LoadInfo loadInfo) {
         Request request = handler.generateRequestBasedOnLoad(globalLoad, loadInfo, lbLowerBound, lbUpperBound);
 
+        if (request == null) {
+            SimpleLog.i("Failed to auto balance load. No applicable node found");
+            return;
+        }
+
         for (NotableLoadChangeCallback callback : callbacks)
             callback.onRequestAvailable(request);
     }

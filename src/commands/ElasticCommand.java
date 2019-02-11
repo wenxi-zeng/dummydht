@@ -314,16 +314,16 @@ public enum ElasticCommand implements Command {
             String result;
 
             String[] args = request.getAttachment().split(" ");
-            BucketNode bucketNode = new BucketNode(Integer.valueOf(args[2]));
 
             String[] address1 = args[0].split(":");
             String[] address2 = args[1].split(":");
+            String[] buckets = args[2].split(",");
 
             PhysicalNode from = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
             PhysicalNode to = new PhysicalNode(address2[0], Integer.valueOf(address2[1]));
-            LookupTable.getInstance().moveBucket(bucketNode, from , to);
+            LookupTable.getInstance().moveBuckets(Arrays.stream(buckets).mapToInt(Integer::parseInt).toArray(), from , to);
 
-            result = "Bucket moved";
+            result = "Buckets moved";
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 

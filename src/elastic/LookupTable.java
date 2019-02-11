@@ -167,6 +167,18 @@ public class LookupTable implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
+    public void moveBuckets(int[] buckets, PhysicalNode from , PhysicalNode to) {
+        List<BucketNode> nodes = new ArrayList<>();
+        for (int bucket : buckets)
+            nodes.add(new BucketNode(bucket));
+        moveBuckets(nodes, from, to);
+    }
+
+    public void moveBuckets(List<BucketNode> nodes, PhysicalNode from , PhysicalNode to) {
+        loadBalanceAlgorithm.moveBuckets(this, nodes, from, to);
+        update(); // commit the change, gossip to other nodes
+    }
+
     public void copyBucket(BucketNode node, PhysicalNode to) {
         loadBalanceAlgorithm.copyBucket(this, node, to);
     }

@@ -6,7 +6,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
-public class FileBucket implements Serializable {
+public class FileBucket implements Serializable, Comparable<FileBucket> {
 
     private int key;
 
@@ -137,5 +137,10 @@ public class FileBucket implements Serializable {
         }
         FileBucket rhs = ((FileBucket) other);
         return new EqualsBuilder().append(locked, rhs.locked).append(key, rhs.key).append(sizeOfWrites, rhs.sizeOfWrites).append(sizeOfReads, rhs.sizeOfReads).append(numberOfReads, rhs.numberOfReads).append(numberOfWrites, rhs.numberOfWrites).isEquals();
+    }
+
+    @Override
+    public int compareTo(FileBucket o) {
+        return Long.compare(this.sizeOfWrites, o.sizeOfWrites);
     }
 }
