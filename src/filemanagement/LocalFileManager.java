@@ -113,8 +113,10 @@ public class LocalFileManager {
     public LoadInfo updateLoadInfo(LoadInfo loadInfo) {
         FileBucket dummyBucket = new FileBucket(-1);
         loadInfo.getBucketInfoList().clear();
+        loadInfo.setLoadBalancing(false);
 
         for (FileBucket bucket : localBuckets.values()) {
+            if (bucket.isLocked()) loadInfo.setLoadBalancing(true);
             dummyBucket.merge(bucket);
             loadInfo.getBucketInfoList().add(bucket);
         }

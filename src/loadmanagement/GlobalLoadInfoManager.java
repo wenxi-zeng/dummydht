@@ -72,7 +72,6 @@ public class GlobalLoadInfoManager {
         }
         consolidate(nodeIdList);
         print();
-        announce();
     }
 
     private void consolidate(List<String> nodeIdList) {

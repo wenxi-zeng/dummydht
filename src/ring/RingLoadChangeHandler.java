@@ -27,31 +27,43 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
     public Request generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
         PhysicalNode node = new PhysicalNode(loadInfo.getNodeId());
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
-        Solution bestSolution = new Solution(loadInfo.getFileLoad());
+        Solution bestSolution = null;
 
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             Indexable predecessor = table.getTable().pre(vnode);
             Solution solution = evaluate(loadInfo, predecessor, vnode, lowerBound);
 
-            if (solution.getResultLoad() < bestSolution.getResultLoad())
+            if (bestSolution == null || solution.getResultLoad() < bestSolution.getResultLoad())
                 bestSolution = solution;
         }
 
+        if (bestSolution == null) return null;
+
+        List<Integer> deltaHashList = new ArrayList<>();
+        for (Indexable vnode : pnode.getVirtualNodes()) {
+            if (vnode.getHash() == bestSolution.getVnodeHash())
+                deltaHashList.add(bestSolution.getDelta());
+            else
+                deltaHashList.add(0);
+        }
+
         return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                .withAttachments(loadInfo.getNodeId(), StringUtils.join(bestSolution.getBuckets(), ','));
+                .withAttachments(loadInfo.getNodeId(), StringUtils.join(deltaHashList, ','));
     }
 
     private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long lowerBound) {
-        Solution solution = new Solution(loadInfo.getFileLoad());
+        Solution solution = new Solution(loadInfo.getFileLoad(), current.getHash());
         Map<Integer, FileBucket> map = loadInfo.getBucketInfoList().stream().collect(
                 Collectors.toMap(FileBucket::getKey, bucket -> bucket));
 
         int iterator = current.getHash();
         while (inRange(iterator, predecessor.getHash(), current.getHash())) {
-            FileBucket bucket = map.get(iterator);
-            if (!solution.update(bucket.getKey(), bucket.getSizeOfWrites(), lowerBound))
+            FileBucket bucket = map.get(iterator--);
+            if (bucket != null && !solution.update(bucket.getKey(), bucket.getSizeOfWrites(), lowerBound))
                 break;
+
+            if (iterator < 0) iterator = Config.getInstance().getNumberOfHashSlots() - 1;
         }
 
         return solution;
@@ -70,10 +82,14 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
     private class Solution {
         private List<Integer> buckets;
         private long resultLoad;
+        private int delta;
+        private int vnodeHash;
 
-        public Solution(long initLoad) {
+        public Solution(long initLoad, int vnodeHash) {
             buckets = new ArrayList<>();
             resultLoad = initLoad;
+            delta = 0;
+            this.vnodeHash = vnodeHash;
         }
 
         public List<Integer> getBuckets() {
@@ -92,6 +108,22 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
             this.resultLoad = resultLoad;
         }
 
+        public int getDelta() {
+            return delta;
+        }
+
+        public void setDelta(int delta) {
+            this.delta = delta;
+        }
+
+        public int getVnodeHash() {
+            return vnodeHash;
+        }
+
+        public void setVnodeHash(int vnodeHash) {
+            this.vnodeHash = vnodeHash;
+        }
+
         public boolean update(int bucket, long load, long target) {
             long temp = resultLoad - load;
             if (temp < target) {
@@ -100,6 +132,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
             else {
                 buckets.add(bucket);
                 resultLoad -= load;
+                delta++;
                 return true;
             }
         }

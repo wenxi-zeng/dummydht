@@ -49,6 +49,7 @@ public class LoadMonitor implements GlobalLoadListener {
         }
         else {
             for (LoadInfo info : globalLoad) {
+                if (info.isLoadBalancing()) continue;
                 if (info.getSizeOfFiles() > lbUpperBound) {
                     SimpleLog.v("Node " + info.getNodeId() + " is overloaded. Decreasing its load");
                     onOverload(globalLoad, info);

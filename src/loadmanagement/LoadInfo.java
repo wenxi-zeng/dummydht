@@ -51,6 +51,8 @@ public class LoadInfo implements Serializable, Queueable
 
     private transient boolean consolidated = false;
 
+    private transient boolean loadBalancing = false;
+
     /**
      * No args constructor for use in serialization
      *
@@ -237,6 +239,14 @@ public class LoadInfo implements Serializable, Queueable
 
     public void setConsolidated(boolean consolidated) {
         this.consolidated = consolidated;
+    }
+
+    public boolean isLoadBalancing() {
+        return loadBalancing;
+    }
+
+    public void setLoadBalancing(boolean loadBalancing) {
+        this.loadBalancing = loadBalancing;
     }
 
     @Override
