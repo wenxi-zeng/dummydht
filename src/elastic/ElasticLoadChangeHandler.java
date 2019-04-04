@@ -1,15 +1,15 @@
 package elastic;
 
 import commands.ElasticCommand;
-import commonmodels.Indexable;
 import commonmodels.LoadChangeHandler;
-import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import filemanagement.FileBucket;
 import loadmanagement.LoadInfo;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ElasticLoadChangeHandler implements LoadChangeHandler {
@@ -24,7 +24,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
     public Request generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
         List<LoadInfo> lightNodes = new ArrayList<>();
         for (LoadInfo info : globalLoad) {
-            if (info.getSizeOfFiles() < lowerBound) {
+            if (info.getReadLoad() < lowerBound) {
                 lightNodes.add(info);
             }
         }

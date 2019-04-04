@@ -19,6 +19,8 @@ public class LocalFileManager {
 
     private float writeOverhead;
 
+    private long interval;
+
     private static volatile LocalFileManager instance = null;
 
     private LocalFileManager() {
@@ -26,6 +28,7 @@ public class LocalFileManager {
         numberOfMiss = 0;
         readOverhead = Config.getInstance().getReadOverhead();
         writeOverhead = Config.getInstance().getWriteOverhead();
+        interval = Config.getInstance().getLoadInfoReportInterval() / 1000;
     }
 
     public static LocalFileManager getInstance() {
@@ -118,15 +121,14 @@ public class LocalFileManager {
         for (FileBucket bucket : localBuckets.values()) {
             if (bucket.isLocked()) loadInfo.setLoadBalancing(true);
             dummyBucket.merge(bucket);
-            loadInfo.getBucketInfoList().add(bucket);
+            loadInfo.getBucketInfoList().add((FileBucket) bucket.clone());
+            bucket.reset();
         }
 
         loadInfo.setSizeOfFiles(dummyBucket.getSizeOfWrites());
         loadInfo.setFileLoad(dummyBucket.getSizeOfWrites());
-        loadInfo.setWriteLoad((long)(writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()));
-        loadInfo.setReadLoad(dummyBucket.getSizeOfReads() == 0 ?
-                (long)(readOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) :
-                (long)(readOverhead * dummyBucket.getNumberOfReads() + dummyBucket.getSizeOfReads()));
+        loadInfo.setWriteLoad((long)(writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) / interval);
+        loadInfo.setReadLoad((long)(readOverhead * dummyBucket.getNumberOfReads() + dummyBucket.getSizeOfReads()) / interval);
         loadInfo.setNumberOfMiss(numberOfMiss);
         loadInfo.setNumberOfLockConflicts(dummyBucket.getNumberOfLockConflicts());
         loadInfo.setNumberOfHits(dummyBucket.getNumberOfReads() +

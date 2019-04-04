@@ -6,7 +6,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
-public class FileBucket implements Serializable, Comparable<FileBucket> {
+public class FileBucket implements Serializable, Cloneable, Comparable<FileBucket> {
 
     private int key;
 
@@ -38,6 +38,14 @@ public class FileBucket implements Serializable, Comparable<FileBucket> {
         this.sizeOfWrites += bucket.sizeOfWrites;
         this.numberOfReads += bucket.numberOfReads;
         this.numberOfWrites += bucket.numberOfWrites;
+    }
+
+    public void reset() {
+        this.sizeOfReads = 0;
+        this.sizeOfWrites = 0;
+        this.numberOfReads = 0;
+        this.numberOfWrites = 0;
+        this.numberOfLockConflicts = 0;
     }
 
     public void write(long filesize) {
@@ -142,5 +150,15 @@ public class FileBucket implements Serializable, Comparable<FileBucket> {
     @Override
     public int compareTo(FileBucket o) {
         return Long.compare(this.sizeOfWrites, o.sizeOfWrites);
+    }
+
+    @Override
+    protected Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return new FileBucket(key);
+        }
     }
 }
