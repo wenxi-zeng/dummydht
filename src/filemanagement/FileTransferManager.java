@@ -54,8 +54,8 @@ public class FileTransferManager {
 
             fileBucket.setLocked(true);
             fileBuckets.add(fileBucket);
-            numberOfFilesTransferred += fileBucket.getNumberOfWrites();
-            sizeOfFilesTransferred += fileBucket.getSizeOfWrites();
+            numberOfFilesTransferred += fileBucket.getNumberOfFiles();
+            sizeOfFilesTransferred += fileBucket.getSize();
         }
 
         String result;
@@ -94,8 +94,8 @@ public class FileTransferManager {
 
             fileBucket.setLocked(true);
             fileBuckets.add(fileBucket);
-            numberOfFilesReplicated += fileBucket.getNumberOfWrites();
-            sizeOfFilesReplicated += fileBucket.getSizeOfWrites();
+            numberOfFilesReplicated += fileBucket.getNumberOfFiles();
+            sizeOfFilesReplicated += fileBucket.getSize();
         }
 
         String result;
@@ -137,8 +137,8 @@ public class FileTransferManager {
             fileBucket.setLocked(false);
             fileBucket.merge(bucket);
 
-            numberOfFilesReceived += bucket.getNumberOfWrites();
-            sizeOfFilesReceived += bucket.getSizeOfWrites();
+            numberOfFilesReceived += bucket.getNumberOfFiles();
+            sizeOfFilesReceived += bucket.getSize();
         }
 
         float totalTime = sizeOfFilesReceived * 1.0f / Config.getInstance().getNetworkSpeed();

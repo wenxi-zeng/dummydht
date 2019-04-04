@@ -10,6 +10,10 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
 
     private int key;
 
+    private long size;
+
+    private long numberOfFiles;
+
     private long sizeOfReads;
 
     private long sizeOfWrites;
@@ -29,8 +33,8 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
 
     public FileBucket(int key, int numberOfFiles, long size) {
         this(key);
-        this.numberOfWrites = numberOfFiles;
-        this.sizeOfWrites = size;
+        this.numberOfFiles = numberOfFiles;
+        this.size = size;
     }
 
     public void merge(FileBucket bucket) {
@@ -38,9 +42,12 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
         this.sizeOfWrites += bucket.sizeOfWrites;
         this.numberOfReads += bucket.numberOfReads;
         this.numberOfWrites += bucket.numberOfWrites;
+        this.numberOfFiles += bucket.numberOfFiles;
+        this.size += bucket.size;
     }
 
     public void reset() {
+        // only reset the properties for statistics
         this.sizeOfReads = 0;
         this.sizeOfWrites = 0;
         this.numberOfReads = 0;
@@ -55,6 +62,8 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
         else {
             this.numberOfWrites++;
             this.sizeOfWrites += filesize;
+            this.numberOfFiles++;
+            this.size += filesize;
         }
     }
 
@@ -83,6 +92,22 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public long getNumberOfFiles() {
+        return numberOfFiles;
+    }
+
+    public void setNumberOfFiles(long numberOfFiles) {
+        this.numberOfFiles = numberOfFiles;
     }
 
     public long getSizeOfReads() {
