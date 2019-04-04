@@ -58,24 +58,28 @@ public class FileTransferManager {
             sizeOfFilesTransferred += fileBucket.getSizeOfWrites();
         }
 
-        float transferTime = sizeOfFilesTransferred  * 1.0f / Config.getInstance().getNetworkSpeed();
+        String result;
+        if (numberOfFilesTransferred == 0) {
+            result = "Message from " + from.getId() + " transferring to " + toNode.getId() + ": no file needs to be transferred";
+        }
+        else {
+            float transferTime = sizeOfFilesTransferred * 1.0f / Config.getInstance().getNetworkSpeed();
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    callTransmitted(fileBuckets, from, toNode);
+                    cleanBuckets(fileBuckets);
+                }
+            }, (long) transferTime);
 
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                callTransmitted(fileBuckets, from, toNode);
-                cleanBuckets(fileBuckets);
-            }
-        }, (long)transferTime);
+            result = "Message from : " + from.getId()
+                    + ":\n         Transferring to " + toNode.getId()
+                    + ".\n         Number of files to be transferred: " + numberOfFilesTransferred
+                    + ",\n         Total size: " + sizeOfFilesTransferred
+                    + ",\n         Estimated time: " + transferTime;
+        }
 
-
-        String result = "Message from : " + from.getId()
-                + ":\n         Transferring to " + toNode.getId()
-                + ".\n         Number of files to be transferred: " + numberOfFilesTransferred
-                + ",\n         Total size: " + sizeOfFilesTransferred
-                + ",\n         Estimated time: " + transferTime;
         SimpleLog.i(result);
-
         return result;
     }
 
@@ -94,23 +98,28 @@ public class FileTransferManager {
             sizeOfFilesReplicated += fileBucket.getSizeOfWrites();
         }
 
-        float replicateTime = sizeOfFilesReplicated * 1.0f / Config.getInstance().getNetworkSpeed();
+        String result;
+        if (numberOfFilesReplicated == 0) {
+            result = "Message from : " + from.getId() + " copying to " + toNode.getId() + ": no file needs to be replicated";
+        }
+        else {
+            float replicateTime = sizeOfFilesReplicated * 1.0f / Config.getInstance().getNetworkSpeed();
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    callTransmitted(fileBuckets, from, toNode);
+                    unlockBucket(fileBuckets);
+                }
+            }, (long) replicateTime);
 
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                callTransmitted(fileBuckets, from, toNode);
-                unlockBucket(fileBuckets);
-            }
-        }, (long)replicateTime);
+            result = "Message from : " + from.getId()
+                    + ":\n         Transferring to " + toNode.getId()
+                    + ".\n         Number of files to be replicated: " + numberOfFilesReplicated
+                    + ",\n         Total size: " + sizeOfFilesReplicated
+                    + ",\n         Estimated time: " + replicateTime;
+        }
 
-        String result = "Message from : " + from.getId()
-                + ":\n         Transferring to " + toNode.getId()
-                + ".\n         Number of files to be replicated: " + numberOfFilesReplicated
-                + ",\n         Total size: " + sizeOfFilesReplicated
-                + ",\n         Estimated time: " + replicateTime;
         SimpleLog.i(result);
-
         return result;
     }
 
