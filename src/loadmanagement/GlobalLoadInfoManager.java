@@ -101,7 +101,7 @@ public class GlobalLoadInfoManager {
             builder.append(info.toString()).append('\n');
         }
 
-        SimpleLog.r(builder.toString());
+        SimpleLog.v(builder.toString());
     }
 
     private void announce() {

@@ -53,7 +53,7 @@ public class LoadMonitor implements GlobalLoadListener {
                     SimpleLog.v("Node " + info.getNodeId() + " is under load balancing, no operation is taken");
                     continue;
                 }
-                if (info.getReadLoad() > lbUpperBound) {
+                if (info.getLoad() > lbUpperBound) {
                     SimpleLog.v("Node " + info.getNodeId() + " is overloaded. Decreasing its load");
                     onOverload(globalLoad, info);
                 }

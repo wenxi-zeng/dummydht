@@ -1,9 +1,5 @@
 package loadmanagement;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -12,6 +8,10 @@ import filemanagement.FileBucket;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -247,6 +247,10 @@ public class LoadInfo implements Serializable, Queueable
 
     public void setLoadBalancing(boolean loadBalancing) {
         this.loadBalancing = loadBalancing;
+    }
+
+    public long getLoad() {
+        return readLoad + writeLoad;
     }
 
     @Override

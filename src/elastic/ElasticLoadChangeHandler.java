@@ -24,7 +24,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
     public Request generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
         List<LoadInfo> lightNodes = new ArrayList<>();
         for (LoadInfo info : globalLoad) {
-            if (info.getReadLoad() < lowerBound) {
+            if (info.getLoad() < lowerBound) {
                 lightNodes.add(info);
             }
         }
