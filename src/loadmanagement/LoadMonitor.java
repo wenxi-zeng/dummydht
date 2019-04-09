@@ -38,7 +38,7 @@ public class LoadMonitor implements GlobalLoadListener {
     public void onLoadUpdated(List<LoadInfo> globalLoad) {
         boolean allFull = true;
         for (LoadInfo info : globalLoad) {
-            if (info.getFileLoad() < lbLowerBound) {
+            if (info.getLoad() < lbLowerBound) {
                 allFull = false;
                 break;
             }

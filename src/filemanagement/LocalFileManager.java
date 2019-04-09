@@ -127,8 +127,8 @@ public class LocalFileManager {
 
         loadInfo.setSizeOfFiles(dummyBucket.getSizeOfWrites());
         loadInfo.setFileLoad(dummyBucket.getSizeOfWrites());
-        loadInfo.setWriteLoad((long)(writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) / interval);
-        loadInfo.setReadLoad((long)(readOverhead * dummyBucket.getNumberOfReads() + dummyBucket.getSizeOfReads()) / interval);
+        loadInfo.setWriteLoad((long)(((writeOverhead * dummyBucket.getNumberOfWrites() + dummyBucket.getSizeOfWrites()) * 1.0) / interval));
+        loadInfo.setReadLoad((long)(((readOverhead * dummyBucket.getNumberOfReads() + dummyBucket.getSizeOfReads()) * 1.0) / interval));
         loadInfo.setNumberOfMiss(numberOfMiss);
         loadInfo.setNumberOfLockConflicts(dummyBucket.getNumberOfLockConflicts());
         loadInfo.setNumberOfHits(dummyBucket.getNumberOfReads() +

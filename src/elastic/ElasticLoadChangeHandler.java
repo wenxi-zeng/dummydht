@@ -47,16 +47,16 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
     }
 
     private Solution evaluate(LoadInfo loadInfo, LoadInfo targetNodeInfo, FileBucket[] fileBuckets, long lowerBound, long upperBound) {
-        Solution bestSolution = new Solution(loadInfo.getFileLoad(), targetNodeInfo.getNodeId());
-        List<Solution> solutions = getPossibleSolutions(fileBuckets, loadInfo.getFileLoad() - lowerBound);
+        Solution bestSolution = new Solution(loadInfo.getLoad(), targetNodeInfo.getNodeId());
+        List<Solution> solutions = getPossibleSolutions(fileBuckets, loadInfo.getLoad() - lowerBound);
 
         if (solutions.size() > 0) {
             bestSolution = solutions.get(0);
         }
 
         for (Solution sol : solutions) {
-            sol.setCauseTargetOverload(sol.getResultLoad() + targetNodeInfo.getFileLoad() > upperBound);
-            sol.setResultLoad(loadInfo.getFileLoad() - sol.getResultLoad());
+            sol.setCauseTargetOverload(sol.getResultLoad() + targetNodeInfo.getLoad() > upperBound);
+            sol.setResultLoad(loadInfo.getLoad() - sol.getResultLoad());
             sol.setTargetNodeId(targetNodeInfo.getNodeId());
 
             if (!sol.isCauseTargetOverload() && sol.getResultLoad() < bestSolution.getResultLoad())

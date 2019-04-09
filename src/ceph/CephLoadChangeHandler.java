@@ -7,7 +7,6 @@ import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import loadmanagement.LoadInfo;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,14 +34,14 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
             Clusterable child = parent.getSubClusters()[i];
             if (child instanceof PhysicalNode) {
                 LoadInfo info = map.get(((PhysicalNode) child).getFullAddress());
-                totalLoad += info.getFileLoad();
+                totalLoad += info.getLoad();
                 totalCapacity += child.getWeight();
             }
         }
 
         if (totalLoad < totalCapacity) {
             return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
-                    .withAttachment(loadInfo.getNodeId() + " " + ((loadInfo.getFileLoad() - upperBound + (upperBound - lowerBound) / 2) * -1));
+                    .withAttachment(loadInfo.getNodeId() + " " + ((loadInfo.getLoad() - upperBound + (upperBound - lowerBound) / 2) * -1));
         }
         else {
             return null;
