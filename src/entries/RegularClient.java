@@ -38,7 +38,10 @@ public class RegularClient {
             if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
                 onTableFetched(o.getAttachment());
             }
-            SimpleLog.v(String.valueOf(o));
+            else if (o.getAttachment() != null) {
+                onTableUpdated(o.getAttachment());
+            }
+            //SimpleLog.v(String.valueOf(o));
         }
 
         @Override
@@ -120,7 +123,10 @@ public class RegularClient {
         while (!command.equalsIgnoreCase("exit")){
             try {
                 Request request = terminal.translate(command);
-                socketClient.send(address, request, callBack);
+                if (request.getReceiver() == null)
+                    socketClient.send(address, request, callBack);
+                else
+                    socketClient.send(request.getReceiver(), request, callBack);
                 command = in.nextLine();
             } catch (InvalidRequestException e) {
                 e.printStackTrace();
@@ -188,14 +194,17 @@ public class RegularClient {
         }
     }
 
-    private void onTableFetched(Object table) {
+    private void onTableUpdated(Object table) {
         Request request = new Request()
-                            .withHeader(DaemonCommand.UPDATE.name())
-                            .withLargeAttachment(table);
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(table);
 
         Response response = terminal.process(request);
         SimpleLog.v(String.valueOf(response));
+    }
 
+    private void onTableFetched(Object table) {
+        onTableUpdated(table);
         connect();
     }
 
