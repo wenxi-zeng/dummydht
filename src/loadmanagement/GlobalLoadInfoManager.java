@@ -16,6 +16,8 @@ public class GlobalLoadInfoManager {
 
     private List<LoadInfo> historicalLoadInfo;
 
+    private LoadInfo dummyInfo;
+
     private final DummyDhtRepository repo;
 
     private List<GlobalLoadListener> callBacks;
@@ -27,6 +29,7 @@ public class GlobalLoadInfoManager {
         historicalLoadInfo = new ArrayList<>();
         repo = DummyDhtRepository.getInstance();
         callBacks = new ArrayList<>();
+        dummyInfo = new LoadInfo().withNodeId(null);
     }
 
     public static GlobalLoadInfoManager getInstance() {
@@ -61,17 +64,19 @@ public class GlobalLoadInfoManager {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
         repo.put(info);
-        print();
         announce();
     }
 
     public void update(List<PhysicalNode> nodes) {
-        List<String> nodeIdList = new ArrayList<>(globalLoadInfo.keySet());
+        List<String> obsolete = new ArrayList<>(globalLoadInfo.keySet());
+        List<String> newNodes = new ArrayList<>();
         for (PhysicalNode node : nodes) {
-            nodeIdList.remove(node.getFullAddress());
+            obsolete.remove(node.getFullAddress());
+            if (!globalLoadInfo.containsKey(node.getFullAddress()))
+                newNodes.add(node.getFullAddress());
         }
-        consolidate(nodeIdList);
-        print();
+        consolidate(obsolete);
+        initialize(newNodes);
     }
 
     private void consolidate(List<String> nodeIdList) {
@@ -90,6 +95,12 @@ public class GlobalLoadInfoManager {
         }
     }
 
+    private void initialize(List<String> nodeIdList) {
+        for (String node  : nodeIdList) {
+            globalLoadInfo.put(node, dummyInfo);
+        }
+    }
+
     public void print() {
         StringBuilder builder = new StringBuilder();
         builder.append("Global load info\n");
@@ -104,9 +115,18 @@ public class GlobalLoadInfoManager {
         SimpleLog.v(builder.toString());
     }
 
-    private void announce() {
+    private synchronized void announce() {
+        for (LoadInfo info : globalLoadInfo.values()) {
+            if (info.getNodeId() == null) return;
+        }
+        print();
+        List<LoadInfo> infoList = new ArrayList<>(globalLoadInfo.values());
+        for (String key : globalLoadInfo.keySet()) {
+            globalLoadInfo.put(key, dummyInfo);
+        }
+
         for (GlobalLoadListener callBack : callBacks) {
-            callBack.onLoadUpdated(new ArrayList<>(globalLoadInfo.values()));
+            callBack.onLoadUpdated(infoList);
         }
     }
 }

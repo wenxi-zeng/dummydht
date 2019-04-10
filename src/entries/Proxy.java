@@ -2,14 +2,16 @@ package entries;
 
 import commands.DaemonCommand;
 import commands.ProxyCommand;
-import commonmodels.*;
+import commonmodels.Daemon;
+import commonmodels.LoadBalancingCallBack;
+import commonmodels.MembershipCallBack;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import loadmanagement.GlobalLoadInfoManager;
-import loadmanagement.LoadInfo;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
 import util.Config;
@@ -86,6 +88,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         daemon.getDataNodeServer().setMembershipCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
+        GlobalLoadInfoManager.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
         GlobalLoadInfoManager.getInstance().subscribe(loadMonitor);
         loadMonitor.subscribe(this);
     }

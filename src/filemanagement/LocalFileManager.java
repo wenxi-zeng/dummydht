@@ -3,7 +3,6 @@ package filemanagement;
 import loadmanagement.LoadInfo;
 import util.Config;
 import util.MathX;
-import util.SimpleLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,7 +98,7 @@ public class LocalFileManager {
 
         fileBucket.write(fileSize);
 
-        SimpleLog.i("File written to bucket [" + bucket + "], file size:" + fileSize);
+        //SimpleLog.i("File written to bucket [" + bucket + "], file size:" + fileSize);
         return fileBucket;
     }
 
