@@ -3,6 +3,7 @@ package data;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.TimeZone;
 
 public class Connector {
     private String status = "not connected";
@@ -71,12 +72,13 @@ public class Connector {
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 String url = "jdbc:mysql://" + server + "/" + schema + "?user="
-                        + user + "&password=" + password;
+                        + user + "&password=" + password + "&serverTimezone=" + TimeZone.getDefault().getID();
                 connection = (Connection) DriverManager.getConnection(url);
                 status = "connected";
                 connected = true;
             } catch (Exception e) {
                 status = e.getMessage();
+                e.printStackTrace();
             }
         }
         return connection;
