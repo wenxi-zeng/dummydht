@@ -18,14 +18,12 @@ public class RequestThread implements Runnable {
 
     @Override
     public void run() {
-        while(!Thread.currentThread().isInterrupted()) {
+        while(true) {
             Request request;
             try {
                 request = requestGenerator.next();
                 callBack.onRequestGenerated(request);
                 Thread.sleep(interArrivalTime);
-            }catch (InterruptedException e) {
-                break;
             } catch (Exception e) {
                 e.printStackTrace();
             }
