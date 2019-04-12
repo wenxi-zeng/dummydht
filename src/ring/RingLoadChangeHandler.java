@@ -58,7 +58,8 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
                 Collectors.toMap(FileBucket::getKey, bucket -> bucket));
 
         int iterator = current.getHash();
-        while (inRange(iterator, predecessor.getHash(), current.getHash())) {
+        int start = predecessor.getHash() + 1; // the hash of predecessor needs to be excluded
+        while (inRange(iterator, start, current.getHash())) {
             FileBucket bucket = map.get(iterator--);
             if (bucket != null && !solution.update(bucket.getKey(), bucket.getSizeOfWrites(), lowerBound))
                 break;

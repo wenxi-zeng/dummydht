@@ -70,6 +70,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
                 .withHeader(DaemonCommand.UPDATE.name())
                 .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
         propagateTable(request);
+        SimpleLog.v(String.valueOf(request.getLargeAttachment()));
     }
 
     @Override
