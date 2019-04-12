@@ -41,7 +41,9 @@ public class RegularClient {
             else if (o.getAttachment() != null) {
                 onTableUpdated(o.getAttachment());
             }
-            //SimpleLog.v(String.valueOf(o));
+            else {
+                SimpleLog.v(String.valueOf(o));
+            }
         }
 
         @Override
@@ -146,6 +148,9 @@ public class RegularClient {
                     request.withEpoch(terminal.getEpoch());
                     PhysicalNode server = choseServer(request.getAttachment());
                     socketClient.send(server.getFullAddress(), request, callBack);
+                }
+                else if (request.getReceiver() != null) {
+                    socketClient.send(request.getReceiver(), request, callBack);
                 }
                 else {
                     Response response = terminal.process(request);
