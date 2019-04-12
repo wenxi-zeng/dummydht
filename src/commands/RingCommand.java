@@ -8,7 +8,6 @@ import commonmodels.transport.Response;
 import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
-import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import ring.LookupTable;
 import util.Config;
@@ -456,7 +455,7 @@ public enum RingCommand implements Command {
         @Override
         public Response execute(Request request) {
             String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result).withAttachment(request.getLargeAttachment());
         }
 
         @Override
