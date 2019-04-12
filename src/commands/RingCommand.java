@@ -182,7 +182,7 @@ public enum RingCommand implements Command {
             }
 
             if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
-                response.setAttachment(LookupTable.getInstance().getTable());
+                response.setAttachment(LookupTable.getInstance());
 
             return response;
         }
