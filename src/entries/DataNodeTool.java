@@ -44,7 +44,7 @@ public class DataNodeTool {
         }
     };
 
-    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = request -> {
+    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = (request, client) -> {
         try {
             process(request.toCommand());
         } catch (Exception e) {

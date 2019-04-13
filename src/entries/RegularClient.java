@@ -41,9 +41,9 @@ public class RegularClient {
             else if (o.getAttachment() != null) {
                 onTableUpdated(o.getAttachment());
             }
-            else {
-                SimpleLog.v(String.valueOf(o));
-            }
+//            else {
+//                SimpleLog.v(String.valueOf(o));
+//            }
         }
 
         @Override
@@ -52,9 +52,9 @@ public class RegularClient {
         }
     };
 
-    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = request -> {
+    private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = (request, client) -> {
         PhysicalNode server = choseServer(request.getAttachment());
-        socketClient.send(server.getFullAddress(), request, callBack);
+        client.send(server.getFullAddress(), request, callBack);
     };
 
     public static void main(String args[]) {

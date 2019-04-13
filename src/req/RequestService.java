@@ -22,9 +22,8 @@ public class RequestService {
     public void start() {
         ScheduledExecutorService pool = Executors.newScheduledThreadPool(numberOfThreads);
         for (int i = 0; i < numberOfThreads; ++i) {
-            pool.scheduleAtFixedRate(new RequestThread(generator,
-                    interArrivalTime,
-                    callBack), 0, interArrivalTime, TimeUnit.MILLISECONDS);
+            pool.scheduleAtFixedRate(new RequestThread(generator, callBack),
+                    0, interArrivalTime, TimeUnit.MILLISECONDS);
         }
     }
 }

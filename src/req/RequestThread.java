@@ -1,6 +1,7 @@
 package req;
 
 import commonmodels.transport.Request;
+import socket.SocketClient;
 
 public class RequestThread implements Runnable {
 
@@ -8,22 +9,25 @@ public class RequestThread implements Runnable {
 
     private final RequestGenerateThreadCallBack callBack;
 
+    private final SocketClient socketClient;
+
     public RequestThread(RequestGenerator requestGenerator, RequestGenerateThreadCallBack callBack) {
         this.requestGenerator = requestGenerator;
         this.callBack = callBack;
+        socketClient = new SocketClient();
     }
 
     @Override
     public void run() {
         try {
             Request request = requestGenerator.next();
-            callBack.onRequestGenerated(request);
+            callBack.onRequestGenerated(request, socketClient);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public interface RequestGenerateThreadCallBack {
-        void onRequestGenerated(Request request);
+        void onRequestGenerated(Request request, SocketClient client);
     }
 }
