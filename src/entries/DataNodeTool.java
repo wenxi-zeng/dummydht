@@ -134,11 +134,7 @@ public class DataNodeTool {
                 generator,
                 requestGenerateThreadCallBack);
 
-        try {
-            service.start();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        service.start();
     }
 
     private void process(String command) throws Exception {

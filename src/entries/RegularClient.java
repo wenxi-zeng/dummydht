@@ -192,11 +192,7 @@ public class RegularClient {
                 generator,
                 requestGenerateThreadCallBack);
 
-        try {
-            service.start();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        service.start();
     }
 
     private void onTableUpdated(Object table) {

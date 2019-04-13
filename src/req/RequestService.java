@@ -1,9 +1,6 @@
 package req;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class RequestService {
 
@@ -22,17 +19,12 @@ public class RequestService {
         this.callBack = callBack;
     }
 
-    public void start() throws InterruptedException {
-        CountDownLatch start = new CountDownLatch(numberOfThreads);
-        ExecutorService pool = Executors.newFixedThreadPool(numberOfThreads);
+    public void start() {
+        ScheduledExecutorService pool = Executors.newScheduledThreadPool(numberOfThreads);
         for (int i = 0; i < numberOfThreads; ++i) {
-            pool.execute(new RequestThread(generator,
+            pool.scheduleAtFixedRate(new RequestThread(generator,
                     interArrivalTime,
-                    callBack));
+                    callBack), 0, interArrivalTime, TimeUnit.MILLISECONDS);
         }
-
-        start.await(5, TimeUnit.SECONDS);
-        pool.shutdownNow();
-        pool.awaitTermination(1, TimeUnit.SECONDS);
     }
 }
