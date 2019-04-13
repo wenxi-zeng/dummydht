@@ -14,6 +14,7 @@ import filemanagement.FileTransferManager;
 import loadmanagement.GlobalLoadInfoManager;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
+import statmanagement.StatInfoManager;
 import util.Config;
 import util.ObjectConverter;
 import util.SimpleLog;
@@ -278,5 +279,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
     @Override
     public void onRequestAvailable(Request request) {
         processDataNodeCommand(request);
+        StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
     }
 }
