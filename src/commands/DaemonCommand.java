@@ -284,11 +284,13 @@ public enum DaemonCommand implements Command {
             }
             else {
                 //noinspection unchecked
-                result = FileTransferManager.getInstance().received(
+                float transferElapsed = FileTransferManager.getInstance().received(
                         (List<FileBucket>) request.getLargeAttachment(),
                         new PhysicalNode(request.getSender()),
                         new PhysicalNode(request.getReceiver())
                 );
+                result = "Total file migration time: " + transferElapsed;
+                request.addProcessTime(transferElapsed);
 
                 return new Response(request)
                         .withStatus(Response.STATUS_SUCCESS)

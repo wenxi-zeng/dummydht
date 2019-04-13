@@ -84,6 +84,7 @@ public class StatInfoManager {
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_EXECUTION)
                 .calcElapsed(receiveStamp);
+        stat.setElapsed(stat.getElapsed() + (long)request.getProcessTime());
         queue.add(stat);
     }
 

@@ -123,7 +123,7 @@ public class FileTransferManager {
         return result;
     }
 
-    public String received(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
+    public float received(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
         int numberOfFilesReceived = 0;
         long sizeOfFilesReceived = 0;
 
@@ -146,10 +146,10 @@ public class FileTransferManager {
                 + ":\n         File transmitted from " + from.getId()
                 + ".\n         Number of files received: " + numberOfFilesReceived
                 + ",\n         Total size: " + sizeOfFilesReceived
-                + ",\n         Estimated time: " + totalTime;
+                + ",\n         Used time: " + totalTime;
         SimpleLog.i(result);
 
-        return result;
+        return totalTime;
     }
 
     public void requestTransfer(int hi, int hf, PhysicalNode from, PhysicalNode toNode) {

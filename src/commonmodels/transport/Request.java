@@ -43,6 +43,8 @@ public class Request implements Serializable
 
     private Object largeAttachment;
 
+    private transient float processTime = .0f;
+
     private final static long serialVersionUID = -2162237185763801887L;
 
     /**
@@ -218,6 +220,14 @@ public class Request implements Serializable
     public Request withLargeAttachment(Object largeAttachment) {
         this.largeAttachment = largeAttachment;
         return this;
+    }
+
+    public float getProcessTime() {
+        return processTime;
+    }
+
+    public void addProcessTime(float processTime) {
+        this.processTime += processTime;
     }
 
     @Override
