@@ -55,7 +55,7 @@ public class LogServer implements SocketServer.EventHandler {
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
+    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
         try {
             SimpleLog.v("[" + out.getRemoteAddress() + "]: " + o.toString());
         } catch (IOException e) {

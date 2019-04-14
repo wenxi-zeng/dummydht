@@ -15,14 +15,12 @@ import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
-import util.ObjectConverter;
 import util.SimpleLog;
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -209,13 +207,12 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
+    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
         Response response = processCommonCommand(o);
         if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
 
-        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
-        out.write(buffer).get();
+        responsor.reply(out, response);
     }
 
     @Override

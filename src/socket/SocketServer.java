@@ -14,8 +14,10 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class SocketServer {
 
@@ -25,6 +27,18 @@ public class SocketServer {
 
     @NotNull
     private EventHandler eventHandler;
+
+    private EventResponsor eventResponsor = (out, response) -> {
+        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
+        Future<Integer> future = out.write(buffer);
+        while (future != null) {
+            future.get();
+            if (buffer.remaining() > 0)
+                future = out.write(buffer);
+            else
+                break;
+        }
+    };
 
     public SocketServer(int port, @NotNull EventHandler eventHandler) {
         this.port = port;
@@ -43,7 +57,7 @@ public class SocketServer {
             registerShutdownHook(channel);
 
             if (channel.isOpen()) {
-                channel.setOption(StandardSocketOptions.SO_RCVBUF, 4 * 1024);
+                channel.setOption(StandardSocketOptions.SO_RCVBUF, 32 * 1024);
                 channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                 channel.bind(new InetSocketAddress(port));
                 channel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
@@ -55,7 +69,7 @@ public class SocketServer {
 
                         if ((result != null) && (result.isOpen())) {
                             try {
-                                final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+                                final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
                                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
                                 while (result.read(buffer).get() != -1) {
@@ -74,7 +88,7 @@ public class SocketServer {
                                     Request req = (Request) o;
                                     long stamp = StatInfoManager.getInstance().getStamp();
                                     StatInfoManager.getInstance().statRequest(req, stamp);
-                                    eventHandler.onReceived(result, req);
+                                    eventHandler.onReceived(result, req, eventResponsor);
                                     StatInfoManager.getInstance().statExecution(req, stamp);
                                 }
                             } catch (Exception e) {
@@ -125,7 +139,11 @@ public class SocketServer {
     }
 
     public interface EventHandler {
-        void onReceived(AsynchronousSocketChannel out, Request o) throws Exception;
+        void onReceived(AsynchronousSocketChannel out, Request o, EventResponsor responsor) throws Exception;
         void onBound();
+    }
+
+    public interface EventResponsor {
+        void reply (AsynchronousSocketChannel out, Object response) throws IOException, ExecutionException, InterruptedException;
     }
 }

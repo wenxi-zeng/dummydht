@@ -8,12 +8,15 @@ import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -98,10 +101,9 @@ public class SocketClient {
         AsynchronousSocketChannel asynchronousSocketChannel = AsynchronousSocketChannel.open();
 
         if (asynchronousSocketChannel.isOpen()) {
-            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 128 * 1024);
-            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 128 * 1024);
+            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 32 * 1024);
+            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 32 * 1024);
             asynchronousSocketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-
         }
 
         return asynchronousSocketChannel;
@@ -114,9 +116,16 @@ public class SocketClient {
 
         try {
             final ByteBuffer sendBuffer = ObjectConverter.getByteBuffer(data);
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
             // transmitting data
-            asynchronousSocketChannel.write(sendBuffer).get();
+            Future<Integer> future = asynchronousSocketChannel.write(sendBuffer);
+            while (future != null) {
+                future.get();
+                if (sendBuffer.remaining() > 0)
+                    future = asynchronousSocketChannel.write(sendBuffer);
+                else
+                    break;
+            }
             asynchronousSocketChannel.shutdownOutput();
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -134,9 +143,11 @@ public class SocketClient {
 
             o = ObjectConverter.getObject(bos.toByteArray());
             success = true;
-        } catch (IOException | InterruptedException | ExecutionException ex) {
-            System.err.println(ex);
-            message = ex.getMessage();
+        } catch (Exception ex) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ex.printStackTrace(pw);
+            message = sw.toString();
         } finally {
             try {
                 asynchronousSocketChannel.shutdownOutput();

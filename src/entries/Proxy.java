@@ -14,12 +14,11 @@ import filemanagement.FileTransferManager;
 import loadmanagement.GlobalLoadInfoManager;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
+import socket.SocketServer;
 import statmanagement.StatInfoManager;
 import util.Config;
-import util.ObjectConverter;
 import util.SimpleLog;
 
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
@@ -160,13 +159,12 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o) throws Exception {
+    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
         Response response = processCommonCommand(o);
         if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
 
-        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
-        out.write(buffer).get();
+        responsor.reply(out, response);
         startFollowupTask(o.getFollowup(), response);
     }
 

@@ -26,6 +26,8 @@ public class FileBucket implements Serializable, Cloneable, Comparable<FileBucke
 
     private boolean locked;
 
+    private final static long serialVersionUID = -607052110101868742L;
+
     public FileBucket(int key) {
         this.key = key;
         this.locked = false;

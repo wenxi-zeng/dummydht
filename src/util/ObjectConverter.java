@@ -10,6 +10,7 @@ public class ObjectConverter {
         ObjectOutput out = new ObjectOutputStream(bos);
         out.writeObject(o);
         out.flush();
+        out.close();
 
         return bos.toByteArray();
     }
