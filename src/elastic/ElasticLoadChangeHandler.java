@@ -6,6 +6,7 @@ import commonmodels.transport.Request;
 import filemanagement.FileBucket;
 import loadmanagement.LoadInfo;
 import org.apache.commons.lang3.StringUtils;
+import util.Config;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,8 +15,17 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
 
     private final LookupTable table;
 
+    private float readOverhead;
+
+    private float writeOverhead;
+
+    private long interval;
+
     public ElasticLoadChangeHandler(LookupTable table) {
         this.table = table;
+        readOverhead = Config.getInstance().getReadOverhead();
+        writeOverhead = Config.getInstance().getWriteOverhead();
+        interval = Config.getInstance().getLoadInfoReportInterval() / 1000;
     }
 
     @Override
@@ -65,30 +75,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         return bestSolution;
     }
 
-    public List<Solution> getPossibleSolutions(FileBucket[] fileBuckets, long target) {
-        List<Solution> list = new ArrayList<>();
-        backtrack(list, new ArrayList<>(), fileBuckets, target, 0);
-        return list;
-    }
-
-    private void backtrack(List<Solution> list, List<FileBucket> tempList, FileBucket[] fileBuckets, long remain, int start){
-        if(start >= fileBuckets.length) return;
-        else if(remain - fileBuckets[start].getSizeOfWrites() < 0) {
-            Solution solution = new Solution();
-            solution.setBuckets(tempList.stream().map(FileBucket::getKey).collect(Collectors.toList()));
-            solution.setResultLoad(remain);
-            list.add(solution);
-        }
-        else{
-            for(int i = start; i < fileBuckets.length; i++){
-                tempList.add(fileBuckets[i]);
-                backtrack(list, tempList, fileBuckets, remain - fileBuckets[i].getSizeOfWrites(), i); // not i + 1 because we can reuse same elements
-                tempList.remove(tempList.size() - 1);
-            }
-        }
-    }
-
-    private List<Solution> backtrack(FileBucket[] fileBuckets, int target) {
+    private List<Solution> getPossibleSolutions(FileBucket[] fileBuckets, long target) {
         List<Solution> solutions = new ArrayList<>();
         if (fileBuckets.length < 1) return solutions;
 
@@ -104,7 +91,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         stack.push(expanded);
 
         while (!stack.empty()) {
-            if(target - fileBuckets[expanded].getSizeOfWrites() < 0) {
+            if(target - getLoad(fileBuckets[expanded]) < 0) {
                 Solution solution = new Solution();
                 solution.setBuckets(tempList.stream().map(FileBucket::getKey).collect(Collectors.toList()));
                 solution.setResultLoad(target);
@@ -114,21 +101,22 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
                     stack.pop();
                     int last = tempList.size() - 1;
                     if (last > -1) {
-                        target += fileBuckets[last].getSizeOfWrites();
+                        target += getLoad(fileBuckets[last]);
                         tempList.remove(last);
                     }
                 }
             }
             else {
-                target -= fileBuckets[expanded].getSizeOfWrites();
+                target -= getLoad(fileBuckets[expanded]);
                 tempList.add(fileBuckets[expanded]);
             }
 
             if (queue.isEmpty()) { // empty, remove what is in the tempList
                 stack.pop();
+                if (stack.empty()) break;
                 int last = tempList.size() - 1;
                 if (last > -1) {
-                    target += fileBuckets[last].getSizeOfWrites();
+                    target += getLoad(fileBuckets[last]);
                     tempList.remove(last);
                 }
                 for (int i = stack.peek() + 1; i < fileBuckets.length; i++) {
@@ -142,6 +130,11 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         }
 
         return solutions;
+    }
+
+    public double getLoad(FileBucket bucket) {
+        return ((writeOverhead * bucket.getNumberOfWrites() + bucket.getSizeOfWrites()) * 1.0) / interval +
+                ((readOverhead * bucket.getNumberOfReads() + bucket.getSizeOfReads()) * 1.0) / interval;
     }
 
     private class Solution {
