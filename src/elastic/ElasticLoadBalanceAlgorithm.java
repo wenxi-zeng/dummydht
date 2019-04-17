@@ -5,6 +5,7 @@ import filemanagement.FileTransferManager;
 import util.Config;
 import util.SimpleLog;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -65,6 +66,7 @@ public class ElasticLoadBalanceAlgorithm {
             return;
         }
 
+        List<Integer> bucketsToTransfer = new ArrayList<>();
         for (BucketNode bucketNode : nodes) {
             if (!fromNode.getVirtualNodes().contains(bucketNode)){
                 SimpleLog.i(from.getId() + " does not have bucket [" + bucketNode.getHash() + "]");
@@ -80,11 +82,12 @@ public class ElasticLoadBalanceAlgorithm {
             fromNode.getVirtualNodes().remove(bucketNode);
             bucketNode.getPhysicalNodes().add(toNode.getId());
             toNode.getVirtualNodes().add(bucketNode);
-
-            requestTransfer(bucketNode, from ,to);
+            bucketsToTransfer.add(bucketNode.getHash());
         }
 
-        SimpleLog.i("Moving buckets [" + String.valueOf(nodes) + "] from " + from.getId() + " to " + to.getId());
+        requestTransfer(bucketsToTransfer, from ,to);
+
+        SimpleLog.i("Moving buckets [" + nodes + "] from " + from.getId() + " to " + to.getId());
         SimpleLog.i("Updated buckets info: " + nodes.toString());
         SimpleLog.i("Updated " + fromNode.getId() + " info: " + fromNode.toString());
         SimpleLog.i("Updated " + toNode.getId() + " info: " + toNode.toString());
@@ -166,9 +169,18 @@ public class ElasticLoadBalanceAlgorithm {
         FileTransferManager.getInstance().requestTransfer(node.getHash(), fromNode, toNode);
     }
 
+    private void requestTransfer(List<Integer> nodes, PhysicalNode fromNode, PhysicalNode toNode) {
+        SimpleLog.i("Request to transfer hash bucket [" + nodes + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().requestTransfer(nodes, fromNode, toNode);
+    }
+
     private void requestReplication(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
         SimpleLog.i("Copy hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
         FileTransferManager.getInstance().requestCopy(node.getHash(), fromNode, toNode);
     }
 
+    private void requestReplication(List<Integer> nodes, PhysicalNode fromNode, PhysicalNode toNode) {
+        SimpleLog.i("Copy hash bucket [" + nodes + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().requestCopy(nodes, fromNode, toNode);
+    }
 }

@@ -37,8 +37,14 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
             }
         }
 
-        FileBucket[] fileBuckets = new FileBucket[loadInfo.getBucketInfoList().size()];
-        fileBuckets = loadInfo.getBucketInfoList().toArray(fileBuckets);
+        List<FileBucket> temp = new ArrayList<>();
+        for (FileBucket bucket : loadInfo.getBucketInfoList()) {
+            double load = getLoad(bucket);
+            if (load > 0 && load < upperBound) // filter empty buckets and overloaded buckets
+                temp.add(bucket);
+        }
+        FileBucket[] fileBuckets = new FileBucket[temp.size()];
+        fileBuckets = temp.toArray(fileBuckets);
         Arrays.sort(fileBuckets);
 
         Solution bestSolution = null;
