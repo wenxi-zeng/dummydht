@@ -107,7 +107,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
                     stack.pop();
                     int last = tempList.size() - 1;
                     if (last > -1) {
-                        target += getLoad(fileBuckets[last]);
+                        target += getLoad(tempList.get(last));
                         tempList.remove(last);
                     }
                 }
@@ -122,7 +122,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
                 if (stack.empty()) break;
                 int last = tempList.size() - 1;
                 if (last > -1) {
-                    target += getLoad(fileBuckets[last]);
+                    target += getLoad(tempList.get(last));
                     tempList.remove(last);
                 }
                 for (int i = stack.peek() + 1; i < fileBuckets.length; i++) {
