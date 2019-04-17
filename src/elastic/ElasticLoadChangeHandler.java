@@ -7,9 +7,7 @@ import filemanagement.FileBucket;
 import loadmanagement.LoadInfo;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ElasticLoadChangeHandler implements LoadChangeHandler {
@@ -30,6 +28,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         }
 
         FileBucket[] fileBuckets = new FileBucket[loadInfo.getBucketInfoList().size()];
+        fileBuckets = loadInfo.getBucketInfoList().toArray(fileBuckets);
         Arrays.sort(fileBuckets);
 
         Solution bestSolution = null;
@@ -87,6 +86,62 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
                 tempList.remove(tempList.size() - 1);
             }
         }
+    }
+
+    private List<Solution> backtrack(FileBucket[] fileBuckets, int target) {
+        List<Solution> solutions = new ArrayList<>();
+        if (fileBuckets.length < 1) return solutions;
+
+        int expanded;
+        Stack<Integer> stack = new Stack<>();
+        Queue<Integer> queue = new LinkedList<>();
+        List<FileBucket> tempList = new ArrayList<>();
+        for (int i = 0; i < fileBuckets.length; i++) {
+            queue.add(i);
+        }
+        //noinspection ConstantConditions
+        expanded = queue.poll();
+        stack.push(expanded);
+
+        while (!stack.empty()) {
+            if(target - fileBuckets[expanded].getSizeOfWrites() < 0) {
+                Solution solution = new Solution();
+                solution.setBuckets(tempList.stream().map(FileBucket::getKey).collect(Collectors.toList()));
+                solution.setResultLoad(target);
+                solutions.add(solution);
+
+                if (!queue.isEmpty()) { // if empty, will be removed later
+                    stack.pop();
+                    int last = tempList.size() - 1;
+                    if (last > -1) {
+                        target += fileBuckets[last].getSizeOfWrites();
+                        tempList.remove(last);
+                    }
+                }
+            }
+            else {
+                target -= fileBuckets[expanded].getSizeOfWrites();
+                tempList.add(fileBuckets[expanded]);
+            }
+
+            if (queue.isEmpty()) { // empty, remove what is in the tempList
+                stack.pop();
+                int last = tempList.size() - 1;
+                if (last > -1) {
+                    target += fileBuckets[last].getSizeOfWrites();
+                    tempList.remove(last);
+                }
+                for (int i = stack.peek() + 1; i < fileBuckets.length; i++) {
+                    queue.add(i);
+                }
+            }
+            else {
+                expanded = queue.poll();
+                stack.push(expanded);
+            }
+        }
+
+        return solutions;
     }
 
     private class Solution {
