@@ -128,6 +128,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
                 for (int i = stack.peek() + 1; i < fileBuckets.length; i++) {
                     queue.add(i);
                 }
+                stack.pop();
             }
             else {
                 expanded = queue.poll();
