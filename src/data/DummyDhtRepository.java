@@ -55,7 +55,8 @@ public class DummyDhtRepository {
         disconnectTask = new TimerTask() {
             @Override
             public void run() {
-                close();
+                if (queue.isEmpty())
+                    close();
             }
         };
     }
@@ -79,11 +80,12 @@ public class DummyDhtRepository {
     private synchronized void consume() {
         while (!queue.isEmpty()) {
             open();
-            Queueable queueable = queue.poll();
+            Queueable queueable = queue.peek();
             if (queueable instanceof StatInfo)
                 insertStatInfo((StatInfo) queueable);
             else if (queueable instanceof LoadInfo)
                 insertLoadInfo((LoadInfo) queueable);
+            queue.poll();
         }
     }
 
