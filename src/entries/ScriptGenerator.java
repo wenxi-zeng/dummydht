@@ -11,6 +11,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class ScriptGenerator {
 
@@ -48,7 +50,7 @@ public class ScriptGenerator {
         int portRange = config.getPortRange();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : config.getNodes()) {
+        for (String node : getNodes()) {
             StringBuilder command = new StringBuilder();
             for (int i = 0; i < portRange; i++) {
                 command.append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht-daemon.jar ")
@@ -72,7 +74,7 @@ public class ScriptGenerator {
     private static void generateStopAll() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : Config.getInstance().getNodes()) {
+        for (String node : getNodes()) {
             if (node.contains(SELF))
                 stringBuilder.append("pgrep java | xargs kill -9").append('\n');
             else
@@ -91,7 +93,7 @@ public class ScriptGenerator {
         StringBuilder stringBuilder = new StringBuilder();
         String configFile = ResourcesLoader.getRelativeFileName(null);
 
-        for (String node : Config.getInstance().getNodes()) {
+        for (String node : getNodes()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 scp -rp ").append(configFile).append(" root@")
                         .append(node).append(":").append(File.separator)
@@ -111,7 +113,7 @@ public class ScriptGenerator {
         StringBuilder stringBuilder = new StringBuilder();
         String resFolder = ResourcesLoader.getRelativeFileName("res");
 
-        for (String node : Config.getInstance().getNodes()) {
+        for (String node : getNodes()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 scp -rp ").append(resFolder).append(File.separator).append("config.properties").append(" root@")
                         .append(node).append(":").append(resFolder).append("\n");
@@ -128,9 +130,8 @@ public class ScriptGenerator {
 
     private static void generateMakeDirAll() {
         StringBuilder stringBuilder = new StringBuilder();
-        String configFile = ResourcesLoader.getRelativeFileName(null);
 
-        for (String node : Config.getInstance().getNodes()) {
+        for (String node : getNodes()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 ssh root@")
                         .append(node)
@@ -167,7 +168,7 @@ public class ScriptGenerator {
         int portRange = config.getPortRange();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : config.getNodes()) {
+        for (String node : getNodes()) {
             StringBuilder command = new StringBuilder();
             for (int i = 0; i < portRange; i++) {
                 command.append("firewall-cmd --zone=public --permanent --add-port=").append(startPort + i).append("/tcp\n")
@@ -190,10 +191,9 @@ public class ScriptGenerator {
 
     private static void generateDisableFirewallAll() {
         String filename = ResourcesLoader.getRelativeFileName(FILE_DISABLE_FIERWALL_ALL);
-        Config config = Config.getInstance();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : config.getNodes()) {
+        for (String node : getNodes()) {
             StringBuilder command = new StringBuilder();
             command.append("systemctl stop firewalld\n");
             if (node.contains(SELF))
@@ -218,5 +218,15 @@ public class ScriptGenerator {
         }
 
         return null;
+    }
+
+    private static HashSet<String> getNodes() {
+        Config config = Config.getInstance();
+        HashSet<String> nodes = new HashSet<>(Arrays.asList(config.getNodes()));
+        nodes.add(config.getLogServer().substring(0, config.getLogServer().indexOf(':')));
+        nodes.add(config.getStatServer().substring(0, config.getStatServer().indexOf(':')));
+        nodes.add(config.getDataServer().substring(0, config.getDataServer().indexOf(':')));
+
+        return nodes;
     }
 }
