@@ -53,6 +53,14 @@ public class LoadInfo implements Serializable, Queueable
 
     private transient boolean loadBalancing = false;
 
+    public final static int LEVEL_LIGHT = 0;
+    public final static int LEVEL_MEDIAN_LIGHT = 1;
+    public final static int LEVEL_VERY_LIGHT = 2;
+    public final static int LEVEL_NORMAL = 3;
+    public final static int LEVEL_HEAVY = 4;
+    public final static int LEVEL_MEDIAN_HEAVY = 5;
+    public final static int LEVEL_VERY_HEAVY = 6;
+
     /**
      * No args constructor for use in serialization
      *
@@ -251,6 +259,29 @@ public class LoadInfo implements Serializable, Queueable
 
     public long getLoad() {
         return readLoad + writeLoad;
+    }
+
+    public int getLoadLevel(long lower, long upper) {
+        long load = getLoad();
+        if (load < lower) {
+            if (load < 0.3 * lower) {
+                return LEVEL_VERY_LIGHT;
+            } else if (load < 0.6 * lower) {
+                return LEVEL_MEDIAN_LIGHT;
+            } else {
+                return LEVEL_LIGHT;
+            }
+        } else if (load < upper) {
+            return LEVEL_NORMAL;
+        } else {
+            if (load < upper + 0.3 * lower) {
+                return LEVEL_HEAVY;
+            } else if (load < upper + 0.6 * lower) {
+                return LEVEL_MEDIAN_HEAVY;
+            } else {
+                return LEVEL_VERY_HEAVY;
+            }
+        }
     }
 
     @Override

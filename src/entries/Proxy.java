@@ -275,8 +275,10 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
     }
 
     @Override
-    public void onRequestAvailable(Request request) {
-        processDataNodeCommand(request);
-        StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
+    public void onRequestAvailable(List<Request> requests) {
+        for (Request request : requests) {
+            processDataNodeCommand(request);
+            StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
+        }
     }
 }

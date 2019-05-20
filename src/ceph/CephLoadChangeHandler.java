@@ -7,6 +7,7 @@ import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import loadmanagement.LoadInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
     }
 
     @Override
-    public Request generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
+    public List<Request> generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
         PhysicalNode node = new PhysicalNode(loadInfo.getNodeId());
         node = map.getPhysicalNodeMap().get(node.getId());
         Clusterable parent = map.findParentOf(node);
@@ -40,8 +41,10 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
         }
 
         if (totalLoad < totalCapacity) {
-            return new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
-                    .withAttachment(loadInfo.getNodeId() + " " + ((loadInfo.getLoad() - upperBound + (upperBound - lowerBound) / 2) * -1));
+            List<Request> requests = new ArrayList<>();
+            requests.add(new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                    .withAttachment(loadInfo.getNodeId() + " " + ((loadInfo.getLoad() - upperBound + (upperBound - lowerBound) / 2) * -1)));
+            return requests;
         }
         else {
             return null;

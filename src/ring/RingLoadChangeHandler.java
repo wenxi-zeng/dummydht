@@ -24,7 +24,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
     }
 
     @Override
-    public Request generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
+    public List<Request> generateRequestBasedOnLoad(List<LoadInfo> globalLoad, LoadInfo loadInfo, long lowerBound, long upperBound) {
         PhysicalNode node = new PhysicalNode(loadInfo.getNodeId());
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         Solution bestSolution = null;
@@ -48,8 +48,10 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
                 deltaHashList.add(0);
         }
 
-        return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                .withAttachments(loadInfo.getNodeId(), StringUtils.join(deltaHashList, ','));
+        List<Request> requests = new ArrayList<>();
+        requests.add(new Request().withHeader(RingCommand.DECREASELOAD.name())
+                .withAttachments(loadInfo.getNodeId(), StringUtils.join(deltaHashList, ',')));
+        return requests;
     }
 
     private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long lowerBound) {
