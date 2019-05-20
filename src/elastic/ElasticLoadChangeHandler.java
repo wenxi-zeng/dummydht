@@ -45,7 +45,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         }
         FileBucket[] fileBuckets = new FileBucket[temp.size()];
         fileBuckets = temp.toArray(fileBuckets);
-        Arrays.sort(fileBuckets);
+        Arrays.sort(fileBuckets, (o1, o2) -> -1 * Double.compare(getLoad(o1), getLoad(o2)));
 
         Solution bestSolution = null;
         for (LoadInfo targetNodeInfo : lightNodes) {
@@ -79,6 +79,24 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         }
 
         return bestSolution;
+    }
+
+    private Solution getPossibleSolutionsGreedy(FileBucket[] fileBuckets, long target) {
+        if (fileBuckets.length < 1) return null;
+        Solution solution = new Solution();
+        List<Integer> selectedBuckets = new ArrayList<>();
+
+        for (FileBucket bucket : fileBuckets) {
+            if (target < 0) break;
+            double load = getLoad(bucket);
+            if (target > load) {
+                selectedBuckets.add(bucket.getKey());
+                target -= load;
+            }
+        }
+        solution.setBuckets(selectedBuckets);
+
+        return solution;
     }
 
     private List<Solution> getPossibleSolutions(FileBucket[] fileBuckets, long target) {
