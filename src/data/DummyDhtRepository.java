@@ -52,13 +52,7 @@ public class DummyDhtRepository {
                 return result;
             }
         };
-        disconnectTask = new TimerTask() {
-            @Override
-            public void run() {
-                if (queue.isEmpty())
-                    close();
-            }
-        };
+        registerShutdownHook();
     }
 
     public static DummyDhtRepository getInstance() {
@@ -134,14 +128,13 @@ public class DummyDhtRepository {
     }
 
     public void open() {
-        if (task != null)
-            task.cancel(false);
-
         if (session == null || !connector.isConnected()) {
             session = connector.reconnect();
         }
+    }
 
-        task = timer.schedule(disconnectTask, TIME_TO_DISCONNECT, TimeUnit.SECONDS);
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     public void close() {
