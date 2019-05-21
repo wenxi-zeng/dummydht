@@ -262,11 +262,17 @@ public class ClusterMap implements Serializable {
     public String updateTable(Object o) {
         if (o instanceof ClusterMap) {
             ClusterMap remoteMap = (ClusterMap)o;
-            this.setRoot(remoteMap.getRoot());
-            this.setEpoch(remoteMap.getEpoch());
-            this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
 
-            return "Map updated.";
+            if (this.getRoot() == null || remoteMap.getEpoch() > this.getEpoch()) {
+                this.setRoot(remoteMap.getRoot());
+                this.setEpoch(remoteMap.getEpoch());
+                this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
+
+                return "Map updated.";
+            }
+            else {
+                return "Obsolete table. No need to update";
+            }
         }
         else {
             return "Invalid map type.";

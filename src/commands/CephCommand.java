@@ -99,7 +99,7 @@ public enum CephCommand implements Command {
             }
 
             if (request.getEpoch() < ClusterMap.getInstance().getEpoch())
-                response.setAttachment(ClusterMap.getInstance().getRoot());
+                response.setAttachment(ClusterMap.getInstance());
 
             return response;
         }
@@ -150,8 +150,8 @@ public enum CephCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (!shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch())
-                response.setAttachment(ClusterMap.getInstance().getRoot());
+            if (shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch())
+                response.setAttachment(ClusterMap.getInstance());
 
             return response;
         }

@@ -38,6 +38,6 @@ public class ElasticReadWriteAlgorithm {
 
     public FileBucket writeOnly(LookupTable table, DummyFile file) {
         return LocalFileManager.getInstance().write(file,
-                (String str) -> MathX.positiveHash(str.hashCode()) % LookupTable.getInstance().getTable().length);
+                (String str) -> MathX.positiveHash(str.hashCode()) % table.getTable().length);
     }
 }

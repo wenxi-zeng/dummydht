@@ -60,11 +60,17 @@ public class LookupTable implements Serializable {
     public String updateTable(Object o) {
         if (o instanceof LookupTable) {
             LookupTable remoteTable = (LookupTable)o;
-            this.setTable(remoteTable.getTable());
-            this.setEpoch(remoteTable.getEpoch());
-            this.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
 
-            return "Table updated.";
+            if (this.table == null || remoteTable.getEpoch() > this.getEpoch()) {
+                this.setTable(remoteTable.getTable());
+                this.setEpoch(remoteTable.getEpoch());
+                this.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
+
+                return "Table updated.";
+            }
+            else {
+                return "Obsolete table. No need to update";
+            }
         }
         else {
             return "Invalid table type.";

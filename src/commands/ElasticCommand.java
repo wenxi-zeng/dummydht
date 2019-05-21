@@ -102,7 +102,7 @@ public enum ElasticCommand implements Command {
             }
 
             if (request.getEpoch() < LookupTable.getInstance().getEpoch())
-                response.setAttachment(LookupTable.getInstance().getTable());
+                response.setAttachment(LookupTable.getInstance());
 
             return response;
         }
@@ -153,8 +153,8 @@ public enum ElasticCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (!shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
-                response.setAttachment(LookupTable.getInstance().getTable());
+            if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
+                response.setAttachment(LookupTable.getInstance());
 
             return response;
         }
