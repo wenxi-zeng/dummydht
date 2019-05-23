@@ -36,6 +36,14 @@ public abstract class DataNode {
         createTerminal();
     }
 
+    public DataNode(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+        useDynamicAddress = false;
+        loadProperties();
+        createTerminal();
+    }
+
     public void destroy() {
         if (terminal != null)
             terminal.destroy();
@@ -66,7 +74,7 @@ public abstract class DataNode {
     }
 
     public String getAddress() {
-        return ip + ":" + port;
+        return ip == null ?  null : ip + ":" + port;
     }
 
     public String getGossipId() {

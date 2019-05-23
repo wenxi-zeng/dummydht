@@ -9,7 +9,6 @@ import commonmodels.transport.Response;
 import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
-import loadmanagement.LoadInfoManager;
 import util.Config;
 import util.MathX;
 import util.SimpleLog;
@@ -26,7 +25,7 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            ClusterMap.getInstance().initialize();
+            ClusterMap.getInstance().initialize(request.getAttachment());
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
@@ -387,6 +386,9 @@ public enum CephCommand implements Command {
         @Override
         public Response execute(Request request) {
             String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
+            if (result.equals(ClusterMap.UPDATE_STATUS_DONE)) {
+                ClusterMap.getInstance().scheduleLoadBalancing();
+            }
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
         }
 

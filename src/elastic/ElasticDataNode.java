@@ -12,6 +12,13 @@ import java.util.List;
 
 public class ElasticDataNode extends DataNode {
 
+    public ElasticDataNode() {
+    }
+
+    public ElasticDataNode(String ip, int port) {
+        super(ip, port);
+    }
+
     @Override
     public void createTerminal() {
         terminal = new ElasticTerminal();

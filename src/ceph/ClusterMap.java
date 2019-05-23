@@ -32,7 +32,15 @@ public class ClusterMap implements Serializable {
 
     private transient ReadWriteCallBack readWriteCallBack;
 
+    private transient PhysicalNode self;
+
     private static volatile ClusterMap instance = null;
+
+    public static final String UPDATE_STATUS_DONE = "Map updated";
+
+    public static final String UPDATE_STATUS_CANCEL = "Obsolete table. No need to update";
+
+    public static final String UPDATE_STATUS_FAILED = "Invalid map type";
 
     private ClusterMap() {
         physicalNodeMap = new HashMap<>();
@@ -60,7 +68,11 @@ public class ClusterMap implements Serializable {
         instance = null;
     }
 
-    public void initialize() {
+    public void initialize(String selfAddress) {
+        if (selfAddress != null) {
+            this.self = new PhysicalNode(selfAddress);
+        }
+
         membershipAlgorithm.initialize(this);
     }
 
@@ -218,6 +230,10 @@ public class ClusterMap implements Serializable {
         update();
     }
 
+    public void scheduleLoadBalancing() {
+        loadBalancing(root);
+    }
+
     public void addNode(String clusterId, PhysicalNode node) {
         membershipAlgorithm.addPhysicalNode(this, clusterId, node);
         update(); // commit the change, gossip to other nodes
@@ -268,14 +284,14 @@ public class ClusterMap implements Serializable {
                 this.setEpoch(remoteMap.getEpoch());
                 this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
 
-                return "Map updated.";
+                return UPDATE_STATUS_DONE;
             }
             else {
-                return "Obsolete table. No need to update";
+                return UPDATE_STATUS_CANCEL;
             }
         }
         else {
-            return "Invalid map type.";
+            return UPDATE_STATUS_FAILED;
         }
     }
 
@@ -300,5 +316,9 @@ public class ClusterMap implements Serializable {
         }
 
         return spareEdges;
+    }
+
+    public PhysicalNode getSelf() {
+        return physicalNodeMap.get(self.getId());
     }
 }

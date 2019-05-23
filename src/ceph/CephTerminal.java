@@ -8,9 +8,19 @@ import commonmodels.transport.Response;
 import util.URIHelper;
 
 public class CephTerminal implements Terminal {
+
+    private String machineAddress;
+
+    public CephTerminal() {
+    }
+
+    public CephTerminal(String machineAddress) {
+        this.machineAddress = machineAddress;
+    }
+
     @Override
     public void initialize() {
-        CephCommand.INITIALIZE.execute(null);
+        CephCommand.INITIALIZE.execute(machineAddress == null ? null : new Request().withAttachment(machineAddress));
     }
 
     @Override

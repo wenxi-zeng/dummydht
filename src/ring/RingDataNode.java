@@ -11,6 +11,13 @@ import java.util.List;
 
 public class RingDataNode extends DataNode {
 
+    public RingDataNode() {
+    }
+
+    public RingDataNode(String ip, int port) {
+        super(ip, port);
+    }
+
     @Override
     public void createTerminal() {
         terminal = new RingTerminal();

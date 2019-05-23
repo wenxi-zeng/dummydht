@@ -82,6 +82,8 @@ public class Config {
 
     private long networkSpeed;
 
+    private boolean standalone;
+
     public Config() {
         rb = ResourcesLoader.getBundle(CONFIG_PATH);
         numberOfReplicas = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
@@ -91,6 +93,7 @@ public class Config {
         scheme = rb.getString(PROPERTY_SCHEME);
         initialWeight = Float.valueOf(rb.getString(PROPERTY_INITIAL_WEIGHT));
         networkSpeed = Utils.parseLong(rb.getString(PROPERTY_NETWORK_SPEED));
+        standalone = false;
     }
 
     public static Config getInstance() {
@@ -265,5 +268,13 @@ public class Config {
 
     public List<String> getLogFilter() {
         return Arrays.asList(rb.getString(PROPERTY_LOG_FILTER).split(","));
+    }
+
+    public boolean isStandalone() {
+        return standalone;
+    }
+
+    public void setStandalone(boolean standalone) {
+        this.standalone = standalone;
     }
 }

@@ -30,20 +30,18 @@ public class DataNodeServer {
 
         switch (scheme) {
             case Config.SCHEME_RING:
-                dataNode = new RingDataNode();
+                dataNode = new RingDataNode(ip, port);
                 break;
             case Config.SCHEME_ELASTIC:
-                dataNode = new ElasticDataNode();
+                dataNode = new ElasticDataNode(ip, port);
                 break;
             case Config.SCHEME_CEPH:
-                dataNode = new CephDataNode();
+                dataNode = new CephDataNode(ip, port);
                 break;
             default:
                 throw new Exception("Invalid DHT type");
         }
 
-        dataNode.setPort(port);
-        dataNode.setIp(ip);
         dataNode.setUseDynamicAddress(true);
     }
 

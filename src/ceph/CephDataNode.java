@@ -10,9 +10,16 @@ import java.util.List;
 
 public class CephDataNode extends DataNode {
 
+    public CephDataNode() {
+    }
+
+    public CephDataNode(String ip, int port) {
+        super(ip, port);
+    }
+
     @Override
     public void createTerminal() {
-        terminal = new CephTerminal();
+        terminal = new CephTerminal(getAddress());
     }
 
     @Override
