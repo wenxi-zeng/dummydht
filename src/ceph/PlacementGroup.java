@@ -10,22 +10,25 @@ public class PlacementGroup implements Indexable {
 
     private int index;
 
+    private int hash;
+
     public PlacementGroup() {
     }
 
-    public PlacementGroup(String id, int index) {
-        this.id = id;
+    public PlacementGroup(int hash, int index) {
+        this.hash = hash;
+        this.id = "PG" +  hash;
         this.index = index;
     }
 
     @Override
     public int getHash() {
-        return id.hashCode();
+        return hash;
     }
 
     @Override
     public void setHash(int hash) {
-
+        this.hash = hash;
     }
 
     @Override

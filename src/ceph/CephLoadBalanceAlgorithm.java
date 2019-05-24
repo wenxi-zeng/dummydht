@@ -182,7 +182,7 @@ public class CephLoadBalanceAlgorithm {
                 // add the replica to replication list, we will copy the
                 // placement group to it later.
                 replicationList.computeIfAbsent(replica.getId(), k -> new ArrayList<>());
-                replicationList.get(replica.getId()).add(new PlacementGroup(pg.getId(), r - 1));
+                replicationList.get(replica.getId()).add(new PlacementGroup(pg.getHash(), r - 1));
             }
         }
 
@@ -226,7 +226,7 @@ public class CephLoadBalanceAlgorithm {
 
         SimpleLog.i("Transfer placement groups: " + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
         FileTransferManager.getInstance().requestTransfer(
-                placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
+                placementGroups.stream().map(Indexable::getHash).collect(Collectors.toList()),
                 fromNode,
                 toNode);
     }
@@ -239,7 +239,7 @@ public class CephLoadBalanceAlgorithm {
 
         SimpleLog.i("Copy placement groups:" + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
         FileTransferManager.getInstance().requestCopy(
-                placementGroups.stream().map(Indexable::getIndex).collect(Collectors.toList()),
+                placementGroups.stream().map(Indexable::getHash).collect(Collectors.toList()),
                 fromNode,
                 toNode);
     }

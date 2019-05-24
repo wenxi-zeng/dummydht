@@ -125,16 +125,16 @@ public class CephMembershipAlgorithm {
         for (int i = 0; i< Config.getInstance().getNumberOfPlacementGroups(); i++) {
             int r = 0;
             int count = 0;
-            String pgid = map.getPlacementGroupId(i);
+            PlacementGroup pg = new PlacementGroup(i, r);
 
             while (count < Config.getInstance().getNumberOfReplicas()) {
-                Clusterable node = map.rush(pgid, r);
+                Clusterable node = map.rush(pg.getId(), r);
 
                 if (node != null &&
                         node.getStatus().equals(STATUS_ACTIVE) &&
                         (node instanceof PhysicalNode)) {
                     PhysicalNode pnode = (PhysicalNode)node;
-                    PlacementGroup pg = new PlacementGroup(pgid, r);
+                    pg.setIndex(r);
                     if (!pnode.getVirtualNodes().contains(pg)) {
                         pnode.getVirtualNodes().add(pg);
                         count++;
