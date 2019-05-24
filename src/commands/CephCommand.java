@@ -25,7 +25,7 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            ClusterMap.getInstance().initialize(request.getAttachment());
+            ClusterMap.getInstance().initialize(request == null ? null : request.getAttachment());
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Initialized");
         }
 
