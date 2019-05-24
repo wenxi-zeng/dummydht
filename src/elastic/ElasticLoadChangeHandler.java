@@ -54,6 +54,11 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         return requests;
     }
 
+    @Override
+    public void optimize(List<Request> requests) {
+        // stub
+    }
+
     private List<Solution> evaluate(List<LoadInfo> sortedTargets, LoadInfo loadInfo, FileBucket[] fileBuckets, long lowerBound, long upperBound) {
         if (fileBuckets.length < 1) return null;
 

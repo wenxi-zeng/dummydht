@@ -28,26 +28,51 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
 
         Map<String, LoadInfo> map = globalLoad.stream().collect(
                 Collectors.toMap(LoadInfo::getNodeId, info -> info));
-
-        long totalLoad = 0;
-        long totalCapacity = 0;
-        for (int i = parent.getSubClusters().length - 1; i >= 0; i--) {
+        float halfWeight = 0;
+        int numberOfLightNodes = 0;
+        for (int i = 0; i < parent.getSubClusters().length; i++) {
             Clusterable child = parent.getSubClusters()[i];
+            if (child == null) continue;
             if (child instanceof PhysicalNode) {
-                LoadInfo info = map.get(((PhysicalNode) child).getFullAddress());
-                totalLoad += info.getLoad();
-                totalCapacity += child.getWeight();
+                PhysicalNode pchild = (PhysicalNode) child;
+                LoadInfo info = map.get(pchild.getFullAddress());
+
+                if (pchild.getId().equals(node.getId())) {
+                    halfWeight = pchild.getWeight() / 2;
+                }
+                else if(info.getLoad() < lowerBound) {
+                    numberOfLightNodes++;
+                }
             }
         }
 
-        if (totalLoad < totalCapacity) {
-            List<Request> requests = new ArrayList<>();
-            requests.add(new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
-                    .withAttachment(loadInfo.getNodeId() + " " + ((loadInfo.getLoad() - upperBound + (upperBound - lowerBound) / 2) * -1)));
-            return requests;
+        if (numberOfLightNodes < 1) return null;
+
+        float distributeWeight = halfWeight / numberOfLightNodes;
+        for (int i = 0; i < parent.getSubClusters().length; i++) {
+            Clusterable child = parent.getSubClusters()[i];
+            if (child == null) continue;
+            if (child instanceof PhysicalNode) {
+                PhysicalNode pchild = (PhysicalNode) child;
+                LoadInfo info = map.get(pchild.getFullAddress());
+
+                if (pchild.getId().equals(node.getId())) {
+                    pchild.setWeight(halfWeight);
+                }
+                else if(info.getLoad() < lowerBound) {
+                    pchild.setWeight(pchild.getWeight() + distributeWeight);
+                }
+            }
         }
-        else {
-            return null;
-        }
+
+        // no need to generate request for changed nodes,
+        // since every node has to have a update request.
+        // requests are generated in the optimize method.
+        return null;
+    }
+
+    @Override
+    public void optimize(List<Request> requests) {
+        requests.add(new Request().withHeader(CephCommand.PROPAGATE.name()));
     }
 }

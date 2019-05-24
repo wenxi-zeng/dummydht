@@ -54,6 +54,11 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         return requests;
     }
 
+    @Override
+    public void optimize(List<Request> requests) {
+        // stub
+    }
+
     private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long lowerBound) {
         Solution solution = new Solution(loadInfo.getLoad(), current.getHash());
         Map<Integer, FileBucket> map = loadInfo.getBucketInfoList().stream().collect(

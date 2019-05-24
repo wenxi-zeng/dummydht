@@ -401,5 +401,28 @@ public enum CephCommand implements Command {
         public String getHelpString() {
             return getParameterizedString();
         }
+    },
+
+    PROPAGATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.PROPAGATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            ClusterMap.getInstance().propagateTableChanges();
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Table propagated.");
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CephCommand.PROPAGATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
     }
 }

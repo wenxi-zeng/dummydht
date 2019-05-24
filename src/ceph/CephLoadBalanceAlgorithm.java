@@ -15,6 +15,16 @@ import static util.Config.STATUS_INACTIVE;
 
 public class CephLoadBalanceAlgorithm {
 
+    public void propagateTableChanges(ClusterMap map) {
+        // here we invoke LoadBalancingCallBack().onFinished(),
+        // since it's a delegation of table propagation method in proxy.
+        // in normal data nodes, such propagation is obviously no needed,
+        // unless in decentralized mode.
+
+        if (map.getLoadBalancingCallBack() != null)
+            map.getLoadBalancingCallBack().onFinished();
+    }
+
     public void loadBalancing(ClusterMap map, Clusterable clusterable) {
         List<Tuple> transferTupleList;
 
@@ -31,8 +41,9 @@ public class CephLoadBalanceAlgorithm {
             requestTransfer(tuple.placementGroup, tuple.from, tuple.to);
         }
 
-        if (map.getLoadBalancingCallBack() != null)
-            map.getLoadBalancingCallBack().onFinished();
+        // no need to invoke LoadBalancingCallBack().onFinished(),
+        // since ceph nodes first receive table updates, and then
+        // start load balancing and file transfer according to updated map
     }
 
     public List<Tuple> computeTransferTuples(ClusterMap map, Clusterable clusterable) {
@@ -106,8 +117,9 @@ public class CephLoadBalanceAlgorithm {
             requestReplication(tuple.placementGroup, tuple.from, tuple.to);
         }
 
-        if (map.getLoadBalancingCallBack() != null)
-            map.getLoadBalancingCallBack().onFinished();
+        // no need to invoke LoadBalancingCallBack().onFinished(),
+        // since ceph nodes first receive table updates, and then
+        // start load balancing and file transfer according to updated map
     }
 
     public List<Tuple> computeBackupTuples(ClusterMap map, Clusterable failedNode) {
@@ -201,8 +213,9 @@ public class CephLoadBalanceAlgorithm {
         loadBalancing(map, map.getRoot());
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
 
-        if (map.getLoadBalancingCallBack() != null)
-            map.getLoadBalancingCallBack().onFinished();
+        // no need to invoke LoadBalancingCallBack().onFinished(),
+        // since ceph nodes first receive table updates, and then
+        // start load balancing and file transfer according to updated map
     }
 
     private void requestTransfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {

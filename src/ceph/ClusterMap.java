@@ -249,6 +249,11 @@ public class ClusterMap implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
+    public void propagateTableChanges() {
+        loadBalanceAlgorithm.propagateTableChanges(this);
+        update();
+    }
+
     public List<PhysicalNode> lookup(String filename) {
         return readWriteAlgorithm.lookup(this, filename);
     }

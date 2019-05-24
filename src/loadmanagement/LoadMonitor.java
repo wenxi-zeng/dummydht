@@ -48,6 +48,7 @@ public class LoadMonitor implements GlobalLoadListener {
             SimpleLog.v("All nodes are higher than load balancing lower bound, no need to balance");
         }
         else {
+            List<Request> requests = new ArrayList<>();
             for (LoadInfo info : globalLoad) {
                 if (info.isLoadBalancing()) {
                     SimpleLog.v("Node " + info.getNodeId() + " is under load balancing, no operation is taken");
@@ -55,22 +56,24 @@ public class LoadMonitor implements GlobalLoadListener {
                 }
                 if (info.getLoad() > lbUpperBound) {
                     SimpleLog.v("Node " + info.getNodeId() + " is overloaded. Decreasing its load");
-                    onOverload(globalLoad, info);
+                    requests.addAll(onOverload(globalLoad, info));
                 }
             }
+            handler.optimize(requests);
+
+            if (requests.size() < 1) {
+                SimpleLog.i("Failed to auto balance load. No applicable node found");
+                return;
+            }
+
+            for (NotableLoadChangeCallback callback : callbacks)
+                callback.onRequestAvailable(requests);
         }
     }
 
-    private void onOverload(List<LoadInfo> globalLoad, LoadInfo loadInfo) {
+    private List<Request> onOverload(List<LoadInfo> globalLoad, LoadInfo loadInfo) {
         List<Request> requests = handler.generateRequestBasedOnLoad(globalLoad, loadInfo, lbLowerBound, lbUpperBound);
-
-        if (requests == null || requests.size() < 1) {
-            SimpleLog.i("Failed to auto balance load. No applicable node found");
-            return;
-        }
-
-        for (NotableLoadChangeCallback callback : callbacks)
-            callback.onRequestAvailable(requests);
+        return  requests == null ? new ArrayList<>() : requests;
     }
 
     public interface NotableLoadChangeCallback {
