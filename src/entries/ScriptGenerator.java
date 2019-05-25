@@ -30,6 +30,8 @@ public class ScriptGenerator {
 
     private final static String FILE_DISABLE_FIERWALL_ALL = "disable-firewall-all.sh";
 
+    private final static String FILE_CLEAR_ALL = "clear-all.sh";
+
     private static String SELF;
 
     public static void main(String args[]) {
@@ -41,6 +43,7 @@ public class ScriptGenerator {
         generateMakeDirAll();
         generateAuthorizeAll();
         generateDisableFirewallAll();
+        generateClearAll();
     }
 
     private static void generateStartAll() {
@@ -53,7 +56,7 @@ public class ScriptGenerator {
         for (String node : getNodes()) {
             StringBuilder command = new StringBuilder();
             for (int i = 0; i < portRange; i++) {
-                command.append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht-daemon.jar ")
+                command.append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -daemon ")
                         .append(startPort + i)
                         .append(" &").append('\n');
             }
@@ -202,6 +205,26 @@ public class ScriptGenerator {
                 stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
         }
 
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateClearAll() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : getNodes()) {
+            StringBuilder command = new StringBuilder();
+
+            command.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("*").append('\n');
+
+            if (!node.contains(SELF))
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        String filename = ResourcesLoader.getRelativeFileName(FILE_CLEAR_ALL);
         try (PrintStream out = new PrintStream(createFile(filename))) {
             out.println(stringBuilder.toString());
         } catch (FileNotFoundException e) {
