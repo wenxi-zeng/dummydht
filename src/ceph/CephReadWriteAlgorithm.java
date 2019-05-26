@@ -7,7 +7,10 @@ import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
 import util.Config;
 import util.MathX;
+import util.SimpleLog;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +34,23 @@ public class CephReadWriteAlgorithm {
     }
 
     public FileBucket writeAndReplicate(ClusterMap map, DummyFile file) {
-        FileBucket fileBucket = writeOnly(map, file);
+        try {
+            FileBucket fileBucket = writeOnly(map, file);
 
-        if (fileBucket != null && !fileBucket.isLocked() && map.getReadWriteCallBack() != null) {
-            List<PhysicalNode> replicas = lookup(map, file.getName());
-            map.getReadWriteCallBack().onFileWritten(file.toAttachment(), replicas);
+            if (fileBucket != null && !fileBucket.isLocked() && map.getReadWriteCallBack() != null) {
+                List<PhysicalNode> replicas = lookup(map, file.getName());
+                map.getReadWriteCallBack().onFileWritten(file.toAttachment(), replicas);
+            }
+
+            return fileBucket;
         }
-
-        return fileBucket;
+        catch (Exception ex) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ex.printStackTrace(pw);
+            SimpleLog.i(sw.toString());
+            return null;
+        }
     }
 
     public FileBucket writeOnly(ClusterMap map, DummyFile file) {

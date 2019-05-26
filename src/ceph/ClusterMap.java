@@ -44,7 +44,7 @@ public class ClusterMap implements Serializable {
 
     private ClusterMap() {
         physicalNodeMap = new HashMap<>();
-        epoch = System.currentTimeMillis();
+        epoch = 0;
         root = new Cluster();
 
         membershipAlgorithm = new CephMembershipAlgorithm();
@@ -284,7 +284,7 @@ public class ClusterMap implements Serializable {
         if (o instanceof ClusterMap) {
             ClusterMap remoteMap = (ClusterMap)o;
 
-            if (this.getRoot() == null || remoteMap.getEpoch() > this.getEpoch()) {
+            if (this.getRoot() == null || this.getRoot().getSubClusters() == null || remoteMap.getEpoch() > this.getEpoch()) {
                 this.setRoot(remoteMap.getRoot());
                 this.setEpoch(remoteMap.getEpoch());
                 this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());

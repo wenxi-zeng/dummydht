@@ -2,10 +2,11 @@ package ceph;
 
 import commonmodels.Clusterable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Cluster implements Clusterable {
+public class Cluster implements Clusterable, Serializable {
 
     private String id;
 
@@ -108,9 +109,5 @@ public class Cluster implements Clusterable {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setSubCluster(Clusterable[] subCluster) {
-        this.subCluster = subCluster;
     }
 }
