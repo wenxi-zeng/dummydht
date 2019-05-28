@@ -3,6 +3,7 @@ package ceph;
 import commands.CephCommand;
 import commonmodels.*;
 import commonmodels.transport.Request;
+import ring.LookupTable;
 import util.MathX;
 
 import java.util.ArrayList;
@@ -25,6 +26,11 @@ public class CephDataNode extends DataNode {
     @Override
     public Object getTable() {
         return ClusterMap.getInstance();
+    }
+
+    @Override
+    public long getEpoch() {
+        return LookupTable.getInstance().getEpoch();
     }
 
     @Override

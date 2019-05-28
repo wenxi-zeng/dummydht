@@ -30,6 +30,11 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
+    public long getEpoch() {
+        return LookupTable.getInstance().getEpoch();
+    }
+
+    @Override
     public String updateTable(Object o) {
         return LookupTable.getInstance().updateTable(o);
     }
