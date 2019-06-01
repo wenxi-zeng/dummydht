@@ -1,14 +1,15 @@
 package datanode.strategies;
 
 import commonmodels.DataNode;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
+import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
 import org.apache.gossip.Member;
 import org.apache.gossip.RemoteMember;
-import org.apache.gossip.crdt.SharedMessage;
-import org.apache.gossip.crdt.SharedMessageOrSet;
+import org.apache.gossip.crdt.GrowOnlySet;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
@@ -20,55 +21,26 @@ import util.URIHelper;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DistributedStrategy extends MembershipStrategy implements GossipListener, UpdateSharedDataEventHandler {
 
     private GossipManager gossipService;
 
+    private Map<String, Long> vectorTime;
+
     public DistributedStrategy(DataNode dataNode) {
         super(dataNode);
-    }
 
-    private static final String INDEX_KEY_FOR_SET = "membership_update";
+        vectorTime = new HashMap<>();
+    }
 
     private static final long MESSAGE_EXPIRE_TIME = 10 * 60 * 1000L;
 
     @Override
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
-        SharedMessage message = new SharedMessage()
-                .withSender(dataNode.getAddress())
-                .withSubject(gossipMember.getUri().getHost() + ":" + gossipMember.getUri().getPort());
-        SharedMessage pre;
 
-        switch (gossipState) {
-            case UP:
-                pre = bringUpFromTombstone(message);
-                if (pre != null) {
-                    message.setContent(pre.getContent());
-                    addMessage(message);
-                    try {
-                        dataNode.execute(message.getContent());
-                    } catch (InvalidRequestException e) {
-                        e.printStackTrace();
-                    }
-                }
-                break;
-            case DOWN:
-                pre = bringDownFromElements(message);
-                if (pre != null) {
-                    message.setContent(pre.getContent());
-                    removeMessage(message);
-                    dataNode.execute(
-                            dataNode.prepareRemoveNodeCommand(
-                                    gossipMember.getUri().getHost(),
-                                    gossipMember.getUri().getPort()));
-                }
-                break;
-        }
     }
 
     @Override
@@ -76,12 +48,23 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.init();
-        SharedMessage message = new SharedMessage()
-                .withSender(dataNode.getAddress())
-                .withSubject(dataNode.getAddress())
-                .withContent(dataNode.prepareAddNodeCommand().toCommand());
-        addMessage(message);
-        dataNode.execute(message.getContent());
+
+        if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
+            dataNode.execute(
+                    dataNode.prepareAddNodeCommand().toCommand()
+            );
+
+            long now = System.currentTimeMillis();
+            Set<Request> digests = new HashSet<>();
+            digests.add(dataNode.prepareAddNodeCommand());
+            GrowOnlySet<Request> growOnlySet = new GrowOnlySet<>(digests);
+            SharedDataMessage m = new SharedDataMessage();
+            m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
+            m.setKey(gossipService.getMyself().getId());
+            m.setPayload(growOnlySet);
+            m.setTimestamp(now);
+            gossipService.merge(m);
+        }
     }
 
     @Override
@@ -148,113 +131,37 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         return result.toString();
     }
 
-    private SharedMessage bringUpFromTombstone(SharedMessage target) {
-        @SuppressWarnings("unchecked")
-        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
-        if (s == null || s.value().contains(target)) return null;
-
-        for (SharedMessage message : s.getTombstones().keySet())
-            if (message.equals(target))
-                return message;
-
-       return null;
-    }
-
-    private SharedMessage bringDownFromElements(SharedMessage target) {
-        @SuppressWarnings("unchecked")
-        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
-        if (s == null || !s.value().contains(target)) return null;
-
-        for (SharedMessage message : s.value())
-            if (message.equals(target))
-                return message;
-
-        return null;
-    }
-
-    private void removeMessage(SharedMessage message) {
-        @SuppressWarnings("unchecked")
-        SharedMessageOrSet s = (SharedMessageOrSet) gossipService.findCrdt(INDEX_KEY_FOR_SET);
-        if (s == null) return;
-
-        long now = System.currentTimeMillis();
-        SharedDataMessage m = new SharedDataMessage();
-        m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-        m.setKey(INDEX_KEY_FOR_SET);
-        m.setPayload(new SharedMessageOrSet(s, s.remove(message)));
-        m.setTimestamp(System.currentTimeMillis());
-        gossipService.merge(m);
-    }
-
-    private void addMessage(SharedMessage message) {
-        long now = System.currentTimeMillis();
-        SharedDataMessage m = new SharedDataMessage();
-        m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-        m.setKey(INDEX_KEY_FOR_SET);
-        m.setPayload(new SharedMessageOrSet(message));
-        m.setTimestamp(now);
-        gossipService.merge(m);
-    }
-
-    private void processAddedValue(Set<SharedMessage> value) {
-        for (SharedMessage message : value) {
-            try {
-                dataNode.execute(message.getContent());
-            } catch (InvalidRequestException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void processRemovedValue(Set<SharedMessage> value) {
-        for (SharedMessage message : value) {
-            String[] address = message.getSubject().split(":");
-            dataNode.execute(
-                    dataNode.prepareRemoveNodeCommand(address[0], Integer.valueOf(address[1]))
-            );
-        }
-    }
-
     @Override
     public void onUpdate(String key, Object oldValue, Object newValue) {
+        if (newValue == null) return;
 
-        if (oldValue == null && newValue == null) {
-            return;
+        @SuppressWarnings("unchecked")
+        GrowOnlySet<Request> digests = (GrowOnlySet<Request>)newValue;
+        List<Request> requests = getUndigestedRequests(vectorTime.get(key), digests.value());
+        for (Request r : requests) {
+            dataNode.execute(r);
+            vectorTime.put(key, r.getEpoch());
         }
-        else if (oldValue == null) {
-            @SuppressWarnings("unchecked")
-            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
-            processAddedValue(newSet.value());
-        }
-        else if (newValue == null) {
-            @SuppressWarnings("unchecked")
-            SharedMessageOrSet newSet = (SharedMessageOrSet)oldValue;
-            processAddedValue(newSet.value());
-        }
-        else if (oldValue.equals(newValue)) {
-            return;
-        }
-        else {
-            @SuppressWarnings("unchecked")
-            SharedMessageOrSet newSet = (SharedMessageOrSet)newValue;
+    }
 
-            @SuppressWarnings("unchecked")
-            SharedMessageOrSet oldSet = (SharedMessageOrSet)oldValue;
+    private Request getMaxDigest(Set<Request> digests) {
+        long version = -1;
+        Request digest = null;
 
-            Set<SharedMessage> added = new HashSet<>(newSet.value());
-            Set<SharedMessage> removed = new HashSet<>(oldSet.value());
-            for (SharedMessage message : oldSet.value()) {
-                added.remove(message);
+        for (Request r : digests) {
+            if (r.getEpoch() > version) {
+                version = r.getEpoch();
+                digest = r;
             }
-            for (SharedMessage message : newSet.value()) {
-                removed.remove(message);
-            }
-
-            processAddedValue(added);
-            processRemovedValue(removed);
         }
 
-        System.out.println(dataNode.getTable().toString());
-        System.out.println("==========================================================================");
+        return digest;
+    }
+
+    private List<Request> getUndigestedRequests(long version, Set<Request> digests) {
+        return digests.stream()
+                .filter(d -> d.getEpoch() > version)
+                .sorted(Comparator.comparingLong(Request::getEpoch))
+                .collect(Collectors.toList());
     }
 }
