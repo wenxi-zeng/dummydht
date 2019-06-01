@@ -1,5 +1,7 @@
 package commonmodels;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,5 +145,17 @@ public class PhysicalNode implements Clusterable, Serializable {
     @Override
     public String toTreeString(String prefix, boolean isTail) {
         return prefix + (isTail ? "└── " : "├── ") + getId() + ": " + getStatus() + ", weight: " + weight + "\n";
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof PhysicalNode) == false) {
+            return false;
+        }
+        PhysicalNode rhs = ((PhysicalNode) other);
+        return new EqualsBuilder().append(getId(), rhs.getId()).isEquals();
     }
 }

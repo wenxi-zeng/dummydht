@@ -18,9 +18,14 @@ public class FileTransferManager {
 
     private List<FileTransferRequestCallBack> callBacks;
 
+    private FileTransferPolicy policy;
+
+    private String mySelf;
+
     private FileTransferManager() {
         localFileManager = LocalFileManager.getInstance();
         callBacks = new ArrayList<>();
+        policy = FileTransferPolicy.All;
     }
 
     public static FileTransferManager getInstance() {
@@ -33,6 +38,22 @@ public class FileTransferManager {
         }
 
         return instance;
+    }
+
+    public FileTransferPolicy getPolicy() {
+        return policy;
+    }
+
+    public void setPolicy(FileTransferPolicy policy) {
+        this.policy = policy;
+    }
+
+    public String getMySelf() {
+        return mySelf;
+    }
+
+    public void setMySelf(String mySelf) {
+        this.mySelf = mySelf;
     }
 
     public void subscribe(FileTransferRequestCallBack callBack) {
@@ -201,14 +222,14 @@ public class FileTransferManager {
     }
 
     private void callFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        if (callBacks != null)
+        if (isCompliedWithPolicy(from, toNode) && callBacks != null)
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onTransferring(buckets, from , toNode);
             }
     }
 
     private void callFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        if (callBacks != null)
+        if (isCompliedWithPolicy(from, toNode) && callBacks != null)
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onReplicating(buckets, from , toNode);
             }
@@ -234,5 +255,30 @@ public class FileTransferManager {
 
             fileBucket.setLocked(false);
         }
+    }
+
+    private boolean isCompliedWithPolicy(PhysicalNode from, PhysicalNode to) {
+        if (mySelf != null) {
+            switch (policy) {
+                case SenderOnly:
+                    return mySelf.equals(from.getAddress());
+                case ReceiverOnly:
+                    return mySelf.equals(to.getAddress());
+                case SenderOrReceiver:
+                    return mySelf.equals(from.getAddress()) || mySelf.equals(to.getAddress());
+                case All:
+                default:
+                    return true;
+            }
+        }
+
+        return true;
+    }
+
+    public enum FileTransferPolicy {
+        All,
+        SenderOnly,
+        ReceiverOnly,
+        SenderOrReceiver
     }
 }

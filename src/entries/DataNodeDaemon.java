@@ -15,6 +15,7 @@ import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
+import util.Config;
 import util.SimpleLog;
 
 import java.net.DatagramSocket;
@@ -129,6 +130,15 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
     public void initSubscriptions() {
         dataNodeServer.setReadWriteCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
+        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
+            // in decentralized mode, node are only responsible for transferring files
+            // that they are involved
+            // if it happens that they receive request to transfer files between other
+            // nodes, the following settings make the node only update the table,
+            // thus avoiding unnecessary file transfer
+            FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
+            FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
+        }
         LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
     }
 
