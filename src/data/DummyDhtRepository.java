@@ -26,23 +26,14 @@ public class DummyDhtRepository {
 
     private ExecutorService executor;
 
-    private ScheduledExecutorService timer;
-
-    private ScheduledFuture task;
-
     private Queue<Queueable> queue;
 
-    private TimerTask disconnectTask;
-
     private static volatile DummyDhtRepository instance = null;
-
-    private static final long TIME_TO_DISCONNECT = 5;
 
     private DummyDhtRepository() {
         connector = new Connector();
         connector.setServer(Config.getInstance().getDataServer());
         executor = Executors.newSingleThreadExecutor();
-        timer = Executors.newSingleThreadScheduledExecutor();
         queue = new LinkedList<Queueable>(){
             @Override
             public boolean add(Queueable queueable) {
