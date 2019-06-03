@@ -3,6 +3,7 @@ package entries;
 import commands.DaemonCommand;
 import commands.RingCommand;
 import commonmodels.Daemon;
+import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
 import commonmodels.ReadWriteCallBack;
 import commonmodels.transport.InvalidRequestException;
@@ -11,10 +12,14 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.AbstractLoadMonitor;
+import loadmanagement.DecentralizedLoadInfoBroker;
+import loadmanagement.DecentralizedLoadMonitor;
 import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
+import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 
@@ -27,7 +32,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
+public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadChangeCallback {
 
     private SocketServer socketServer;
 
@@ -138,6 +143,10 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
             // thus avoiding unnecessary file transfer
             FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
             FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
+
+            AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler());
+            DecentralizedLoadInfoBroker.getInstance().subscribe(loadMonitor);
+            loadMonitor.subscribe(this);
         }
         LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
         LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
@@ -292,6 +301,14 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
         for (PhysicalNode node : replicas) {
             if (!node.getFullAddress().equals(dataNodeServer.getDataNode().getAddress()))
                 send(node.getAddress(), node.getPort(), request, this);
+        }
+    }
+
+    @Override
+    public void onRequestAvailable(List<Request> requests) {
+        for (Request request : requests) {
+            processDataNodeCommand(request);
+            StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
         }
     }
 }

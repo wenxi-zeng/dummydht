@@ -5,6 +5,7 @@ import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import loadmanagement.DecentralizedLoadInfoBroker;
 import loadmanagement.LoadInfo;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
@@ -177,8 +178,67 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public void onLoadInfoReported(LoadInfo loadInfo) {
+        int myLoadLevel = loadInfo.getLoadLevel(lbLowerBound, lbUpperBound);
+        List<LoadInfo> loadInfoList = generateSortedTargets(myLoadLevel);
+        DecentralizedLoadInfoBroker.getInstance().announce(loadInfoList);
+
         this.gossipService.getMyself().getProperties()
                 .put(NODE_PROPERTY_LOAD_STATUS,
-                        String.valueOf(loadInfo.getLoadLevel(lbLowerBound, lbUpperBound)));
+                        String.valueOf(myLoadLevel));
+    }
+
+    private List<LoadInfo> generateSortedTargets(int myLoadLevel) {
+        List<LoadInfo> veryHeavyNodes = new ArrayList<>();
+        List<LoadInfo> medianHeavyNodes = new ArrayList<>();
+        List<LoadInfo> heavyNodes = new ArrayList<>();
+        List<LoadInfo> result = new ArrayList<>();
+
+        PhysicalNode dummyNode = new PhysicalNode();
+        for (Member member : gossipService.getLiveMembers()) {
+            String loadStatus = member.getProperties().get(NODE_PROPERTY_LOAD_STATUS);
+            if (loadStatus == null) continue;
+
+            dummyNode.setAddress(member.getUri().getHost());
+            dummyNode.setPort(member.getUri().getPort());
+            LoadInfo info = new LoadInfo().withNodeId(dummyNode.getFullAddress());
+            info.setReportTime(member.getHeartbeat());
+            int loadLevel = Integer.valueOf(loadStatus);
+            if (loadLevel == LoadInfo.LEVEL_VERY_HEAVY) {
+                veryHeavyNodes.add(info);
+            }
+            else if (loadLevel == LoadInfo.LEVEL_MEDIAN_HEAVY) {
+                medianHeavyNodes.add(info);
+            }
+            else if (loadLevel == LoadInfo.LEVEL_HEAVY) {
+                heavyNodes.add(info);
+            }
+        }
+
+        Comparator<LoadInfo> heartbeatComparator = (o1, o2) -> -1 * Long.compare(o1.getReportTime(), o2.getReportTime());
+        veryHeavyNodes.sort(heartbeatComparator);
+        medianHeavyNodes.sort(heartbeatComparator);
+        heavyNodes.sort(heartbeatComparator);
+
+        if (myLoadLevel == LoadInfo.LEVEL_LIGHT) {
+            result.addAll(heavyNodes);
+            result.addAll(medianHeavyNodes);
+            result.addAll(veryHeavyNodes);
+            return result;
+        }
+        else if (myLoadLevel == LoadInfo.LEVEL_MEDIAN_LIGHT) {
+            result.addAll(medianHeavyNodes);
+            result.addAll(veryHeavyNodes);
+            result.addAll(heavyNodes);
+            return result;
+        }
+        else if (myLoadLevel == LoadInfo.LEVEL_VERY_LIGHT) {
+            result.addAll(veryHeavyNodes);
+            result.addAll(medianHeavyNodes);
+            result.addAll(heavyNodes);
+            return result;
+        }
+        else {
+            return null;
+        }
     }
 }

@@ -1,38 +1,17 @@
 package loadmanagement;
 
-import commonmodels.LoadChangeListener;
 import commonmodels.LoadChangeHandler;
 import commonmodels.NotableLoadChangeCallback;
 import commonmodels.transport.Request;
-import util.Config;
 import util.SimpleLog;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoadMonitor implements LoadChangeListener {
+public class LoadMonitor extends AbstractLoadMonitor {
 
-    private List<NotableLoadChangeCallback> callbacks;
-
-    private LoadChangeHandler handler;
-
-    private final long lbUpperBound;
-
-    private final long lbLowerBound;
-
-    public LoadMonitor(final LoadChangeHandler handler) {
-        callbacks = new ArrayList<>();
-        lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
-        lbLowerBound = Config.getInstance().getLoadBalancingLowerBound();
-        this.handler = handler;
-    }
-
-    public void subscribe(NotableLoadChangeCallback callBack) {
-        callbacks.add(callBack);
-    }
-
-    public void unsubscribe(NotableLoadChangeCallback callBack) {
-        callbacks.remove(callBack);
+    public LoadMonitor(LoadChangeHandler handler) {
+        super(handler);
     }
 
     @Override

@@ -8,6 +8,7 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.AbstractLoadMonitor;
 import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
@@ -19,11 +20,11 @@ import util.SimpleLog;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, NotableLoadChangeCallback {
+public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack {
 
     private DataNodeDaemon daemon;
 
-    private LoadMonitor loadMonitor;
+    private AbstractLoadMonitor loadMonitor;
 
     private static volatile Proxy instance = null;
 
@@ -88,7 +89,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
         GlobalLoadInfoBroker.getInstance().subscribe(loadMonitor);
-        loadMonitor.subscribe(this);
+        loadMonitor.subscribe(daemon);
     }
 
     @Override
@@ -268,14 +269,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
 
         for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
             send(node.getAddress(), node.getPort(), request, this);
-        }
-    }
-
-    @Override
-    public void onRequestAvailable(List<Request> requests) {
-        for (Request request : requests) {
-            processDataNodeCommand(request);
-            StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
         }
     }
 }

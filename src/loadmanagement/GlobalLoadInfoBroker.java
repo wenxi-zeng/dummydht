@@ -1,6 +1,5 @@
 package loadmanagement;
 
-import commonmodels.LoadChangeListener;
 import commonmodels.PhysicalNode;
 import data.DummyDhtRepository;
 import util.SimpleLog;
@@ -10,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GlobalLoadInfoBroker {
+public class GlobalLoadInfoBroker extends LoadInfoBroker {
 
     private Map<String, LoadInfo> globalLoadInfo;
 
@@ -19,8 +18,6 @@ public class GlobalLoadInfoBroker {
     private LoadInfo dummyInfo;
 
     private final DummyDhtRepository repo;
-
-    private List<LoadChangeListener> callBacks;
 
     private static volatile GlobalLoadInfoBroker instance = null;
 
@@ -42,14 +39,6 @@ public class GlobalLoadInfoBroker {
         }
 
         return instance;
-    }
-
-    public void subscribe(LoadChangeListener callBack) {
-        callBacks.add(callBack);
-    }
-
-    public void unsubscribe(LoadChangeListener callBack) {
-        callBacks.remove(callBack);
     }
 
     public List<LoadInfo> getGlobalLoadInfo() {
@@ -125,8 +114,6 @@ public class GlobalLoadInfoBroker {
             globalLoadInfo.put(key, dummyInfo);
         }
 
-        for (LoadChangeListener callBack : callBacks) {
-            callBack.onLoadUpdated(infoList);
-        }
+        announce(infoList);
     }
 }
