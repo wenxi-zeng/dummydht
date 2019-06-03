@@ -269,8 +269,11 @@ public class GossipCore implements GossipCoreConstants {
         for (Entry<LocalMember, GossipState> localMember : gossipManager.getMembers().entrySet()){
           if (localMember.getKey().getId().equals(remoteMember.getId())){
             localMember.getKey().recordHeartbeat(remoteMember.getHeartbeat());
-            localMember.getKey().setHeartbeat(remoteMember.getHeartbeat());
-            localMember.getKey().setProperties(remoteMember.getProperties());
+            // update local member only if the heartbeat of remote member is newer
+            if (localMember.getKey().getHeartbeat() < remoteMember.getHeartbeat()) {
+              localMember.getKey().setHeartbeat(remoteMember.getHeartbeat());
+              localMember.getKey().setProperties(remoteMember.getProperties());
+            }
           }
         }
       }
