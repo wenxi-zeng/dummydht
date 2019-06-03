@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GlobalLoadInfoManager {
+public class GlobalLoadInfoBroker {
 
     private Map<String, LoadInfo> globalLoadInfo;
 
@@ -22,9 +22,9 @@ public class GlobalLoadInfoManager {
 
     private List<LoadChangeListener> callBacks;
 
-    private static volatile GlobalLoadInfoManager instance = null;
+    private static volatile GlobalLoadInfoBroker instance = null;
 
-    private GlobalLoadInfoManager() {
+    private GlobalLoadInfoBroker() {
         globalLoadInfo = new ConcurrentHashMap<>();
         historicalLoadInfo = new ArrayList<>();
         repo = DummyDhtRepository.getInstance();
@@ -32,11 +32,11 @@ public class GlobalLoadInfoManager {
         dummyInfo = new LoadInfo().withNodeId(null);
     }
 
-    public static GlobalLoadInfoManager getInstance() {
+    public static GlobalLoadInfoBroker getInstance() {
         if (instance == null) {
-            synchronized(GlobalLoadInfoManager.class) {
+            synchronized(GlobalLoadInfoBroker.class) {
                 if (instance == null) {
-                    instance = new GlobalLoadInfoManager();
+                    instance = new GlobalLoadInfoBroker();
                 }
             }
         }

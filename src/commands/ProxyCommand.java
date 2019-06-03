@@ -8,7 +8,7 @@ import commonmodels.transport.Response;
 import entries.Proxy;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
-import loadmanagement.GlobalLoadInfoManager;
+import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadInfo;
 
 import java.util.List;
@@ -425,7 +425,7 @@ public enum ProxyCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            GlobalLoadInfoManager.getInstance().update((LoadInfo) request.getLargeAttachment());
+            GlobalLoadInfoBroker.getInstance().update((LoadInfo) request.getLargeAttachment());
             return new Response(request)
                     .withStatus(Response.STATUS_SUCCESS);
         }

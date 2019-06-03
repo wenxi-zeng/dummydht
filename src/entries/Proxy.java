@@ -8,7 +8,7 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
-import loadmanagement.GlobalLoadInfoManager;
+import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
 import socket.SocketServer;
@@ -57,7 +57,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
             send(node.getAddress(), node.getPort(), request, this);
         }
-        GlobalLoadInfoManager.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
+        GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
     }
 
     @Override
@@ -86,8 +86,8 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack,
         daemon.getDataNodeServer().setMembershipCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
-        GlobalLoadInfoManager.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
-        GlobalLoadInfoManager.getInstance().subscribe(loadMonitor);
+        GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
+        GlobalLoadInfoBroker.getInstance().subscribe(loadMonitor);
         loadMonitor.subscribe(this);
     }
 
