@@ -2,6 +2,7 @@ package datanode.strategies;
 
 import commands.DaemonCommand;
 import commonmodels.DataNode;
+import commonmodels.LoadInfoReportHandler;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -12,12 +13,15 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class MembershipStrategy {
+public abstract class MembershipStrategy implements LoadInfoReportHandler {
 
     protected DataNode dataNode;
 
+    protected SocketClient socketClient;
+
     public MembershipStrategy(DataNode dataNode) {
         this.dataNode = dataNode;
+        this.socketClient = new SocketClient();
     }
 
     public abstract Response getMembersStatus();
@@ -33,7 +37,6 @@ public abstract class MembershipStrategy {
 
     private void bootstrap() {
         AtomicBoolean fetched = new AtomicBoolean(false);
-        SocketClient socketClient = new SocketClient();
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response o) {

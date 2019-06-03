@@ -5,6 +5,7 @@ import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import loadmanagement.LoadInfo;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
 import org.apache.gossip.Member;
@@ -163,5 +164,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 .filter(d -> d.getEpoch() > version)
                 .sorted(Comparator.comparingLong(Request::getEpoch))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void onLoadInfoReported(LoadInfo loadInfo) {
+
     }
 }
