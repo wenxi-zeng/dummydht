@@ -1,6 +1,6 @@
 package loadmanagement;
 
-import commonmodels.GlobalLoadListener;
+import commonmodels.LoadChangeListener;
 import commonmodels.PhysicalNode;
 import data.DummyDhtRepository;
 import util.SimpleLog;
@@ -20,7 +20,7 @@ public class GlobalLoadInfoManager {
 
     private final DummyDhtRepository repo;
 
-    private List<GlobalLoadListener> callBacks;
+    private List<LoadChangeListener> callBacks;
 
     private static volatile GlobalLoadInfoManager instance = null;
 
@@ -44,11 +44,11 @@ public class GlobalLoadInfoManager {
         return instance;
     }
 
-    public void subscribe(GlobalLoadListener callBack) {
+    public void subscribe(LoadChangeListener callBack) {
         callBacks.add(callBack);
     }
 
-    public void unsubscribe(GlobalLoadListener callBack) {
+    public void unsubscribe(LoadChangeListener callBack) {
         callBacks.remove(callBack);
     }
 
@@ -125,7 +125,7 @@ public class GlobalLoadInfoManager {
             globalLoadInfo.put(key, dummyInfo);
         }
 
-        for (GlobalLoadListener callBack : callBacks) {
+        for (LoadChangeListener callBack : callBacks) {
             callBack.onLoadUpdated(infoList);
         }
     }

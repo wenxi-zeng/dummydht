@@ -1,6 +1,6 @@
 package loadmanagement;
 
-import commonmodels.GlobalLoadListener;
+import commonmodels.LoadChangeListener;
 import commonmodels.LoadChangeHandler;
 import commonmodels.NotableLoadChangeCallback;
 import commonmodels.transport.Request;
@@ -10,7 +10,7 @@ import util.SimpleLog;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoadMonitor implements GlobalLoadListener {
+public class LoadMonitor implements LoadChangeListener {
 
     private List<NotableLoadChangeCallback> callbacks;
 
