@@ -2,6 +2,7 @@ package loadmanagement;
 
 import commonmodels.GlobalLoadListener;
 import commonmodels.LoadChangeHandler;
+import commonmodels.NotableLoadChangeCallback;
 import commonmodels.transport.Request;
 import util.Config;
 import util.SimpleLog;
@@ -19,7 +20,7 @@ public class LoadMonitor implements GlobalLoadListener {
 
     private final long lbLowerBound;
 
-    public LoadMonitor(final  LoadChangeHandler handler) {
+    public LoadMonitor(final LoadChangeHandler handler) {
         callbacks = new ArrayList<>();
         lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
         lbLowerBound = Config.getInstance().getLoadBalancingLowerBound();
@@ -74,9 +75,5 @@ public class LoadMonitor implements GlobalLoadListener {
     private List<Request> onOverload(List<LoadInfo> globalLoad, LoadInfo loadInfo) {
         List<Request> requests = handler.generateRequestBasedOnLoad(globalLoad, loadInfo, lbLowerBound, lbUpperBound);
         return  requests == null ? new ArrayList<>() : requests;
-    }
-
-    public interface NotableLoadChangeCallback {
-        void onRequestAvailable(List<Request> request);
     }
 }

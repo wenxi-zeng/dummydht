@@ -2,10 +2,7 @@ package entries;
 
 import commands.DaemonCommand;
 import commands.ProxyCommand;
-import commonmodels.Daemon;
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
@@ -22,7 +19,7 @@ import util.SimpleLog;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, LoadMonitor.NotableLoadChangeCallback {
+public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack, NotableLoadChangeCallback {
 
     private DataNodeDaemon daemon;
 
