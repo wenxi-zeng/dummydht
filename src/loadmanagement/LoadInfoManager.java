@@ -1,5 +1,6 @@
 package loadmanagement;
 
+import commonmodels.LoadInfoReportHandler;
 import filemanagement.LocalFileManager;
 
 public class LoadInfoManager {
@@ -33,6 +34,10 @@ public class LoadInfoManager {
     public static void with(String id) {
         nodeId =id;
         getInstance().reporter.start();
+    }
+
+    public void setLoadInfoReportHandler(LoadInfoReportHandler handler) {
+        reporter.setHandler(handler);
     }
 
     public LoadInfo getLoadInfo() {

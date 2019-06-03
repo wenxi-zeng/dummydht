@@ -102,4 +102,8 @@ public class DataNodeServer {
     public void setReadWriteCallBack(ReadWriteCallBack callBack) {
         dataNode.setReadWriteCallBack(callBack);
     }
+
+    public MembershipStrategy getMembershipStrategy() {
+        return membershipStrategy;
+    }
 }

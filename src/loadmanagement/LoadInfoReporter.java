@@ -1,33 +1,33 @@
 package loadmanagement;
 
-import commands.ProxyCommand;
-import commonmodels.transport.Request;
-import commonmodels.transport.Response;
-import socket.SocketClient;
+import commonmodels.LoadInfoReportHandler;
+import data.DummyDhtRepository;
 import util.Config;
 
 import java.util.concurrent.*;
 
-public class LoadInfoReporter implements SocketClient.ServerCallBack {
+public class LoadInfoReporter {
 
     private ScheduledExecutorService scheduledExecutorService;
 
     private ThreadPoolExecutor threadService;
 
-    private SocketClient socketClient;
+    private LoadInfoReportHandler handler;
 
     private final LoadInfoManager loadInfoManager;
+
+    private final DummyDhtRepository repo;
 
     private final long reportInterval;
 
     public LoadInfoReporter(LoadInfoManager loadInfoManager) {
         this.loadInfoManager = loadInfoManager;
         this.reportInterval = Config.getInstance().getLoadInfoReportInterval();
+        repo = DummyDhtRepository.getInstance();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(8);
         threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
                 new ThreadPoolExecutor.DiscardOldestPolicy());
-        socketClient = new SocketClient();
     }
 
     public void start() {
@@ -38,23 +38,13 @@ public class LoadInfoReporter implements SocketClient.ServerCallBack {
     }
 
     private void report() {
-        Request request = new Request()
-                .withHeader(ProxyCommand.UPDATELOAD.name())
-                .withLargeAttachment(loadInfoManager.getLoadInfo());
-        socketClient.send(
-                Config.getInstance().getSeeds().get(0),
-                request,
-                this
-        );
+        LoadInfo loadInfo = loadInfoManager.getLoadInfo();
+        repo.put(loadInfo);
+        if (handler != null)
+            handler.onLoadInfoReported(loadInfo);
     }
 
-    @Override
-    public void onResponse(Request request, Response o) {
-
-    }
-
-    @Override
-    public void onFailure(Request request, String error) {
-
+    public void setHandler(LoadInfoReportHandler handler) {
+        this.handler = handler;
     }
 }

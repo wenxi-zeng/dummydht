@@ -63,7 +63,7 @@ public class GlobalLoadInfoManager {
     public void update(LoadInfo info) {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);
-        repo.put(info);
+        // repo.put(info); moved to LoadInfoReporter
         announce();
     }
 

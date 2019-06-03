@@ -140,6 +140,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
             FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
         }
         LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
+        LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
     }
 
     @Override
