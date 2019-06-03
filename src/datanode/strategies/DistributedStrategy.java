@@ -17,6 +17,7 @@ import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.SharedDataMessage;
+import util.Config;
 import util.URIHelper;
 
 import java.net.URI;
@@ -31,13 +32,21 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private Map<String, Long> vectorTime;
 
+    private final long lbUpperBound;
+
+    private final long lbLowerBound;
+
     public DistributedStrategy(DataNode dataNode) {
         super(dataNode);
 
         vectorTime = new HashMap<>();
+        lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
+        lbLowerBound = Config.getInstance().getLoadBalancingLowerBound();
     }
 
     private static final long MESSAGE_EXPIRE_TIME = 10 * 60 * 1000L;
+
+    public static final String NODE_PROPERTY_LOAD_STATUS = "load_status";
 
     @Override
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
@@ -168,6 +177,8 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public void onLoadInfoReported(LoadInfo loadInfo) {
-
+        this.gossipService.getMyself().getProperties()
+                .put(NODE_PROPERTY_LOAD_STATUS,
+                        String.valueOf(loadInfo.getLoadLevel(lbLowerBound, lbUpperBound)));
     }
 }
