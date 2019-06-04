@@ -98,11 +98,6 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
-    public LoadChangeHandler getLoadChangeHandler() {
-        return new ElasticLoadChangeHandler(LookupTable.getInstance());
-    }
-
-    @Override
     public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
         LookupTable.getInstance().setLoadBalancingCallBack(callBack);
     }

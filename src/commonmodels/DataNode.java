@@ -130,6 +130,10 @@ public abstract class DataNode {
         return prepareRemoveNodeCommand(addressStr[0], Integer.valueOf(addressStr[1]));
     }
 
+    public LoadChangeHandler getLoadChangeHandler() {
+        return new LoadChangeHandlerFactory().getHandler(mode, Config.getInstance().getScheme(), getTable());
+    }
+
     public abstract void createTerminal();
     public abstract Object getTable();
     public abstract long getEpoch();
@@ -142,7 +146,6 @@ public abstract class DataNode {
     public abstract Request prepareLoadBalancingCommand(String... addresses);
     public abstract Request prepareIncreaseLoadCommand(String... addresses);
     public abstract Request prepareDecreaseLoadCommand(String... addresses);
-    public abstract LoadChangeHandler getLoadChangeHandler();
     public abstract void setLoadBalancingCallBack(LoadBalancingCallBack callBack);
     public abstract void setMembershipCallBack(MembershipCallBack callBack);
     public abstract void setReadWriteCallBack(ReadWriteCallBack callBack);
