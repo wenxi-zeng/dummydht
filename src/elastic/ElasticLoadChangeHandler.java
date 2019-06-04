@@ -42,7 +42,8 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         fileBuckets = temp.toArray(fileBuckets);
         Arrays.sort(fileBuckets, (o1, o2) -> -1 * Double.compare(getLoad(o1), getLoad(o2)));
 
-        List<Solution> solutions = evaluate(sortedTargets, loadInfo, fileBuckets, lowerBound, upperBound);
+        long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
+        List<Solution> solutions = evaluate(sortedTargets, loadInfo, fileBuckets, target, upperBound);
         List<Request> requests = new ArrayList<>();
         if (solutions != null) {
             for (Solution solution : solutions) {
@@ -57,6 +58,11 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
     @Override
     public void optimize(List<Request> requests) {
         // stub
+    }
+
+    @Override
+    public long computeTargetLoad(List<LoadInfo> loadInfoList, LoadInfo loadInfo, long lowerBound, long upperBound) {
+        return lowerBound;
     }
 
     private List<Solution> evaluate(List<LoadInfo> sortedTargets, LoadInfo loadInfo, FileBucket[] fileBuckets, long lowerBound, long upperBound) {
