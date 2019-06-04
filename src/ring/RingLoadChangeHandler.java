@@ -28,11 +28,12 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         PhysicalNode node = new PhysicalNode(loadInfo.getNodeId());
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         Solution bestSolution = null;
+        long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
 
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             Indexable predecessor = table.getTable().pre(vnode);
-            Solution solution = evaluate(loadInfo, predecessor, vnode, lowerBound);
+            Solution solution = evaluate(loadInfo, predecessor, vnode, target);
 
             if (bestSolution == null || solution.getResultLoad() < bestSolution.getResultLoad())
                 bestSolution = solution;
@@ -59,7 +60,12 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         // stub
     }
 
-    private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long lowerBound) {
+    @Override
+    public long computeTargetLoad(List<LoadInfo> loadInfoList, LoadInfo loadInfo, long lowerBound, long upperBound) {
+        return lowerBound;
+    }
+
+    private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long target) {
         Solution solution = new Solution(loadInfo.getLoad(), current.getHash());
         Map<Integer, FileBucket> map = loadInfo.getBucketInfoList().stream().collect(
                 Collectors.toMap(FileBucket::getKey, bucket -> bucket));
@@ -68,7 +74,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         int start = predecessor.getHash() + 1; // the hash of predecessor needs to be excluded
         while (inRange(iterator, start, current.getHash())) {
             FileBucket bucket = map.get(iterator--);
-            if (bucket != null && !solution.update(bucket.getKey(), bucket.getSizeOfWrites(), lowerBound))
+            if (bucket != null && !solution.update(bucket.getKey(), bucket.getSizeOfWrites(), target))
                 break;
 
             if (iterator < 0) iterator = Config.getInstance().getNumberOfHashSlots() - 1;
