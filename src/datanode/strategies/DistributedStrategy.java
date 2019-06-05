@@ -2,6 +2,7 @@ package datanode.strategies;
 
 import commands.DaemonCommand;
 import commonmodels.DataNode;
+import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -32,7 +33,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class DistributedStrategy extends MembershipStrategy implements GossipListener, UpdateSharedDataEventHandler {
+public class DistributedStrategy extends MembershipStrategy implements GossipListener, UpdateSharedDataEventHandler, NotableLoadChangeCallback {
 
     private GossipManager gossipService;
 
@@ -69,20 +70,12 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
         selector = new PeerSelector(gossipService, socketClient);
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
-            dataNode.execute(
-                    dataNode.prepareAddNodeCommand().toCommand()
-            );
+            Request r = dataNode.prepareAddNodeCommand();
+            dataNode.execute(r);
 
-            long now = System.currentTimeMillis();
-            Set<Request> digests = new HashSet<>();
-            digests.add(dataNode.prepareAddNodeCommand());
-            GrowOnlySet<Request> growOnlySet = new GrowOnlySet<>(digests);
-            SharedDataMessage m = new SharedDataMessage();
-            m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-            m.setKey(gossipService.getMyself().getId());
-            m.setPayload(growOnlySet);
-            m.setTimestamp(now);
-            gossipService.merge(m);
+            List<Request> requests = new ArrayList<>();
+            requests.add(r);
+            gossipRequests(requests);
         }
     }
 
@@ -196,6 +189,23 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         this.gossipService.getMyself().getProperties()
                 .put(NODE_PROPERTY_LOAD_STATUS,
                         String.valueOf(myLoadLevel));
+    }
+
+    @Override
+    public void onRequestAvailable(List<Request> request) {
+        gossipRequests(request);
+    }
+
+    private void gossipRequests(List<Request> requests) {
+        long now = System.currentTimeMillis();
+        Set<Request> digests = new HashSet<>(requests);
+        GrowOnlySet<Request> growOnlySet = new GrowOnlySet<>(digests);
+        SharedDataMessage m = new SharedDataMessage();
+        m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
+        m.setKey(gossipService.getMyself().getId());
+        m.setPayload(growOnlySet);
+        m.setTimestamp(now);
+        gossipService.merge(m);
     }
 
     class PeerSelector {

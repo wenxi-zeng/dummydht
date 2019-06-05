@@ -147,6 +147,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
             AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler());
             DecentralizedLoadInfoBroker.getInstance().subscribe(loadMonitor);
             loadMonitor.subscribe(this);
+            loadMonitor.subscribe((NotableLoadChangeCallback) dataNodeServer.getMembershipStrategy());
         }
         LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
         LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
