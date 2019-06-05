@@ -39,6 +39,7 @@ public class LoadInfoReporter {
 
     private void report() {
         LoadInfo loadInfo = loadInfoManager.getLoadInfo();
+        loadInfo.setReportTime(System.currentTimeMillis());
         repo.put(loadInfo);
         if (handler != null)
             handler.onLoadInfoReported(loadInfo);
