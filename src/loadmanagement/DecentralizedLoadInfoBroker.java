@@ -1,5 +1,8 @@
 package loadmanagement;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DecentralizedLoadInfoBroker extends LoadInfoBroker {
 
     private static volatile DecentralizedLoadInfoBroker instance = null;
@@ -17,5 +20,11 @@ public class DecentralizedLoadInfoBroker extends LoadInfoBroker {
         }
 
         return instance;
+    }
+
+    @Override
+    public void update(LoadInfo loadInfo) {
+        List<LoadInfo> loadInfoList = new ArrayList<>();
+        announce(loadInfoList);
     }
 }

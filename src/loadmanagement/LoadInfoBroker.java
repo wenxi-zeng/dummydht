@@ -22,4 +22,6 @@ public abstract class LoadInfoBroker {
             callBack.onLoadUpdated(infoList);
         }
     }
+
+    public abstract void update(LoadInfo loadInfo);
 }

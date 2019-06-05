@@ -8,6 +8,8 @@ import commonmodels.transport.Response;
 import entries.DataNodeDaemon;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
+import loadmanagement.DecentralizedLoadInfoBroker;
+import loadmanagement.LoadInfo;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -335,6 +337,30 @@ public enum DaemonCommand implements Command {
         @Override
         public String getParameterizedString() {
             return DaemonCommand.STATUS.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    LOADHANDSHAKE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            return new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            DecentralizedLoadInfoBroker.getInstance().update((LoadInfo) request.getLargeAttachment());
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return DaemonCommand.LOADHANDSHAKE.name();
         }
 
         @Override

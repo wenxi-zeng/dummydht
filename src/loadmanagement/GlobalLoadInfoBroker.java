@@ -49,6 +49,7 @@ public class GlobalLoadInfoBroker extends LoadInfoBroker {
         return historicalLoadInfo;
     }
 
+    @Override
     public void update(LoadInfo info) {
         info.setReportTime(System.currentTimeMillis());
         globalLoadInfo.put(info.getNodeId(), info);

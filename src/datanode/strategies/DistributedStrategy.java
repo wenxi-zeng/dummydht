@@ -1,5 +1,6 @@
 package datanode.strategies;
 
+import commands.DaemonCommand;
 import commonmodels.DataNode;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
@@ -18,18 +19,24 @@ import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.SharedDataMessage;
+import socket.SocketClient;
 import util.Config;
+import util.SimpleLog;
 import util.URIHelper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class DistributedStrategy extends MembershipStrategy implements GossipListener, UpdateSharedDataEventHandler {
 
     private GossipManager gossipService;
+
+    private PeerSelector selector;
 
     private Map<String, Long> vectorTime;
 
@@ -60,6 +67,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         initGossipManager(dataNode);
         gossipService.init();
 
+        selector = new PeerSelector(gossipService, socketClient);
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
             dataNode.execute(
                     dataNode.prepareAddNodeCommand().toCommand()
@@ -179,66 +187,123 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     @Override
     public void onLoadInfoReported(LoadInfo loadInfo) {
         int myLoadLevel = loadInfo.getLoadLevel(lbLowerBound, lbUpperBound);
-        List<LoadInfo> loadInfoList = generateSortedTargets(myLoadLevel);
-        DecentralizedLoadInfoBroker.getInstance().announce(loadInfoList);
+        if (selector != null) {
+            Request request = new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name())
+                    .withLargeAttachment(loadInfo);
+            selector.start(myLoadLevel, request);
+        }
 
         this.gossipService.getMyself().getProperties()
                 .put(NODE_PROPERTY_LOAD_STATUS,
                         String.valueOf(myLoadLevel));
     }
 
-    private List<LoadInfo> generateSortedTargets(int myLoadLevel) {
-        List<LoadInfo> veryHeavyNodes = new ArrayList<>();
-        List<LoadInfo> medianHeavyNodes = new ArrayList<>();
-        List<LoadInfo> heavyNodes = new ArrayList<>();
-        List<LoadInfo> result = new ArrayList<>();
+    class PeerSelector {
 
-        PhysicalNode dummyNode = new PhysicalNode();
-        for (Member member : gossipService.getLiveMembers()) {
-            String loadStatus = member.getProperties().get(NODE_PROPERTY_LOAD_STATUS);
-            if (loadStatus == null) continue;
+        private ExecutorService executorService;
 
-            dummyNode.setAddress(member.getUri().getHost());
-            dummyNode.setPort(member.getUri().getPort());
-            LoadInfo info = new LoadInfo().withNodeId(dummyNode.getFullAddress());
-            info.setReportTime(member.getHeartbeat());
-            int loadLevel = Integer.valueOf(loadStatus);
-            if (loadLevel == LoadInfo.LEVEL_VERY_HEAVY) {
-                veryHeavyNodes.add(info);
+        private ThreadPoolExecutor threadPoolExecutor;
+
+        private final GossipManager gossipServiceRef;
+
+        private final SocketClient socketClientRef;
+
+        public PeerSelector(GossipManager gossipService, SocketClient socketClient) {
+            this.executorService = Executors.newSingleThreadExecutor();
+            BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(8);
+            this.threadPoolExecutor = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
+                    new ThreadPoolExecutor.DiscardOldestPolicy());
+            this.gossipServiceRef = gossipService;
+            this.socketClientRef = socketClient;
+        }
+
+        public void start(int myLoadLevel, Request request) {
+            executorService.execute(() -> threadPoolExecutor.execute(() -> select(myLoadLevel, request)));
+        }
+
+        private void select(int myLoadLevel, Request request) {
+            List<LoadInfo> loadInfoList = generateSortedTargets(myLoadLevel);
+            if (loadInfoList == null || loadInfoList.size() < 1) return;
+
+            AtomicBoolean selected = new AtomicBoolean(false);
+            SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
+                @Override
+                public void onResponse(Request request, Response o) {
+                    SimpleLog.i(o);
+
+                    if (o.getStatus() == Response.STATUS_FAILED) {
+                        onFailure(request, o.getMessage());
+                    }
+                    else {
+                        selected.set(true);
+                    }
+                }
+
+                @Override
+                public void onFailure(Request request, String error) {
+                    SimpleLog.i(error);
+                }
+            };
+
+            for (LoadInfo target : loadInfoList) {
+                socketClientRef.send(target.getNodeId(), request, callBack);
+                if (selected.get()) break;
             }
-            else if (loadLevel == LoadInfo.LEVEL_MEDIAN_HEAVY) {
-                medianHeavyNodes.add(info);
-            }
-            else if (loadLevel == LoadInfo.LEVEL_HEAVY) {
-                heavyNodes.add(info);
-            }
         }
 
-        Comparator<LoadInfo> heartbeatComparator = (o1, o2) -> -1 * Long.compare(o1.getReportTime(), o2.getReportTime());
-        veryHeavyNodes.sort(heartbeatComparator);
-        medianHeavyNodes.sort(heartbeatComparator);
-        heavyNodes.sort(heartbeatComparator);
+        private List<LoadInfo> generateSortedTargets(int myLoadLevel) {
+            List<LoadInfo> veryHeavyNodes = new ArrayList<>();
+            List<LoadInfo> medianHeavyNodes = new ArrayList<>();
+            List<LoadInfo> heavyNodes = new ArrayList<>();
+            List<LoadInfo> result = new ArrayList<>();
 
-        if (myLoadLevel == LoadInfo.LEVEL_LIGHT) {
-            result.addAll(heavyNodes);
-            result.addAll(medianHeavyNodes);
-            result.addAll(veryHeavyNodes);
-            return result;
-        }
-        else if (myLoadLevel == LoadInfo.LEVEL_MEDIAN_LIGHT) {
-            result.addAll(medianHeavyNodes);
-            result.addAll(veryHeavyNodes);
-            result.addAll(heavyNodes);
-            return result;
-        }
-        else if (myLoadLevel == LoadInfo.LEVEL_VERY_LIGHT) {
-            result.addAll(veryHeavyNodes);
-            result.addAll(medianHeavyNodes);
-            result.addAll(heavyNodes);
-            return result;
-        }
-        else {
-            return null;
+            PhysicalNode dummyNode = new PhysicalNode();
+            for (Member member : gossipServiceRef.getLiveMembers()) {
+                String loadStatus = member.getProperties().get(NODE_PROPERTY_LOAD_STATUS);
+                if (loadStatus == null) continue;
+
+                dummyNode.setAddress(member.getUri().getHost());
+                dummyNode.setPort(member.getUri().getPort());
+                LoadInfo info = new LoadInfo().withNodeId(dummyNode.getFullAddress());
+                info.setReportTime(member.getHeartbeat());
+                int loadLevel = Integer.valueOf(loadStatus);
+                if (loadLevel == LoadInfo.LEVEL_VERY_HEAVY) {
+                    veryHeavyNodes.add(info);
+                }
+                else if (loadLevel == LoadInfo.LEVEL_MEDIAN_HEAVY) {
+                    medianHeavyNodes.add(info);
+                }
+                else if (loadLevel == LoadInfo.LEVEL_HEAVY) {
+                    heavyNodes.add(info);
+                }
+            }
+
+            Comparator<LoadInfo> heartbeatComparator = (o1, o2) -> -1 * Long.compare(o1.getReportTime(), o2.getReportTime());
+            veryHeavyNodes.sort(heartbeatComparator);
+            medianHeavyNodes.sort(heartbeatComparator);
+            heavyNodes.sort(heartbeatComparator);
+
+            if (myLoadLevel == LoadInfo.LEVEL_LIGHT) {
+                result.addAll(heavyNodes);
+                result.addAll(medianHeavyNodes);
+                result.addAll(veryHeavyNodes);
+                return result;
+            }
+            else if (myLoadLevel == LoadInfo.LEVEL_MEDIAN_LIGHT) {
+                result.addAll(medianHeavyNodes);
+                result.addAll(veryHeavyNodes);
+                result.addAll(heavyNodes);
+                return result;
+            }
+            else if (myLoadLevel == LoadInfo.LEVEL_VERY_LIGHT) {
+                result.addAll(veryHeavyNodes);
+                result.addAll(medianHeavyNodes);
+                result.addAll(heavyNodes);
+                return result;
+            }
+            else {
+                return null;
+            }
         }
     }
 }
