@@ -209,7 +209,8 @@ public enum CephCommand implements Command {
 
             String attachment = args[1] + " " + args[2];
             return new Request().withHeader(CephCommand.ADDNODE.name())
-                    .withAttachment(attachment);
+                    .withAttachment(attachment)
+                    .withReceiver(args[1]);
         }
 
         @Override

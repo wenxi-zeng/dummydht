@@ -217,7 +217,8 @@ public enum ElasticCommand implements Command {
             }
 
             return new Request().withHeader(ElasticCommand.ADDNODE.name())
-                    .withAttachment(attachment);
+                    .withAttachment(attachment)
+                    .withReceiver(args[1]);
         }
 
         @Override

@@ -215,7 +215,8 @@ public enum RingCommand implements Command {
             }
 
             return new Request().withHeader(RingCommand.ADDNODE.name())
-                    .withAttachment(attachment);
+                    .withAttachment(attachment)
+                    .withReceiver(args[1]);
         }
 
         @Override
