@@ -2,7 +2,9 @@ package entries;
 
 import commands.DaemonCommand;
 import commands.ProxyCommand;
-import commonmodels.*;
+import commonmodels.Daemon;
+import commonmodels.LoadBalancingCallBack;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
@@ -13,14 +15,13 @@ import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
 import socket.SocketServer;
-import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack {
+public class Proxy implements Daemon, LoadBalancingCallBack {
 
     private DataNodeDaemon daemon;
 
@@ -84,7 +85,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
     @Override
     public void initSubscriptions() {
         daemon.getDataNodeServer().setLoadBalancingCallBack(this);
-        daemon.getDataNodeServer().setMembershipCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
@@ -259,16 +259,5 @@ public class Proxy implements Daemon, LoadBalancingCallBack, MembershipCallBack 
                 .getDataNode()
                 .prepareAddNodeCommand(followupAddress);
         processDataNodeCommand(request);
-    }
-
-    @Override
-    public void onInitialized() {
-        // start nodes in table when initialization is done
-        Request request = new Request()
-                .withHeader(DaemonCommand.START.name());
-
-        for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
-            send(node.getAddress(), node.getPort(), request, this);
-        }
     }
 }

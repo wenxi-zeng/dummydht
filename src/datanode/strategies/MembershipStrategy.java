@@ -3,6 +3,8 @@ package datanode.strategies;
 import commands.DaemonCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadInfoReportHandler;
+import commonmodels.MembershipCallBack;
+import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
@@ -13,7 +15,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class MembershipStrategy implements LoadInfoReportHandler {
+public abstract class MembershipStrategy implements LoadInfoReportHandler, MembershipCallBack {
 
     protected DataNode dataNode;
 
@@ -68,7 +70,33 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler {
 
         if (!fetched.get()) {
             SimpleLog.i("Creating table");
+            dataNode.setMembershipCallBack(this);
             dataNode.createTable();
+        }
+        bootstrapped();
+    }
+
+    protected void bootstrapped() {
+        // stub
+    }
+
+    @Override
+    public void onInitialized() {
+        Request request = new Request()
+                .withHeader(DaemonCommand.START.name());
+        SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
+            @Override
+            public void onResponse(Request request, Response o) {
+                SimpleLog.i(o);
+            }
+
+            @Override
+            public void onFailure(Request request, String error) {
+                SimpleLog.i(error);
+            }
+        };
+        for (PhysicalNode node : dataNode.getPhysicalNodes()) {
+            socketClient.send(node.getAddress(), node.getPort(), request, callBack);
         }
     }
 }

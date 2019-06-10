@@ -67,7 +67,15 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.init();
+    }
 
+    @Override
+    public void onNodeStopped() {
+        gossipService.shutdown();
+    }
+
+    @Override
+    protected void bootstrapped() {
         selector = new PeerSelector(gossipService, socketClient);
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
             Request r = dataNode.prepareAddNodeCommand();
@@ -77,11 +85,6 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
             requests.add(r);
             gossipRequests(requests);
         }
-    }
-
-    @Override
-    public void onNodeStopped() {
-        gossipService.shutdown();
     }
 
     @Override
