@@ -5,6 +5,8 @@ import commonmodels.transport.Response;
 import socket.UDPClient;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -77,6 +79,13 @@ public class SimpleLog {
 
     public static synchronized void l(String message) {
         System.out.println(message);
+    }
+
+    public static synchronized void e(Exception ex) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        i(sw.toString());
     }
 
     public synchronized void send(Object message) {
