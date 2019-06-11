@@ -89,8 +89,9 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public Response getMembersStatus() {
-        return new Response().withStatus(Response.STATUS_SUCCESS)
-                    .withMessage(printLiveMembers() + printDeadMembers());
+        return new Response().withHeader(DaemonCommand.STATUS.name())
+                .withStatus(Response.STATUS_SUCCESS)
+                .withMessage(printLiveMembers() + printDeadMembers());
     }
 
     private void initGossipManager(DataNode dataNode) throws URISyntaxException {

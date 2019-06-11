@@ -7,6 +7,8 @@ import commands.ElasticCommand;
 import commands.RingCommand;
 import commonmodels.DataNode;
 import commonmodels.PhysicalNode;
+import commonmodels.Terminal;
+import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
@@ -18,9 +20,9 @@ import ring.RingDataNode;
 import socket.SocketClient;
 import util.Config;
 import util.SimpleLog;
+import util.URIHelper;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 public class DataNodeTool {
 
@@ -143,8 +145,14 @@ public class DataNodeTool {
             return;
         }
 
-        Request request = dataNode.getTerminal().translate(command);
-        dataNode.execute(request);
+        Request request;
+        try {
+            request = dataNode.getTerminal().translate(command);
+            dataNode.execute(request);
+        }
+        catch (InvalidRequestException ignored) {
+            request = new CommonTerminal().translate(command);
+        }
 
         Config config = Config.getInstance();
         if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
@@ -206,6 +214,56 @@ public class DataNodeTool {
                         CephCommand.CHANGEWEIGHT.getHelpString() + "\n" +
                         CephCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                         CephCommand.PRINTCLUSTERMAP.getHelpString() + "\n";
+    }
+
+    public class CommonTerminal implements Terminal {
+
+        @Override
+        public void initialize() {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
+
+        @Override
+        public void printInfo() {
+
+        }
+
+        @Override
+        public long getEpoch() {
+            return 0;
+        }
+
+        @Override
+        public Response process(String[] args) throws InvalidRequestException {
+            return null;
+        }
+
+        @Override
+        public Response process(Request request) {
+            return null;
+        }
+
+        @Override
+        public Request translate(String[] args) throws InvalidRequestException {
+            try {
+                DaemonCommand cmd = DaemonCommand.valueOf(args[0].toUpperCase());
+                URIHelper.verifyAddress(args);
+                return cmd.convertToRequest(args);
+            }
+            catch (IllegalArgumentException e) {
+                throw new InvalidRequestException("Command " + args[0] + " not found");
+            }
+        }
+
+        @Override
+        public Request translate(String command) throws InvalidRequestException {
+            return translate(command.split(" "));
+        }
     }
 
     public class ControlRequestGenerator extends RequestGenerator {

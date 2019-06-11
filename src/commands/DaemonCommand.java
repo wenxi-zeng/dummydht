@@ -81,7 +81,9 @@ public enum DaemonCommand implements Command {
     STATUS {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.STATUS.name());
+            Request request = new Request().withHeader(DaemonCommand.STATUS.name());
+            if (args.length > 1) request.setReceiver(args[1]);
+            return request;
         }
 
         @Override
