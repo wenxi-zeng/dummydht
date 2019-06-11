@@ -25,15 +25,16 @@ public class Response implements Serializable
      *
      */
     public Response() {
+        super();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public Response(Request request) {
+        this();
         if (request != null) {
             this.header = request.getHeader();
             this.token = request.getToken();
         }
-
-        this.timestamp = System.currentTimeMillis();
     }
 
     /**
@@ -43,7 +44,7 @@ public class Response implements Serializable
      * @param attachment
      */
     public Response(String header, short status, String message, Object attachment) {
-        super();
+        this();
         this.header = header;
         this.status = status;
         this.message = message;

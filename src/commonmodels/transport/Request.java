@@ -52,6 +52,7 @@ public class Request implements Serializable
      *
      */
     public Request() {
+        super();
         token = UUID.randomUUID().toString();
         timestamp = System.currentTimeMillis();
     }
@@ -68,7 +69,7 @@ public class Request implements Serializable
      * @param header
      */
     public Request(String header, String sender, String receiver, String followup, String attachment, long epoch, String token, long timestamp) {
-        super();
+        this();
         this.header = header;
         this.sender = sender;
         this.receiver = receiver;
