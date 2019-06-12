@@ -217,7 +217,7 @@ public abstract class AbstractActiveGossiper {
       return;
     }
     long startTime = System.currentTimeMillis();
-    me.setHeartbeat(System.nanoTime());
+    me.setHeartbeat(startTime);
     UdpActiveGossipMessage message = new UdpActiveGossipMessage();
     message.setUriFrom(gossipManager.getMyself().getUri().toASCIIString());
     message.setUuid(UUID.randomUUID().toString());

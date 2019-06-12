@@ -76,7 +76,7 @@ public class GossipMemberStateRefresher {
       if (userDown)
         continue;
 
-      Double phiMeasure = entry.getKey().detect(clock.nanoTime());
+      Double phiMeasure = entry.getKey().detect(clock.currentTimeMillis());
       GossipState requiredState;
 
       if (phiMeasure != null) {
@@ -102,9 +102,10 @@ public class GossipMemberStateRefresher {
   }
 
   public GossipState calcRequiredStateCleanupInterval(LocalMember member, GossipState state) {
-    long now = clock.nanoTime();
-    long nowInMillis = TimeUnit.MILLISECONDS.convert(now, TimeUnit.NANOSECONDS);
-    if (nowInMillis - settings.getCleanupInterval() > member.getHeartbeat()) {
+    long now = clock.currentTimeMillis();
+    // long nowInMillis = TimeUnit.MILLISECONDS.convert(now, TimeUnit.NANOSECONDS);
+    if (now - settings.getCleanupInterval() > member.getHeartbeat()) {
+      //SimpleLog.i("calcRequiredStateCleanupInterval");
       return GossipState.DOWN;
     } else {
       return state;

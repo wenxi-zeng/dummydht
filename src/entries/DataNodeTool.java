@@ -81,6 +81,7 @@ public class DataNodeTool {
             }
             else {
                 dataNodeTool.process(StringUtils.join(args,  ' '));
+                // System.exit(1);
             }
         } catch (Exception e) {
             e.printStackTrace();

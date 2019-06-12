@@ -7,7 +7,6 @@ import commonmodels.PhysicalNode;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
-import loadmanagement.DecentralizedLoadInfoBroker;
 import loadmanagement.LoadInfo;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;

@@ -93,7 +93,7 @@ public abstract class GossipManager {
     this.messageHandler = messageHandler;
 
     clock = new SystemClock();
-    me = new LocalMember(cluster, uri, id, clock.nanoTime(), properties,
+    me = new LocalMember(cluster, uri, id, clock.currentTimeMillis(), properties,
             settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
     gossipCore = new GossipCore(this, registry);
     this.lockManager = new LockManager(this, settings.getLockManagerSettings(), registry);
@@ -103,7 +103,7 @@ public abstract class GossipManager {
       if (!startupMember.equals(me)) {
         LocalMember member = new LocalMember(startupMember.getClusterName(),
                 startupMember.getUri(), startupMember.getId(),
-                clock.nanoTime(), startupMember.getProperties(), settings.getWindowSize(),
+                clock.currentTimeMillis(), startupMember.getProperties(), settings.getWindowSize(),
                 settings.getMinimumSamples(), settings.getDistribution());
         //TODO should members start in down state?
         members.put(member, GossipState.DOWN);
@@ -202,7 +202,7 @@ public abstract class GossipManager {
       for (LocalMember l : ringState.readFromDisk()) {
         LocalMember member = new LocalMember(l.getClusterName(),
             l.getUri(), l.getId(),
-            clock.nanoTime(), l.getProperties(), settings.getWindowSize(),
+            clock.currentTimeMillis(), l.getProperties(), settings.getWindowSize(),
             settings.getMinimumSamples(), settings.getDistribution());
         members.putIfAbsent(member, GossipState.DOWN);
       }
