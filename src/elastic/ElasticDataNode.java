@@ -35,6 +35,11 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
+    public String createTable(Object o) {
+        return LookupTable.getInstance().createTable(o);
+    }
+
+    @Override
     public String updateTable(Object o) {
         return LookupTable.getInstance().updateTable(o);
     }

@@ -34,6 +34,11 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
+    public String createTable(Object o) {
+        return ClusterMap.getInstance().createTable(o);
+    }
+
+    @Override
     public String updateTable(Object o) {
         return ClusterMap.getInstance().updateTable(o);
     }

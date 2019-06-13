@@ -225,6 +225,20 @@ public class LookupTable implements Serializable {
         return "Epoch: " + epoch + "\n" + Arrays.toString(table);
     }
 
+    public String createTable(Object o) {
+        if (o instanceof LookupTable) {
+            LookupTable remoteTable = (LookupTable)o;
+            this.setTable(remoteTable.getTable());
+            this.setEpoch(remoteTable.getEpoch());
+            this.setPhysicalNodeMap(remoteTable.getPhysicalNodeMap());
+
+            return "Table updated.";
+        }
+        else {
+            return "Invalid table type.";
+        }
+    }
+
     public String updateTable(Object o) {
         if (o instanceof LookupTable) {
             LookupTable remoteTable = (LookupTable)o;

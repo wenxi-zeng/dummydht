@@ -137,6 +137,7 @@ public abstract class DataNode {
     public abstract void createTerminal();
     public abstract Object getTable();
     public abstract long getEpoch();
+    public abstract String createTable(Object o); // use for bootstrapping
     public abstract String updateTable(Object o);
     public abstract List<PhysicalNode> getPhysicalNodes();
     public abstract Request prepareListPhysicalNodesCommand();

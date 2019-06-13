@@ -280,6 +280,20 @@ public class ClusterMap implements Serializable {
         return "Epoch: " + epoch + "\n" + root.toTreeString("", true);
     }
 
+    public String createTable(Object o) {
+        if (o instanceof ClusterMap) {
+            ClusterMap remoteMap = (ClusterMap)o;
+            this.setRoot(remoteMap.getRoot());
+            this.setEpoch(remoteMap.getEpoch());
+            this.setPhysicalNodeMap(remoteMap.getPhysicalNodeMap());
+
+            return UPDATE_STATUS_DONE;
+        }
+        else {
+            return UPDATE_STATUS_FAILED;
+        }
+    }
+
     public String updateTable(Object o) {
         if (o instanceof ClusterMap) {
             ClusterMap remoteMap = (ClusterMap)o;

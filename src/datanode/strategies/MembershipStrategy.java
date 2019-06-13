@@ -48,7 +48,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
                     onFailure(request, o.getMessage());
                 }
                 else {
-                    dataNode.updateTable(o.getAttachment());
+                    dataNode.createTable(o.getAttachment());
                     fetched.set(true);
                 }
             }

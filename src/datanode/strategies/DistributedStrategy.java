@@ -76,6 +76,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     @Override
     protected void bootstrapped() {
         selector = new PeerSelector(gossipService, socketClient);
+        SimpleLog.i("bootstrapped: " + dataNode.getTable());
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
             Request r = dataNode.prepareAddNodeCommand();
             dataNode.execute(r);
