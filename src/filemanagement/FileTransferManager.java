@@ -261,11 +261,11 @@ public class FileTransferManager {
         if (mySelf != null) {
             switch (policy) {
                 case SenderOnly:
-                    return mySelf.equals(from.getAddress());
+                    return mySelf.equals(from.getFullAddress());
                 case ReceiverOnly:
-                    return mySelf.equals(to.getAddress());
+                    return mySelf.equals(to.getFullAddress());
                 case SenderOrReceiver:
-                    return mySelf.equals(from.getAddress()) || mySelf.equals(to.getAddress());
+                    return mySelf.equals(from.getFullAddress()) || mySelf.equals(to.getFullAddress());
                 case All:
                 default:
                     return true;
