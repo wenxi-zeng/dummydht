@@ -152,10 +152,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
         @SuppressWarnings("unchecked")
         GrowOnlySet<Request> digests = (GrowOnlySet<Request>)newValue;
-        List<Request> requests = getUndigestedRequests(vectorTime.get(key), digests.value());
+        List<Request> requests = getUndigestedRequests(vectorTime.getOrDefault(key, 0L), digests.value());
         for (Request r : requests) {
             dataNode.execute(r);
-            vectorTime.put(key, r.getEpoch());
+            vectorTime.put(key, r.getTimestamp());
         }
     }
 
@@ -175,7 +175,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     private List<Request> getUndigestedRequests(long version, Set<Request> digests) {
         return digests.stream()
-                .filter(d -> d.getEpoch() > version)
+                .filter(d -> d.getTimestamp() > version)
                 .sorted(Comparator.comparingLong(Request::getEpoch))
                 .collect(Collectors.toList());
     }
