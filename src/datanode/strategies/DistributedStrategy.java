@@ -52,7 +52,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         lbLowerBound = Config.getInstance().getLoadBalancingLowerBound();
     }
 
-    private static final long MESSAGE_EXPIRE_TIME = 10 * 60 * 1000L;
+    private static final long MESSAGE_EXPIRE_TIME = 10 * 1000L;
 
     public static final String NODE_PROPERTY_LOAD_STATUS = "load_status";
 
@@ -76,7 +76,6 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     @Override
     protected void bootstrapped() {
         selector = new PeerSelector(gossipService, socketClient);
-        SimpleLog.i("bootstrapped: " + dataNode.getTable());
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
             Request r = dataNode.prepareAddNodeCommand();
             dataNode.execute(r);
@@ -177,7 +176,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     private List<Request> getUndigestedRequests(long version, Set<Request> digests) {
         return digests.stream()
                 .filter(d -> d.getTimestamp() > version)
-                .sorted(Comparator.comparingLong(Request::getEpoch))
+                .sorted(Comparator.comparingLong(Request::getTimestamp))
                 .collect(Collectors.toList());
     }
 
