@@ -58,7 +58,16 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public void gossipEvent(Member gossipMember, GossipState gossipState) {
+        if (gossipState == GossipState.DOWN) {
+            Request r = dataNode.prepareRemoveNodeCommand(
+                    gossipMember.getUri().getHost(),
+                    gossipMember.getUri().getPort());
+            dataNode.execute(r);
 
+            List<Request> requests = new ArrayList<>();
+            requests.add(r);
+            gossipRequests(requests);
+        }
     }
 
     @Override

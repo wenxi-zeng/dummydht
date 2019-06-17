@@ -263,7 +263,8 @@ public enum ElasticCommand implements Command {
 
             return new Request().withHeader(ElasticCommand.REMOVENODE.name())
                     .withAttachment(args[1])
-                    .withFollowup(args[1]);
+                    .withFollowup(args[1])
+                    .withReceiver(args[1]);
         }
 
         @Override

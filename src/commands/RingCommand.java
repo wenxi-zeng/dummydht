@@ -262,7 +262,8 @@ public enum RingCommand implements Command {
 
             return new Request().withHeader(RingCommand.REMOVENODE.name())
                     .withAttachment(args[1])
-                    .withFollowup(args[1]);
+                    .withFollowup(args[1])
+                    .withReceiver(args[1]);
         }
 
         @Override

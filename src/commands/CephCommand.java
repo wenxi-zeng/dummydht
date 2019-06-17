@@ -249,7 +249,8 @@ public enum CephCommand implements Command {
 
             return new Request().withHeader(CephCommand.REMOVENODE.name())
                     .withAttachment(args[1])
-                    .withFollowup(args[1]);
+                    .withFollowup(args[1])
+                    .withReceiver(args[1]);
         }
 
         @Override
