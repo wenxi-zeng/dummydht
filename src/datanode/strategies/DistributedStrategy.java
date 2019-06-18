@@ -66,15 +66,15 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
             List<Request> requests = new ArrayList<>();
             requests.add(r);
-            gossipRequests(requests);
+            gossipRequests(requests, gossipMember.getId());
         }
     }
 
     @Override
     public void onNodeStarted() throws InterruptedException, UnknownHostException, URISyntaxException, InvalidRequestException {
-        super.onNodeStarted();
         initGossipManager(dataNode);
         gossipService.init();
+        super.onNodeStarted();
     }
 
     @Override
@@ -91,7 +91,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
             List<Request> requests = new ArrayList<>();
             requests.add(r);
-            gossipRequests(requests);
+            gossipRequests(requests, gossipService.getMyself().getId());
         }
     }
 
@@ -106,6 +106,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         GossipSettings settings = new GossipSettings();
         settings.setWindowSize(1000);
         settings.setGossipInterval(1000);
+        settings.setConvictThreshold(5.2);
         settings.setPersistDataState(false);
         settings.setPersistRingState(false);
         List<Member> startupMembers = new ArrayList<>();
@@ -159,10 +160,12 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     public void onUpdate(String key, Object oldValue, Object newValue) {
         if (newValue == null) return;
 
+        // SimpleLog.i("from: " + key + ", oldValue: " + oldValue + ", newValue: " + newValue);
         @SuppressWarnings("unchecked")
         GrowOnlySet<Request> digests = (GrowOnlySet<Request>)newValue;
         List<Request> requests = getUndigestedRequests(vectorTime.getOrDefault(key, 0L), digests.value());
         for (Request r : requests) {
+            // SimpleLog.i("Digesting request: " + r.toCommand());
             dataNode.execute(r);
             vectorTime.put(key, r.getTimestamp());
         }
@@ -205,16 +208,30 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public void onRequestAvailable(List<Request> request) {
-        gossipRequests(request);
+        Map<String, List<Request>> map = new HashMap<>();
+
+        for (Request r : request) {
+            String key = r.getReceiver();
+            if (key == null || key.isEmpty())
+                key = gossipService.getMyself().getId();
+
+            List<Request> requestList = map.getOrDefault(key, new ArrayList<>());
+            requestList.add(r);
+            map.put(key, requestList);
+        }
+
+        for (Map.Entry<String, List<Request>> entry : map.entrySet()) {
+            gossipRequests(entry.getValue(), entry.getKey());
+        }
     }
 
-    private void gossipRequests(List<Request> requests) {
+    private void gossipRequests(List<Request> requests, String key) {
         long now = System.currentTimeMillis();
         Set<Request> digests = new HashSet<>(requests);
         GrowOnlySet<Request> growOnlySet = new GrowOnlySet<>(digests);
         SharedDataMessage m = new SharedDataMessage();
         m.setExpireAt(now + MESSAGE_EXPIRE_TIME);
-        m.setKey(gossipService.getMyself().getId());
+        m.setKey(key);
         m.setPayload(growOnlySet);
         m.setTimestamp(now);
         gossipService.merge(m);

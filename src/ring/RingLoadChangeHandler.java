@@ -51,6 +51,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
         List<Request> requests = new ArrayList<>();
         requests.add(new Request().withHeader(RingCommand.DECREASELOAD.name())
+                .withReceiver(loadInfo.getNodeId())
                 .withAttachments(loadInfo.getNodeId(), StringUtils.join(deltaHashList, ',')));
         return requests;
     }

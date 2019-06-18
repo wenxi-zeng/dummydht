@@ -48,6 +48,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         if (solutions != null) {
             for (Solution solution : solutions) {
                 requests.add(new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
+                        .withReceiver(loadInfo.getNodeId())
                         .withAttachment(loadInfo.getNodeId() + " " + solution.getTargetNodeId() + " " + StringUtils.join(solution.getBuckets(), ',')));
             }
         }
