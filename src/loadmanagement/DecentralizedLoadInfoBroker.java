@@ -25,6 +25,7 @@ public class DecentralizedLoadInfoBroker extends LoadInfoBroker {
     @Override
     public void update(LoadInfo loadInfo) {
         List<LoadInfo> loadInfoList = new ArrayList<>();
+        loadInfoList.add(loadInfo);
         announce(loadInfoList);
     }
 }

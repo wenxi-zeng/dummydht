@@ -11,7 +11,7 @@ import java.util.List;
 public class LoadMonitor extends AbstractLoadMonitor {
 
     public LoadMonitor(LoadChangeHandler handler) {
-        super(handler);
+        super(handler, null);
     }
 
     @Override

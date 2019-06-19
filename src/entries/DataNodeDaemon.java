@@ -135,6 +135,8 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     public void initSubscriptions() {
         dataNodeServer.setReadWriteCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
+        LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
+        LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
         if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
             // in decentralized mode, node are only responsible for transferring files
             // that they are involved
@@ -144,13 +146,11 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
             FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
             FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
 
-            AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler());
+            AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler(), LoadInfoManager.getInstance());
             DecentralizedLoadInfoBroker.getInstance().subscribe(loadMonitor);
             loadMonitor.subscribe(this);
             loadMonitor.subscribe((NotableLoadChangeCallback) dataNodeServer.getMembershipStrategy());
         }
-        LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
-        LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
     }
 
     @Override

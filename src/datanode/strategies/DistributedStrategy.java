@@ -195,7 +195,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     @Override
     public void onLoadInfoReported(LoadInfo loadInfo) {
         int myLoadLevel = loadInfo.getLoadLevel(lbLowerBound, lbUpperBound);
-        if (selector != null) {
+        if (selector != null &&
+                myLoadLevel != LoadInfo.LEVEL_VERY_HEAVY &&
+                myLoadLevel != LoadInfo.LEVEL_MEDIAN_HEAVY &&
+                myLoadLevel != LoadInfo.LEVEL_HEAVY ) {
             Request request = new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name())
                     .withLargeAttachment(loadInfo);
             selector.start(myLoadLevel, request);
@@ -210,7 +213,9 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
     public void onRequestAvailable(List<Request> request) {
         Map<String, List<Request>> map = new HashMap<>();
 
+        SimpleLog.i("onRequestAvailable");
         for (Request r : request) {
+            SimpleLog.i(r.toCommand());
             String key = r.getReceiver();
             if (key == null || key.isEmpty())
                 key = gossipService.getMyself().getId();
