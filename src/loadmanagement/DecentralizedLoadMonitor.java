@@ -19,7 +19,7 @@ public class DecentralizedLoadMonitor extends AbstractLoadMonitor {
 
         handler.optimize(requests);
 
-        if (requests.size() < 1) {
+        if (requests == null || requests.size() < 1) {
             SimpleLog.i("Failed to auto balance load. No request generated");
             return;
         }

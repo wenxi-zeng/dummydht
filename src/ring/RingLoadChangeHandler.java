@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class RingLoadChangeHandler implements LoadChangeHandler {
 
-    private final LookupTable table;
+    protected final LookupTable table;
 
     public RingLoadChangeHandler(LookupTable table) {
         this.table = table;
@@ -32,6 +32,9 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
+
+            if (!isEligibleToBalance(vnode, globalLoad)) continue;
+
             Indexable predecessor = table.getTable().pre(vnode);
             Solution solution = evaluate(loadInfo, predecessor, vnode, target);
 
@@ -64,6 +67,10 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
     @Override
     public long computeTargetLoad(List<LoadInfo> loadInfoList, LoadInfo loadInfo, long lowerBound, long upperBound) {
         return lowerBound;
+    }
+
+    protected boolean isEligibleToBalance(Indexable curr, List<LoadInfo> loadInfoList) {
+        return true;
     }
 
     private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long target) {
