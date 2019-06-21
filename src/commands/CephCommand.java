@@ -222,6 +222,7 @@ public enum CephCommand implements Command {
             String[] address1 = args[0].split(":");
 
             PhysicalNode pnode = new PhysicalNode(address1[0], Integer.valueOf(address1[1]));
+            pnode.setWeight(Config.getInstance().getInitialWeight());
             ClusterMap.getInstance().addNode(clusterId, pnode);
             result = "Node added";
 
