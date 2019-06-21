@@ -20,7 +20,8 @@ public enum DaemonCommand implements Command {
     START {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.START.name());
+            return new Request().withHeader(DaemonCommand.START.name())
+                    .withReceiver(args[1]);
         }
 
         @Override
@@ -50,7 +51,8 @@ public enum DaemonCommand implements Command {
     STOP {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.STOP.name());
+            return new Request().withHeader(DaemonCommand.STOP.name())
+                    .withReceiver(args[1]);
         }
 
         @Override
