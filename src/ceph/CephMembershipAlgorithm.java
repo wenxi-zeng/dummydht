@@ -1,10 +1,7 @@
 package ceph;
 
-import ceph.strategies.CrossClustersStrategy;
-import ceph.strategies.InClusterStrategy;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
-import filemanagement.LocalFileManager;
 import util.Config;
 import util.SimpleLog;
 
@@ -29,12 +26,6 @@ public class CephMembershipAlgorithm {
         int numberOfRushLevel = config.getNumberOfRushLevel();
         int clusterCapacity = config.getClusterCapacity();
         String[] rushLevelNames = config.getRushLevelNames();
-        boolean enableCrossClusterLoadBalancing = config.enableCrossClusterLoadBalancing();
-
-        if (enableCrossClusterLoadBalancing)
-            map.setWeightDistributeStrategy(new CrossClustersStrategy());
-        else
-            map.setWeightDistributeStrategy(new InClusterStrategy());
 
         int totalCapacity = (int)Math.pow(clusterCapacity, numberOfRushLevel - 1);
         if (numberOfActiveNodes > totalCapacity) {

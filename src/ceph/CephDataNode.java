@@ -35,6 +35,7 @@ public class CephDataNode extends DataNode {
 
     @Override
     public String createTable(Object o) {
+        ClusterMap.getInstance().setSelf(ip + ":" + port);
         return ClusterMap.getInstance().createTable(o);
     }
 

@@ -1,5 +1,7 @@
 package ceph;
 
+import ceph.strategies.CrossClustersStrategy;
+import ceph.strategies.InClusterStrategy;
 import ceph.strategies.WeightDistributeStrategy;
 import commonmodels.*;
 import filemanagement.DummyFile;
@@ -50,6 +52,11 @@ public class ClusterMap implements Serializable {
         membershipAlgorithm = new CephMembershipAlgorithm();
         loadBalanceAlgorithm = new CephLoadBalanceAlgorithm();
         readWriteAlgorithm = new CephReadWriteAlgorithm();
+
+        if (Config.getInstance().enableCrossClusterLoadBalancing())
+            weightDistributeStrategy = new CrossClustersStrategy();
+        else
+            weightDistributeStrategy = new InClusterStrategy();
     }
 
     public static ClusterMap getInstance() {
@@ -70,7 +77,7 @@ public class ClusterMap implements Serializable {
 
     public void initialize(String selfAddress) {
         if (selfAddress != null) {
-            this.self = new PhysicalNode(selfAddress);
+            setSelf(selfAddress);
         }
 
         membershipAlgorithm.initialize(this);
@@ -335,6 +342,12 @@ public class ClusterMap implements Serializable {
         }
 
         return spareEdges;
+    }
+
+    public void setSelf(String address) {
+        if (self == null) {
+            this.self = new PhysicalNode(address);
+        }
     }
 
     public PhysicalNode getSelf() {
