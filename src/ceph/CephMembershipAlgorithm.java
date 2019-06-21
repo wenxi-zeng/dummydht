@@ -167,7 +167,7 @@ public class CephMembershipAlgorithm {
                 break;
             }
         }
-        if (i == 0) {
+        if (i < 0) {
             SimpleLog.i("Desired cluster is out of its capacity!");
             return;
         }
