@@ -66,9 +66,9 @@ public class CephDataNode extends DataNode {
         List<Clusterable> edges = ClusterMap.getInstance().getSpareEdges();
 
         String clusterId = "";
+        edges.sort((o1, o2) -> Float.compare(o1.getWeight(), o2.getWeight()));
         if (edges.size() > 0) {
-            int index = MathX.nextInt(edges.size());
-            clusterId = edges.get(index).getId();
+            clusterId = edges.get(0).getId();
         }
 
         String attachment = nodeIp + ":" + nodePort + " " + clusterId;
