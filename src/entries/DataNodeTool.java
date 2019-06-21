@@ -60,9 +60,9 @@ public class DataNodeTool {
         try{
             SimpleLog.with("ControlClient", 1);
             dataNodeTool = new DataNodeTool();
-            dataNodeTool.run();
 
             if (args.length == 0){
+                dataNodeTool.run();
                 Scanner in = new Scanner(System.in);
                 String command = in.nextLine();
 
@@ -73,6 +73,7 @@ public class DataNodeTool {
             }
             else if (args[0].equals("-r")) {
                 if (args.length == 2) {
+                    dataNodeTool.run();
                     dataNodeTool.generateRequest();
                 }
                 else {
