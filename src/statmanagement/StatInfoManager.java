@@ -44,11 +44,12 @@ public class StatInfoManager {
         return queue;
     }
 
-    public void statResponse(@NotNull Request request, @NotNull Response response) {
+    public void statResponse(@NotNull Request request, @NotNull Response response, long respSize) {
         StatInfo responseStat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_RESPONSE)
+                .withSize(respSize)
                 .calcElapsed(response.getTimestamp());
         StatInfo roundTripStat = new StatInfo()
                 .withHeader(request.getHeader())
@@ -69,11 +70,12 @@ public class StatInfoManager {
         queue.add(stat);
     }
 
-    public void statRequest(@NotNull Request request, long receiveStamp) {
+    public void statRequest(@NotNull Request request, long receiveStamp, long reqSize) {
         StatInfo stat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_REQUEST)
+                .withSize(reqSize)
                 .calcElapsed(request.getTimestamp(), receiveStamp);
         queue.add(stat);
     }

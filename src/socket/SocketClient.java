@@ -112,6 +112,7 @@ public class SocketClient {
     private void onServerConnected(AsynchronousSocketChannel asynchronousSocketChannel, Request data, ServerCallBack callBack) {
         boolean success = false;
         Object o = null;
+        int respSize = 0;
         String message = "Unknown server connection error";
 
         try {
@@ -141,7 +142,9 @@ public class SocketClient {
                 }
             }
 
-            o = ObjectConverter.getObject(bos.toByteArray());
+            byte[] byteArray = bos.toByteArray();
+            respSize = byteArray.length;
+            o = ObjectConverter.getObject(byteArray);
             success = true;
         } catch (Exception ex) {
             StringWriter sw = new StringWriter();
@@ -156,7 +159,7 @@ public class SocketClient {
                 SimpleLog.i(data);
                 if (success && o instanceof Response) {
                     Response resp = (Response) o;
-                    StatInfoManager.getInstance().statResponse(data, resp);
+                    StatInfoManager.getInstance().statResponse(data, resp, respSize);
                     callBack.onResponse(data, resp);
                 }
                 else {

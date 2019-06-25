@@ -103,7 +103,7 @@ public class DummyDhtRepository {
     private void insertStatInfo(StatInfo info) {
         try {
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type) " +
+                    "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type, size) " +
                             "VALUES (?, ?, ?, ? , ? , ?)");
             statement.setString(1, info.getToken());
             statement.setTimestamp(2, new Timestamp(info.getStartTime()));
@@ -111,6 +111,7 @@ public class DummyDhtRepository {
             statement.setLong(4, info.getElapsed());
             statement.setTimestamp(5, new Timestamp(info.getEndTime()));
             statement.setString(6, info.getType());
+            statement.setLong(7, info.getSize());
 
             statement.executeUpdate();
         } catch (SQLException e) {

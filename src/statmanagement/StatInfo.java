@@ -16,7 +16,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
         "header",
         "token",
         "elapsed",
-        "type"
+        "type",
+        "size"
 })
 public class StatInfo implements Serializable, Queueable
 {
@@ -32,6 +33,8 @@ public class StatInfo implements Serializable, Queueable
     private long elapsed;
     @JsonProperty("type")
     private String type;
+    @JsonProperty("size")
+    private long size;
     private final static long serialVersionUID = -3973190766843360141L;
 
     public static final String TYPE_REQUEST = "request_communication";
@@ -51,12 +54,13 @@ public class StatInfo implements Serializable, Queueable
      *
      * @param startTime
      * @param endTime
-     * @param elapsed
-     * @param token
-     * @param type
      * @param header
+     * @param token
+     * @param elapsed
+     * @param type
+     * @param size
      */
-    public StatInfo(long startTime, long endTime, String header, String token, long elapsed, String type) {
+    public StatInfo(long startTime, long endTime, String header, String token, long elapsed, String type, long size) {
         super();
         this.startTime = startTime;
         this.endTime = endTime;
@@ -64,6 +68,7 @@ public class StatInfo implements Serializable, Queueable
         this.token = token;
         this.elapsed = elapsed;
         this.type = type;
+        this.size = size;
     }
 
     @JsonProperty("start_time")
@@ -167,6 +172,21 @@ public class StatInfo implements Serializable, Queueable
 
     public StatInfo withType(String type) {
         this.type = type;
+        return this;
+    }
+
+    @JsonProperty("size")
+    public long getSize() {
+        return size;
+    }
+
+    @JsonProperty("size")
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public StatInfo withSize(long size) {
+        this.size = size;
         return this;
     }
 

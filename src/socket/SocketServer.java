@@ -83,11 +83,13 @@ public class SocketServer {
                                     }
                                 }
 
-                                Object o = ObjectConverter.getObject(bos.toByteArray());
+                                byte[] byteArray = bos.toByteArray();
+                                Object o = ObjectConverter.getObject(byteArray);
                                 if (o instanceof Request) {
                                     Request req = (Request) o;
+
                                     long stamp = StatInfoManager.getInstance().getStamp();
-                                    StatInfoManager.getInstance().statRequest(req, stamp);
+                                    StatInfoManager.getInstance().statRequest(req, stamp, byteArray.length);
                                     eventHandler.onReceived(result, req, eventResponsor);
                                     StatInfoManager.getInstance().statExecution(req, stamp);
                                 }
