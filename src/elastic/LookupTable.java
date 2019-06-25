@@ -35,7 +35,7 @@ public class LookupTable implements Serializable {
 
     private LookupTable() {
         physicalNodeMap = new HashMap<>();
-        epoch = System.currentTimeMillis();
+        epoch = 0;
 
         membershipAlgorithm = new ElasticMembershipAlgorithm();
         loadBalanceAlgorithm = new ElasticLoadBalanceAlgorithm();

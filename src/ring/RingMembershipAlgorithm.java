@@ -49,7 +49,7 @@ public class RingMembershipAlgorithm {
                 }
             }
         }
-
+        table.setEpoch(System.currentTimeMillis());
         SimpleLog.i("Table initialized...");
 
         if (table.getMembershipCallBack() != null)

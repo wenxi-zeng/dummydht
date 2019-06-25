@@ -66,6 +66,7 @@ public class CephMembershipAlgorithm {
         allocatePlacementGroups(map);
         SimpleLog.i("Placement groups allocated...");
 
+        map.setEpoch(System.currentTimeMillis());
         SimpleLog.i("Map initialized...");
 
         if (map.getMembershipCallBack() != null)

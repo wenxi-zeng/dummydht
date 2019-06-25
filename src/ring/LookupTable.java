@@ -34,7 +34,7 @@ public class LookupTable implements Serializable {
     private LookupTable() {
         physicalNodeMap = new HashMap<>();
         table = new BinarySearchList();
-        epoch = System.currentTimeMillis();
+        epoch = 0;
 
         membershipAlgorithm = new RingMembershipAlgorithm();
         loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();

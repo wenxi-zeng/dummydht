@@ -35,15 +35,9 @@ public class RegularClient {
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
         public void onResponse(Request request, Response o) {
-            if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
-                onTableFetched(o.getAttachment());
-            }
-            else if (o.getAttachment() != null) {
+            if (o.getAttachment() != null) {
                 onTableUpdated(o.getAttachment());
             }
-//            else {
-//                SimpleLog.v(String.valueOf(o));
-//            }
         }
 
         @Override
@@ -70,9 +64,11 @@ public class RegularClient {
 
         if (args.length == 0) {
             regularClient.run();
+            regularClient.connect();
         }
         else if (args[0].equals("-r")) {
             if (args.length == 2) {
+                regularClient.run();
                 regularClient.generateRequest(args[1]);
             }
             else {
@@ -115,7 +111,7 @@ public class RegularClient {
                 throw new Exception("Invalid DHT type");
         }
 
-        terminal.initialize();
+        // terminal.initialize();
     }
 
     private void connect(InetSocketAddress address) {
@@ -202,11 +198,6 @@ public class RegularClient {
 
         Response response = terminal.process(request);
         SimpleLog.v(String.valueOf(response));
-    }
-
-    private void onTableFetched(Object table) {
-        onTableUpdated(table);
-        connect();
     }
 
     private PhysicalNode choseServer(String attachment) {
