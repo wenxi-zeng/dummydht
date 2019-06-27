@@ -16,9 +16,9 @@ import java.util.concurrent.*;
 
 
 public class DummyDhtRepository {
-    private static final String TABLE_STAT_INFO = "statinfo";
-    private static final String TABLE_LOAD_INFO = "loadinfo";
-    private static final String TABLE_HISTORICAL_LOAD_INFO = "historicalloadinfo";
+    private final String TABLE_STAT_INFO;
+    private final String TABLE_LOAD_INFO;
+    private final String TABLE_HISTORICAL_LOAD_INFO;
 
     private Connector connector;
 
@@ -43,6 +43,11 @@ public class DummyDhtRepository {
                 return result;
             }
         };
+        String prefix = Config.getInstance().getMode() + "_" + Config.getInstance().getScheme() + "_";
+        TABLE_STAT_INFO = prefix + "statinfo";
+        TABLE_LOAD_INFO = prefix + "loadinfo";
+        TABLE_HISTORICAL_LOAD_INFO = prefix + "historicalloadinfo";
+
         registerShutdownHook();
     }
 
@@ -104,7 +109,7 @@ public class DummyDhtRepository {
         try {
             PreparedStatement statement = session.prepareStatement(
                     "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type, size) " +
-                            "VALUES (?, ?, ?, ? , ? , ?)");
+                            "VALUES (?, ?, ?, ? , ? , ?, ?)");
             statement.setString(1, info.getToken());
             statement.setTimestamp(2, new Timestamp(info.getStartTime()));
             statement.setString(3, info.getHeader());
