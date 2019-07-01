@@ -79,9 +79,9 @@ public class ScriptGenerator {
 
         for (String node : getNodes()) {
             if (node.contains(SELF))
-                stringBuilder.append("pgrep java | xargs kill -9").append('\n');
+                stringBuilder.append("ps aux | pgrep java | xargs kill -9").append('\n');
             else
-                stringBuilder.append("sshpass -p alien1 ssh root@").append(node).append(" \"pgrep java | xargs kill -9\"").append('\n');
+                stringBuilder.append("sshpass -p alien1 ssh root@").append(node).append(" \"ps aux | pgrep java | xargs kill -9\"").append('\n');
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_STOP_ALL);
