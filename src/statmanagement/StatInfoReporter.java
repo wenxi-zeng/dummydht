@@ -19,15 +19,20 @@ public class StatInfoReporter {
 
     private UDPClient client;
 
+    private boolean isEnableStatServer;
+
     public StatInfoReporter(StatInfoManager statInfoManager) {
         this.statInfoManager = statInfoManager;
         this.repo = DummyDhtRepository.getInstance();
         this.executor = Executors.newSingleThreadExecutor();
-        try {
-            this.client = new UDPClient(Config.getInstance().getStatServer());
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
+        this.isEnableStatServer = Config.getInstance().isEnableStatServer();
+        //if (this.isEnableStatServer) {
+            try {
+                this.client = new UDPClient(Config.getInstance().getStatServer());
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+        //}
     }
 
     public void report() {
@@ -38,7 +43,9 @@ public class StatInfoReporter {
         while (!statInfoManager.getQueue().isEmpty()) {
             StatInfo info = statInfoManager.getQueue().poll();
             try {
-                client.send(info);
+                if (isEnableStatServer) {
+                    client.send(info);
+                }
                 repo.put(info);
             } catch (IOException e) {
                 e.printStackTrace();

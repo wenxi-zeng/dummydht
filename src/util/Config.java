@@ -39,6 +39,7 @@ public class Config {
     private final static String PROPERTY_WRITE_OVERHEAD = "write_overhead";
     private final static String PROPERTY_LOAD_INFO_REPORT_INTERVAL = "load_info_report_interval";
     private final static String PROPERTY_STAT_SERVER = "stat_server";
+    private final static String PROPERTY_ENABLE_STAT_SERVER = "enable_stat_server";
     private final static String PROPERTY_DATA_SERVER = "data_server";
     private final static String PROPERTY_LB_UPPER_BOUND = "lb_upper_bound";
     private final static String PROPERTY_LB_LOWER_BOUND = "lb_lower_bound";
@@ -252,6 +253,10 @@ public class Config {
 
     public String getStatServer() {
         return rb.getString(PROPERTY_STAT_SERVER);
+    }
+
+    public boolean isEnableStatServer() {
+        return Boolean.valueOf(rb.getString(PROPERTY_ENABLE_STAT_SERVER));
     }
 
     public String getDataServer() {
