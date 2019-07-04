@@ -1,43 +1,139 @@
 package socket;
 
-import com.sun.istack.internal.NotNull;
 import util.ObjectConverter;
-import util.SimpleLog;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class UDPServer extends Thread {
+public class UDPServer implements Runnable {
 
-    private DatagramSocket socket;
-    private byte[] buf = new byte[65535];
+    private final Selector selector;
 
-    @NotNull
-    private EventHandler eventHandler;
+    private final DatagramChannel datagramChannel;
 
-    public UDPServer(int port, EventHandler eventHandler) throws SocketException {
-        this.socket = new DatagramSocket(port);
-        this.eventHandler = eventHandler;
+    private static volatile ExecutorService workerPool;
+
+    private final AtomicBoolean keepRunning = new AtomicBoolean(true);
+
+    private static final int WORKER_POOL_SIZE = 8;
+
+    public UDPServer(int port, EventHandler eventHandler) throws IOException {
+        selector = Selector.open();
+        datagramChannel = DatagramChannel.open();
+        datagramChannel.configureBlocking(false);
+        datagramChannel.socket().bind(new InetSocketAddress(port));
+        registerShutdownHook();
+        new Handler(selector, datagramChannel, eventHandler);
+    }
+
+    public static ExecutorService getWorkerPool() {
+        if (workerPool == null) {
+            synchronized(SocketServer.class) {
+                if (workerPool == null) {
+                    workerPool = Executors.newFixedThreadPool(WORKER_POOL_SIZE);
+                }
+            }
+        }
+
+        return workerPool;
     }
 
     public void run() {
-        while (true) {
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        try {
+            while (keepRunning.get()) {
+                selector.select();
+                Iterator it = selector.selectedKeys().iterator();
+
+                while (it.hasNext()) {
+                    SelectionKey sk = (SelectionKey) it.next();
+                    it.remove();
+                    Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
+                    if (r != null) {
+                        r.run();
+                    }
+                }
+            }
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                socket.receive(packet);
-                Object o = ObjectConverter.getObject(packet.getData());
-                if (o != null) {
-                    eventHandler.onReceived(o);
+                if (datagramChannel != null && datagramChannel.isOpen()) {
+                    selector.close();
+                    datagramChannel.close();
                 }
             } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+    }
+
+    public interface EventHandler {
+        void onReceived(Object o);
+    }
+
+    private class Handler implements Runnable {
+
+        private final DatagramChannel _datagramChannel;
+
+        private final EventHandler _eventHandler;
+
+        private final SelectionKey _selectionKey;
+
+        private Object o;
+
+        private static final int READ_BUF_SIZE = 128 * 1024;
+        private ByteBuffer _readBuf = ByteBuffer.allocate(READ_BUF_SIZE);
+
+        private Handler(Selector selector, DatagramChannel datagramChannel, EventHandler eventHandler) throws IOException{
+            _datagramChannel = datagramChannel;
+            _eventHandler = eventHandler;
+            _selectionKey = datagramChannel.register(selector, SelectionKey.OP_READ);
+            _selectionKey.attach(this);
+            selector.wakeup();
+        }
+
+        @Override
+        public void run() {
+            try {
+                read();
+
+                _selectionKey.interestOps(SelectionKey.OP_READ);
+                _selectionKey.selector().wakeup();
+            } catch (IOException e) {
+                _selectionKey.cancel();
                 e.printStackTrace();
             }
         }
-    }
-    public interface EventHandler {
-        void onReceived(Object o);
+
+        private void read() throws IOException {
+            SocketAddress sender =_datagramChannel.receive(_readBuf);
+
+            if (sender != null) {
+                o = ObjectConverter.getObject(_readBuf);
+                _readBuf.clear();
+                getWorkerPool().execute(this::process);
+
+            }
+        }
+
+        private synchronized void process() {
+            if (o != null) {
+                _eventHandler.onReceived(o);
+            }
+        }
     }
 }

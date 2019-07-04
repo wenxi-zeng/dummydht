@@ -92,6 +92,9 @@ public class SimpleLog {
         try {
             if (socketClient == null) {
                 socketClient = new UDPClient(Config.getInstance().getLogServer());
+                Thread t = new Thread(socketClient);
+                t.setDaemon(true);
+                t.start();
                 filter = Config.getInstance().getLogFilter();
             }
 

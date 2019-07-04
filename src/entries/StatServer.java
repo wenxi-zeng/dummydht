@@ -4,10 +4,10 @@ import socket.UDPServer;
 import util.Config;
 import util.SimpleLog;
 
+import java.io.IOException;
 import java.net.SocketException;
 
 public class StatServer implements UDPServer.EventHandler {
-    private UDPServer socketServer;
 
     public static void main(String[] args){
         if (args.length > 1)
@@ -36,19 +36,17 @@ public class StatServer implements UDPServer.EventHandler {
         }
 
         try {
-            StatServer demon = new StatServer(daemonPort);
-            demon.exec();
+            new StatServer(daemonPort);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public StatServer(int port) throws SocketException {
-        socketServer = new UDPServer(port, this);
-    }
-
-    private void exec() throws Exception {
-        socketServer.start();
+    public StatServer(int port) throws IOException {
+        UDPServer socketServer = new UDPServer(port, this);
+        Thread t = new Thread(socketServer);
+        t.setDaemon(true);
+        t.start();
     }
 
     @Override

@@ -29,7 +29,10 @@ public class StatInfoReporter {
         //if (this.isEnableStatServer) {
             try {
                 this.client = new UDPClient(Config.getInstance().getStatServer());
-            } catch (SocketException e) {
+                Thread t = new Thread(client);
+                t.setDaemon(true);
+                t.start();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         //}
