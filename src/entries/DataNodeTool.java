@@ -28,7 +28,7 @@ public class DataNodeTool {
 
     private DataNode dataNode;
 
-    private SocketClient socketClient = new SocketClient();
+    private SocketClient socketClient;
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
 
@@ -90,6 +90,7 @@ public class DataNodeTool {
     }
 
     public DataNodeTool() throws Exception {
+        socketClient = SocketClient.getInstance();
         String scheme = Config.getInstance().getScheme();
 
         switch (scheme) {

@@ -23,11 +23,11 @@ import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 
+import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,7 +36,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
 
     private SocketServer socketServer;
 
-    private SocketClient socketClient = new SocketClient();
+    private SocketClient socketClient;
 
     private DataNodeServer dataNodeServer;
 
@@ -102,7 +102,15 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     private DataNodeDaemon(String ip, int port) {
         this.ip = ip;
         this.port = port;
-        this.socketServer = new SocketServer(this.port, this);
+        this.socketClient = SocketClient.getInstance();
+        try {
+            this.socketServer = new SocketServer(this.port, this);
+            Thread t = new Thread(this.socketServer);
+            t.setDaemon(true);
+            t.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getIp() {
@@ -122,8 +130,8 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     }
 
     @Override
-    public void exec() throws Exception {
-        socketServer.start();
+    public void exec() {
+        socketServer.run();
     }
 
     @Override
@@ -228,12 +236,12 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
+    public Response onReceived(Request o) {
         Response response = processCommonCommand(o);
         if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
 
-        responsor.reply(out, response);
+        return response;
     }
 
     @Override

@@ -3,62 +3,52 @@ package socket;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
-import util.ObjectConverter;
-import util.SimpleLog;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SocketClient {
+public class SocketClient implements Runnable{
 
-    public SocketClient() {
-    }
+    private Selector selector;
 
-    public void sendAsync(int port, Request data, ServerCallBack callBack) {
-        sendAsync(new InetSocketAddress("localhost", port), data, callBack);
-    }
+    private final AtomicBoolean keepRunning = new AtomicBoolean(true);
 
-    public void sendAsync(String address, int port, Request data, ServerCallBack callBack) {
-        sendAsync(new InetSocketAddress(address, port), data, callBack);
-    }
+    private static volatile SocketClient instance = null;
 
-    private void sendAsync(InetSocketAddress inetSocketAddress, Request data, ServerCallBack callBack) {
-        try (AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
-            if (asynchronousSocketChannel != null) {
-                asynchronousSocketChannel.connect(inetSocketAddress, null, new CompletionHandler<Void, Void>() {
-
-                    @Override
-                    public void completed(Void result, Void attachment) {
-                        onServerConnected(asynchronousSocketChannel, data, callBack);
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, Void attachment) {
-                        StatInfoManager.getInstance().statRoundTripFailure(data);
-                        callBack.onFailure(data, "Connection cannot be established!");
-                    }
-                });
-            } else {
-                StatInfoManager.getInstance().statRoundTripFailure(data);
-                callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
-            }
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            StatInfoManager.getInstance().statRoundTripFailure(data);
-            callBack.onFailure(data, "An error occurred");
+    private SocketClient() {
+        try {
+            selector = Selector.open();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    public static SocketClient getInstance() {
+        if (instance == null) {
+            synchronized(SocketClient.class) {
+                if (instance == null) {
+                    instance = new SocketClient();
+                    Thread t = new Thread(instance);
+                    t.setDaemon(true);
+                    t.start();
+                }
+            }
+        }
+
+        return instance;
+    }
+
+    public static SocketClient newInstance() {
+        SocketClient client = new SocketClient();
+        Thread t = new Thread(client);
+        t.setDaemon(true);
+        t.start();
+        return client;
     }
 
     public void send(int port, Request data, ServerCallBack callBack) {
@@ -76,100 +66,40 @@ public class SocketClient {
     }
 
     public void send(InetSocketAddress inetSocketAddress, Request data, ServerCallBack callBack) {
-        try(AsynchronousSocketChannel asynchronousSocketChannel = initAsynchronousSocketChannel()) {
-            if (asynchronousSocketChannel != null) {
-                Void connect = asynchronousSocketChannel.connect(inetSocketAddress).get(3, TimeUnit.SECONDS);
-
-                if (connect == null)
-                    onServerConnected(asynchronousSocketChannel, data, callBack);
-                else
-                    callBack.onFailure(data, "Connection cannot be established!");
-            }
-            else {
-                callBack.onFailure(data, "The asynchronous socket channel cannot be opened!");
-            }
-        } catch (IOException | InterruptedException | ExecutionException e) {
+        try {
+            registerRequest(inetSocketAddress, data, callBack);
+        } catch (IOException e) {
             StatInfoManager.getInstance().statRoundTripFailure(data);
             callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " throws "  + e.getMessage());
-        } catch (TimeoutException e) {
-            StatInfoManager.getInstance().statRoundTripFailure(data);
-            callBack.onFailure(data, "Remote " + inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort() + " time out");
         }
     }
 
-    private AsynchronousSocketChannel initAsynchronousSocketChannel() throws IOException {
-        AsynchronousSocketChannel asynchronousSocketChannel = AsynchronousSocketChannel.open();
-
-        if (asynchronousSocketChannel.isOpen()) {
-            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 32 * 1024);
-            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 32 * 1024);
-            asynchronousSocketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        }
-
-        return asynchronousSocketChannel;
+    private void registerRequest(InetSocketAddress remote, Request data, ServerCallBack callBack) throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        socketChannel.connect(remote);
+        new Connector(selector, socketChannel, data, callBack);
     }
 
-    private void onServerConnected(AsynchronousSocketChannel asynchronousSocketChannel, Request data, ServerCallBack callBack) {
-        boolean success = false;
-        Object o = null;
-        int respSize = 0;
-        String message = "Unknown server connection error";
-
+    @Override
+    public void run() {
         try {
-            final ByteBuffer sendBuffer = ObjectConverter.getByteBuffer(data);
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
-            // transmitting data
-            Future<Integer> future = asynchronousSocketChannel.write(sendBuffer);
-            while (future != null) {
-                future.get();
-                if (sendBuffer.remaining() > 0)
-                    future = asynchronousSocketChannel.write(sendBuffer);
-                else
-                    break;
-            }
-            asynchronousSocketChannel.shutdownOutput();
+            while (keepRunning.get()) {
+                selector.select();
+                Iterator it = selector.selectedKeys().iterator();
 
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            // read response
-            while(asynchronousSocketChannel.read(buffer).get() != -1) {
-                buffer.flip();
-                bos.write(ObjectConverter.getBytes(buffer));
-
-                if (buffer.hasRemaining()) {
-                    buffer.compact();
-                } else {
-                    buffer.clear();
+                while (it.hasNext()) {
+                    SelectionKey sk = (SelectionKey) it.next();
+                    it.remove();
+                    Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
+                    if (r != null) {
+                        r.run();
+                    }
                 }
             }
-
-            byte[] byteArray = bos.toByteArray();
-            respSize = byteArray.length;
-            o = ObjectConverter.getObject(byteArray);
-            success = true;
-        } catch (Exception ex) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            ex.printStackTrace(pw);
-            message = sw.toString();
-        } finally {
-            try {
-                asynchronousSocketChannel.shutdownOutput();
-                asynchronousSocketChannel.close();
-
-                SimpleLog.i(data);
-                if (success && o instanceof Response) {
-                    Response resp = (Response) o;
-                    StatInfoManager.getInstance().statResponse(data, resp, respSize);
-                    callBack.onResponse(data, resp);
-                }
-                else {
-                    StatInfoManager.getInstance().statRoundTripFailure(data);
-                    callBack.onFailure(data, message);
-                }
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 

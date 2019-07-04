@@ -1,6 +1,7 @@
 package entries;
 
 import commonmodels.transport.Request;
+import commonmodels.transport.Response;
 import socket.SocketServer;
 import util.Config;
 import util.SimpleLog;
@@ -47,20 +48,25 @@ public class LogServer implements SocketServer.EventHandler {
     }
 
     public LogServer(int port) {
-        socketServer = new SocketServer(port, this);
+        try {
+            socketServer = new SocketServer(port, this);
+            Thread t = new Thread(socketServer);
+            t.setDaemon(true);
+            t.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void exec() throws Exception {
-        socketServer.start();
+    private void exec() {
+        socketServer.run();
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
-        try {
-            SimpleLog.v("[" + out.getRemoteAddress() + "]: " + o.toString());
-        } catch (IOException e) {
-            SimpleLog.v("[NIO error]: " + o);
-        }
+    public Response onReceived(Request o) {
+        SimpleLog.v("[" + o.getSender() + "]: " + o.toString());
+
+        return null;
     }
 
     @Override

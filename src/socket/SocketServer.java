@@ -2,150 +2,97 @@ package socket;
 
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
-import statmanagement.StatInfoManager;
-import util.ObjectConverter;
+import commonmodels.transport.Response;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.concurrent.ExecutionException;
+import java.nio.channels.*;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SocketServer {
+public class SocketServer implements Runnable{
 
-    private int port;
+    private final Selector selector;
 
-    private final Object lock = new Object();
+    private final ServerSocketChannel serverSocketChannel;
+
+    private final AtomicBoolean keepRunning = new AtomicBoolean(true);
 
     @NotNull
     private EventHandler eventHandler;
 
-    private EventResponsor eventResponsor = (out, response) -> {
-        ByteBuffer buffer = ObjectConverter.getByteBuffer(response);
-        Future<Integer> future = out.write(buffer);
-        while (future != null) {
-            future.get();
-            if (buffer.remaining() > 0)
-                future = out.write(buffer);
-            else
-                break;
-        }
-    };
+    private static volatile ExecutorService workerPool;
 
-    public SocketServer(int port, @NotNull EventHandler eventHandler) {
-        this.port = port;
+    private static final int WORKER_POOL_SIZE = 16;
+
+    public SocketServer(int port, @NotNull EventHandler eventHandler) throws IOException {
         this.eventHandler = eventHandler;
+        selector = Selector.open();
+        serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.socket().bind(new InetSocketAddress(port));
+        serverSocketChannel.configureBlocking(false);
+        registerShutdownHook();
+        new Acceptor(selector, serverSocketChannel, eventHandler);
+    }
+
+    @Override
+    public void run() {
+        if (eventHandler != null)
+            eventHandler.onBound();
+
+        try {
+            while (keepRunning.get()) {
+                selector.select();
+                Iterator it = selector.selectedKeys().iterator();
+
+                while (it.hasNext()) {
+                    SelectionKey sk = (SelectionKey) it.next();
+                    it.remove();
+                    Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
+                    if (r != null) {
+                        r.run();
+                    }
+                }
+            }
+        }
+        catch (IOException ex) {
+                ex.printStackTrace();
+        }
     }
 
     public void setEventHandler(EventHandler eventHandler) {
         this.eventHandler = eventHandler;
     }
 
-    public void start() throws Exception {
-        ExecutorService connectPool = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
-        AsynchronousChannelGroup group = AsynchronousChannelGroup.withCachedThreadPool(connectPool, 1);
-
-        try (AsynchronousServerSocketChannel channel = AsynchronousServerSocketChannel.open(group)) {
-            registerShutdownHook(channel);
-
-            if (channel.isOpen()) {
-                channel.setOption(StandardSocketOptions.SO_RCVBUF, 32 * 1024);
-                channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-                channel.bind(new InetSocketAddress(port));
-                channel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
-
-                    @Override
-                    public void completed(AsynchronousSocketChannel result, Void attachment) {
-
-                        channel.accept(null, this);
-
-                        if ((result != null) && (result.isOpen())) {
-                            try {
-                                final ByteBuffer buffer = ByteBuffer.allocateDirect(8 * 1024);
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                                while (result.read(buffer).get() != -1) {
-                                    buffer.flip();
-                                    bos.write(ObjectConverter.getBytes(buffer));
-
-                                    if (buffer.hasRemaining()) {
-                                        buffer.compact();
-                                    } else {
-                                        buffer.clear();
-                                    }
-                                }
-
-                                byte[] byteArray = bos.toByteArray();
-                                Object o = ObjectConverter.getObject(byteArray);
-                                if (o instanceof Request) {
-                                    Request req = (Request) o;
-
-                                    long stamp = StatInfoManager.getInstance().getStamp();
-                                    StatInfoManager.getInstance().statRequest(req, stamp, byteArray.length);
-                                    eventHandler.onReceived(result, req, eventResponsor);
-                                    StatInfoManager.getInstance().statExecution(req, stamp);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                try {
-                                    result.shutdownOutput();
-                                    result.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, Void attachment) {
-                        channel.accept(null, this);
-                        throw new UnsupportedOperationException("Cannot accept connections!");
-                    }
-                });
-
-                if (eventHandler != null)
-                    eventHandler.onBound();
-
-                await();
-            } else {
-                throw new Exception("The asynchronous server-socket channel cannot be opened!");
+    public static ExecutorService getWorkerPool() {
+        if (workerPool == null) {
+            synchronized(SocketServer.class) {
+                if (workerPool == null) {
+                    workerPool = Executors.newFixedThreadPool(WORKER_POOL_SIZE);
+                }
             }
         }
+
+        return workerPool;
     }
 
-    private void registerShutdownHook(AsynchronousServerSocketChannel channel) {
+    private void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                if (channel != null && channel.isOpen())
-                    channel.close();
+                if (serverSocketChannel != null && serverSocketChannel.isOpen()) {
+                    selector.close();
+                    serverSocketChannel.close();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }));
     }
 
-    private void await() throws InterruptedException {
-        synchronized (lock) {
-            lock.wait();
-        }
-    }
-
     public interface EventHandler {
-        void onReceived(AsynchronousSocketChannel out, Request o, EventResponsor responsor) throws Exception;
+        Response onReceived(Request o);
         void onBound();
-    }
-
-    public interface EventResponsor {
-        void reply (AsynchronousSocketChannel out, Object response) throws IOException, ExecutionException, InterruptedException;
     }
 }

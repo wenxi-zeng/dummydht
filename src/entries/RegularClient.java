@@ -28,7 +28,7 @@ import java.util.Scanner;
 
 public class RegularClient {
 
-    private SocketClient socketClient = new SocketClient();
+    private SocketClient socketClient;
 
     private Terminal terminal;
 
@@ -95,6 +95,7 @@ public class RegularClient {
     }
 
     public RegularClient() throws Exception {
+        socketClient = SocketClient.getInstance();
         String scheme = Config.getInstance().getScheme();
 
         switch (scheme) {

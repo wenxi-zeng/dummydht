@@ -23,7 +23,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
 
     public MembershipStrategy(DataNode dataNode) {
         this.dataNode = dataNode;
-        this.socketClient = new SocketClient();
+        this.socketClient = SocketClient.getInstance();
     }
 
     public abstract Response getMembersStatus();

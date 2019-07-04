@@ -157,13 +157,13 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     }
 
     @Override
-    public void onReceived(AsynchronousSocketChannel out, Request o, SocketServer.EventResponsor responsor) throws Exception {
+    public Response onReceived(Request o) {
         Response response = processCommonCommand(o);
         if (response.getStatus() == Response.STATUS_INVALID_REQUEST)
             response = processDataNodeCommand(o);
 
-        responsor.reply(out, response);
         startFollowupTask(o.getFollowup(), response);
+        return response;
     }
 
     @Override

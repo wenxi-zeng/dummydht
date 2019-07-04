@@ -14,7 +14,7 @@ public class RequestThread implements Runnable {
     public RequestThread(RequestGenerator requestGenerator, RequestGenerateThreadCallBack callBack) {
         this.requestGenerator = requestGenerator;
         this.callBack = callBack;
-        socketClient = new SocketClient();
+        socketClient = SocketClient.newInstance();
     }
 
     @Override
