@@ -3,11 +3,14 @@ package socket;
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import util.SimpleLog;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,18 +26,29 @@ public class SocketServer implements Runnable{
     @NotNull
     private EventHandler eventHandler;
 
+    private Queue<Attachable> attachments;
+
     private static volatile ExecutorService workerPool;
 
     private static final int WORKER_POOL_SIZE = 16;
 
     public SocketServer(int port, @NotNull EventHandler eventHandler) throws IOException {
         this.eventHandler = eventHandler;
-        selector = Selector.open();
+        this.selector = Selector.open();
+        this.attachments = new LinkedList<Attachable>() {
+            @Override
+            public boolean add(Attachable attachable) {
+                boolean result = super.add(attachable);
+                SimpleLog.v("Server: run, adding attachments");
+                selector.wakeup();
+                return result;
+            }
+        };
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().bind(new InetSocketAddress(port));
         serverSocketChannel.configureBlocking(false);
         registerShutdownHook();
-        new Acceptor(selector, serverSocketChannel, eventHandler);
+        attachments.add(new Acceptor(serverSocketChannel, attachments, eventHandler));
     }
 
     @Override
@@ -44,10 +58,14 @@ public class SocketServer implements Runnable{
 
         try {
             while (keepRunning.get()) {
+                SimpleLog.v("Server: run, before select");
+                registerAttachments();
                 selector.select();
+                SimpleLog.v("Server: run, after select");
                 Iterator it = selector.selectedKeys().iterator();
 
                 while (it.hasNext()) {
+                    SimpleLog.v("Server: run, iterating");
                     SelectionKey sk = (SelectionKey) it.next();
                     it.remove();
                     Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
@@ -76,6 +94,15 @@ public class SocketServer implements Runnable{
         }
 
         return workerPool;
+    }
+
+    private void registerAttachments() throws IOException {
+        if (attachments.isEmpty()) return;
+
+        while (!attachments.isEmpty()) {
+            Attachable attachable = attachments.poll();
+            attachable.attach(selector);
+        }
     }
 
     private void registerShutdownHook() {

@@ -111,9 +111,6 @@ public class UDPServer implements Runnable {
         public void run() {
             try {
                 read();
-
-                _selectionKey.interestOps(SelectionKey.OP_READ);
-                _selectionKey.selector().wakeup();
             } catch (IOException e) {
                 _selectionKey.cancel();
                 e.printStackTrace();

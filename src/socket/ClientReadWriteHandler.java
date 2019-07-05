@@ -13,40 +13,40 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-public class ClientReadWriteHandler implements Runnable {
+public class ClientReadWriteHandler implements Runnable, Attachable {
     private final SocketChannel socketChannel;
-    private final SelectionKey selectionKey;
     private final SocketClient.ServerCallBack callBack;
     private final Request data;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
+
+    private SelectionKey selectionKey;
     private ByteBuffer _readBuf = ByteBuffer.allocate(READ_BUF_SIZE);
     private ByteBuffer _writeBuf;
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-    public ClientReadWriteHandler(Selector selector, SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack) throws IOException {
+    public ClientReadWriteHandler(SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack) throws IOException {
         this.socketChannel = socketChannel;
         this.socketChannel.configureBlocking(false);
         this.data = data;
         this.callBack = callBack;
 
         this._writeBuf = ObjectConverter.getByteBuffer(data);
-        this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
-        this.selectionKey.attach(this);
-        selector.wakeup(); // let blocking select() return
     }
 
     @Override
     public void run() {
         try {
             if (this.selectionKey.isReadable()) {
+                SimpleLog.v("Client: run, before read");
                 read();
+                SimpleLog.v("Client: run, after read");
             }
             else if (this.selectionKey.isWritable()) {
+                SimpleLog.v("Client: run, before write");
                 write();
+                SimpleLog.v("Client: run, after write");
             }
-
-            this.selectionKey.selector().wakeup();
         }
         catch (IOException ex) {
             selectionKey.cancel();
@@ -73,7 +73,17 @@ public class ClientReadWriteHandler implements Runnable {
     private synchronized void read() throws IOException {
         int numBytes = this.socketChannel.read(_readBuf);
 
-        if (numBytes == -1) {
+        SimpleLog.v("Client: run, reading " + numBytes);
+        boolean readyFully = _readBuf.hasRemaining();
+        _readBuf.flip();
+        bos.write(ObjectConverter.getBytes(_readBuf));
+        if (_readBuf.hasRemaining()) {
+            _readBuf.compact();
+        } else {
+            _readBuf.clear();
+        }
+
+        if (readyFully || numBytes == -1) {
             socketChannel.close();
             selectionKey.cancel();
 
@@ -83,17 +93,6 @@ public class ClientReadWriteHandler implements Runnable {
             _writeBuf.clear();
             bos.reset();
         }
-        else {
-            _readBuf.flip();
-            bos.write(ObjectConverter.getBytes(_readBuf));
-            if (_readBuf.hasRemaining()) {
-                _readBuf.compact();
-            } else {
-                _readBuf.clear();
-            }
-
-            this.selectionKey.interestOps(SelectionKey.OP_READ);
-        }
     }
 
     private void write() throws IOException {
@@ -101,8 +100,11 @@ public class ClientReadWriteHandler implements Runnable {
         if (_writeBuf.remaining() == 0) {
             this.selectionKey.interestOps(SelectionKey.OP_READ);
         }
-        else {
-            this.selectionKey.interestOps(SelectionKey.OP_WRITE);
-        }
+    }
+
+    @Override
+    public void attach(Selector selector) throws IOException {
+        this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
+        this.selectionKey.attach(this);
     }
 }

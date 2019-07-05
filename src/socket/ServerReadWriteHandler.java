@@ -4,6 +4,7 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
+import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,9 +14,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-public class ServerReadWriteHandler implements Runnable {
+public class ServerReadWriteHandler implements Runnable, Attachable {
     private final SocketChannel socketChannel;
-    private final SelectionKey selectionKey;
+    private SelectionKey selectionKey;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
     private static final int WRiTE_BUF_SIZE = 32 * 1024;
@@ -24,26 +25,25 @@ public class ServerReadWriteHandler implements Runnable {
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
     private SocketServer.EventHandler eventHandler;
 
-    public ServerReadWriteHandler(Selector selector, SocketChannel socketChannel, SocketServer.EventHandler eventHandler) throws IOException {
+    public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler) throws IOException {
         this.socketChannel = socketChannel;
         this.socketChannel.configureBlocking(false);
         this.eventHandler = eventHandler;
-        this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_READ);
-        this.selectionKey.attach(this);
-        selector.wakeup(); // let blocking select() return
     }
 
     @Override
     public void run() {
         try {
             if (this.selectionKey.isReadable()) {
+                SimpleLog.v("Server: run, before read");
                 read();
+                SimpleLog.v("Server: run, after read");
             }
             else if (this.selectionKey.isWritable()) {
+                SimpleLog.v("Server: run, before write");
                 write();
+                SimpleLog.v("Server: run, after write");
             }
-
-            this.selectionKey.selector().wakeup();
         }
         catch (IOException ex) {
             selectionKey.cancel();
@@ -70,16 +70,18 @@ public class ServerReadWriteHandler implements Runnable {
             }
             this.selectionKey.interestOps(SelectionKey.OP_WRITE);
         }
-
     }
 
     private synchronized void read() throws IOException {
         int numBytes = this.socketChannel.read(_readBuf);
 
+        SimpleLog.v("Server: run, reading " + numBytes);
         if (numBytes == -1) {
-            SocketServer.getWorkerPool().execute(this::process);
+            socketChannel.close();
+            selectionKey.cancel();
         }
         else {
+            boolean readyFully = _readBuf.hasRemaining();
             _readBuf.flip();
             bos.write(ObjectConverter.getBytes(_readBuf));
             if (_readBuf.hasRemaining()) {
@@ -88,7 +90,9 @@ public class ServerReadWriteHandler implements Runnable {
                 _readBuf.clear();
             }
 
-            this.selectionKey.interestOps(SelectionKey.OP_READ);
+            if (readyFully) {
+                SocketServer.getWorkerPool().execute(this::process);
+            }
         }
     }
 
@@ -99,11 +103,13 @@ public class ServerReadWriteHandler implements Runnable {
             _writeBuf.clear();
             bos.reset();
 
-            // Set the key's interest-set back to READ operation
             this.selectionKey.interestOps(SelectionKey.OP_READ);
         }
-        else {
-            this.selectionKey.interestOps(SelectionKey.OP_WRITE);
-        }
+    }
+
+    @Override
+    public void attach(Selector selector) throws IOException {
+        selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
+        selectionKey.attach(this);
     }
 }

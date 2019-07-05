@@ -1,16 +1,15 @@
 package socket;
 
 import commonmodels.transport.Request;
+import util.SimpleLog;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Queue;
 
-public class Connector implements Runnable {
-
-    private final Selector selector;
+public class Connector implements Runnable, Attachable {
 
     private final Request data;
 
@@ -18,27 +17,34 @@ public class Connector implements Runnable {
 
     private final SocketChannel socketChannel;
 
-    private final SelectionKey selectionKey;
+    private final Queue<Attachable> attachments;
 
-    public Connector(Selector selector, SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack) throws IOException{
-        this.selector = selector;
+    private SelectionKey selectionKey;
+
+    public Connector(SocketChannel socketChannel, Request data, Queue<Attachable> attachments, SocketClient.ServerCallBack callBack) {
         this.socketChannel = socketChannel;
         this.data = data;
+        this.attachments = attachments;
         this.callBack = callBack;
-
-        selectionKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-        selectionKey.attach(this);
     }
 
     @Override
     public void run() {
         try {
+            SimpleLog.v("Client: run, before finishConnect");
             socketChannel.finishConnect();
-            new ClientReadWriteHandler(selector, socketChannel, data, callBack);
+            SimpleLog.v("Client: run, after finishConnect");
+            attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack));
         }
         catch (IOException ex) {
             selectionKey.cancel();
             ex.printStackTrace();
         }
+    }
+
+    @Override
+    public void attach(Selector selector) throws IOException {
+        selectionKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);
+        selectionKey.attach(this);
     }
 }

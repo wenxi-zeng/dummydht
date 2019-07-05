@@ -13,6 +13,7 @@ import util.SimpleLog;
 
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class MembershipStrategy implements LoadInfoReportHandler, MembershipCallBack {
@@ -39,6 +40,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
 
     private void bootstrap() {
         AtomicBoolean fetched = new AtomicBoolean(false);
+        Semaphore semaphore = new Semaphore(1);
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response o) {
@@ -50,12 +52,14 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
                 else {
                     dataNode.createTable(o.getAttachment());
                     fetched.set(true);
+                    semaphore.release();
                 }
             }
 
             @Override
             public void onFailure(Request request, String error) {
                 SimpleLog.i(error);
+                semaphore.release();
             }
         };
 
@@ -64,6 +68,11 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
                 Request request = new Request().withHeader(DaemonCommand.FETCH.name())
                                                 .withFollowup(dataNode.getAddress());
                 socketClient.send(seed, request, callBack);
+                try {
+                    semaphore.acquire();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             if (fetched.get()) break;
         }
