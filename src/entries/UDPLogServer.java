@@ -44,9 +44,7 @@ public class UDPLogServer implements UDPServer.EventHandler {
 
     public UDPLogServer(int port) throws IOException {
         UDPServer socketServer = new UDPServer(port, this);
-        Thread t = new Thread(socketServer);
-        t.setDaemon(true);
-        t.start();
+        new Thread(socketServer).start();
     }
 
     @Override

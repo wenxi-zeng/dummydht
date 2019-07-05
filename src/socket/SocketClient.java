@@ -33,9 +33,7 @@ public class SocketClient implements Runnable{
             synchronized(SocketClient.class) {
                 if (instance == null) {
                     instance = new SocketClient();
-                    Thread t = new Thread(instance);
-                    t.setDaemon(true);
-                    t.start();
+                    new Thread(instance).start();
                 }
             }
         }
@@ -45,9 +43,7 @@ public class SocketClient implements Runnable{
 
     public static SocketClient newInstance() {
         SocketClient client = new SocketClient();
-        Thread t = new Thread(client);
-        t.setDaemon(true);
-        t.start();
+        new Thread(client).start();
         return client;
     }
 

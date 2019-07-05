@@ -50,9 +50,7 @@ public class LogServer implements SocketServer.EventHandler {
     public LogServer(int port) {
         try {
             socketServer = new SocketServer(port, this);
-            Thread t = new Thread(socketServer);
-            t.setDaemon(true);
-            t.start();
+            new Thread(socketServer).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
