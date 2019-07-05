@@ -2,6 +2,7 @@ package socket;
 
 import util.ObjectConverter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -123,10 +124,11 @@ public class UDPServer implements Runnable {
             SocketAddress sender =_datagramChannel.receive(_readBuf);
 
             if (sender != null) {
+                _readBuf.flip();
                 o = ObjectConverter.getObject(_readBuf);
+
                 _readBuf.clear();
                 getWorkerPool().execute(this::process);
-
             }
         }
 
