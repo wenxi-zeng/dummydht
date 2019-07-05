@@ -77,7 +77,7 @@ public class ScriptGenerator {
     private static void generateStopAll() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             if (node.contains(SELF))
                 stringBuilder.append("ps aux | pgrep java | xargs kill -9").append('\n');
             else
@@ -96,7 +96,7 @@ public class ScriptGenerator {
         StringBuilder stringBuilder = new StringBuilder();
         String configFile = ResourcesLoader.getRelativeFileName(null);
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 scp -rp ").append(configFile).append(" root@")
                         .append(node).append(":").append(File.separator)
@@ -116,7 +116,7 @@ public class ScriptGenerator {
         StringBuilder stringBuilder = new StringBuilder();
         String resFolder = ResourcesLoader.getRelativeFileName("res");
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 scp -rp ").append(resFolder).append(File.separator).append("config.properties").append(" root@")
                         .append(node).append(":").append(resFolder).append("\n");
@@ -134,7 +134,7 @@ public class ScriptGenerator {
     private static void generateMakeDirAll() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 ssh root@")
                         .append(node)
@@ -171,7 +171,7 @@ public class ScriptGenerator {
         int portRange = config.getPortRange();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             StringBuilder command = new StringBuilder();
             for (int i = 0; i < portRange; i++) {
                 command.append("firewall-cmd --zone=public --permanent --add-port=").append(startPort + i).append("/tcp\n")
@@ -196,7 +196,7 @@ public class ScriptGenerator {
         String filename = ResourcesLoader.getRelativeFileName(FILE_DISABLE_FIERWALL_ALL);
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             StringBuilder command = new StringBuilder();
             command.append("systemctl stop firewalld\n");
             if (node.contains(SELF))
@@ -249,6 +249,17 @@ public class ScriptGenerator {
         nodes.add(config.getLogServer().substring(0, config.getLogServer().indexOf(':')));
         nodes.add(config.getStatServer().substring(0, config.getStatServer().indexOf(':')));
         nodes.add(config.getDataServer().substring(0, config.getDataServer().indexOf(':')));
+
+        return nodes;
+    }
+
+    private static HashSet<String> getAllServers() {
+        Config config = Config.getInstance();
+        HashSet<String> nodes = new HashSet<>(Arrays.asList(config.getNodes()));
+        nodes.add(config.getLogServer().substring(0, config.getLogServer().indexOf(':')));
+        nodes.add(config.getStatServer().substring(0, config.getStatServer().indexOf(':')));
+        nodes.add(config.getDataServer().substring(0, config.getDataServer().indexOf(':')));
+        nodes.add(config.getRequestClient().substring(0, config.getRequestClient().indexOf(':')));
 
         return nodes;
     }

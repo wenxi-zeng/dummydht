@@ -31,6 +31,7 @@ public class Config {
     private final static String PROPERTY_RATIO_LOAD_BALANCING = "load_balancing_ratio";
     private final static String PROPERTY_INTER_ARRIVAL_TIME_READ_WRITE = "read_write_inter_arrival_time";
     private final static String PROPERTY_INTER_ARRIVAL_TIME_LOAD_BALANCING = "load_balancing_inter_arrival_time";
+    private final static String PROPERTY_REQUEST_CLIENT = "request_client";
     private final static String PROPERTY_REQUEST_DISTRIBUTION = "request_distribution";
     private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
     private final static String PROPERTY_REQUEST_EXP_LAMDA = "lamda";
@@ -199,6 +200,10 @@ public class Config {
 
     public long getNetworkSpeed() {
         return networkSpeed;
+    }
+
+    public String getRequestClient() {
+        return rb.getString(PROPERTY_REQUEST_CLIENT);
     }
 
     public double[] getReadWriteRatio() {
