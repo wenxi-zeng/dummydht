@@ -40,7 +40,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
 
     private void bootstrap() {
         AtomicBoolean fetched = new AtomicBoolean(false);
-        Semaphore semaphore = new Semaphore(1);
+        Semaphore semaphore = new Semaphore(0);
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response o) {
