@@ -105,7 +105,6 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
         this.socketClient = SocketClient.getInstance();
         try {
             this.socketServer = new SocketServer(this.port, this);
-            new Thread(this.socketServer).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -129,7 +128,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
 
     @Override
     public void exec() {
-        socketServer.run();
+        new Thread(this.socketServer).start();
     }
 
     @Override
