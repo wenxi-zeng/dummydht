@@ -13,9 +13,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Queue;
 
 public class ServerReadWriteHandler implements Runnable, Attachable {
     private final SocketChannel socketChannel;
+    private final Queue<Attachable> attachments;
     private SelectionKey selectionKey;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
@@ -25,10 +27,11 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
     private SocketServer.EventHandler eventHandler;
 
-    public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler) throws IOException {
+    public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler, Queue<Attachable> attchements) throws IOException {
         this.socketChannel = socketChannel;
         this.socketChannel.configureBlocking(false);
         this.eventHandler = eventHandler;
+        this.attachments = attchements;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
             }
         }
         catch (IOException ex) {
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
             ex.printStackTrace();
         }
     }
@@ -77,8 +80,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
 
         SimpleLog.v("Server: run, reading " + numBytes);
         if (numBytes == -1) {
-            socketChannel.close();
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
         }
         else {
             boolean readyFully = _readBuf.hasRemaining();

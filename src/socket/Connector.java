@@ -34,10 +34,10 @@ public class Connector implements Runnable, Attachable {
             SimpleLog.v("Client: run, before finishConnect");
             socketChannel.finishConnect();
             SimpleLog.v("Client: run, after finishConnect");
-            attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack));
+            attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack, attachments));
         }
         catch (IOException ex) {
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
             ex.printStackTrace();
         }
     }

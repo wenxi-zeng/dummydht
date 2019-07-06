@@ -29,11 +29,11 @@ public class Acceptor implements Runnable, Attachable {
             SocketChannel socketChannel = serverSocketChannel.accept();
             SimpleLog.v("Server: run, after accept");
             if (socketChannel != null) {
-                attachments.add(new ServerReadWriteHandler(socketChannel, eventHandler));
+                attachments.add(new ServerReadWriteHandler(socketChannel, eventHandler, attachments));
             }
         }
         catch (IOException ex) {
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
             ex.printStackTrace();
         }
     }

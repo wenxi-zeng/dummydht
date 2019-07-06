@@ -12,11 +12,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Queue;
 
 public class ClientReadWriteHandler implements Runnable, Attachable {
     private final SocketChannel socketChannel;
     private final SocketClient.ServerCallBack callBack;
     private final Request data;
+    private final Queue<Attachable> attachments;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
 
@@ -25,11 +27,12 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     private ByteBuffer _writeBuf;
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-    public ClientReadWriteHandler(SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack) throws IOException {
+    public ClientReadWriteHandler(SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack, Queue<Attachable> attachments) throws IOException {
         this.socketChannel = socketChannel;
         this.socketChannel.configureBlocking(false);
         this.data = data;
         this.callBack = callBack;
+        this.attachments = attachments;
 
         this._writeBuf = ObjectConverter.getByteBuffer(data);
     }
@@ -49,7 +52,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
             }
         }
         catch (IOException ex) {
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
             ex.printStackTrace();
         }
     }
@@ -84,8 +87,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
 
         if (readyFully || numBytes == -1) {
-            socketChannel.close();
-            selectionKey.cancel();
+            attachments.add(new Recycler(selectionKey));
 
             process();
 
