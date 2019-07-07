@@ -69,7 +69,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
         else {
             StatInfoManager.getInstance().statRoundTripFailure(data);
-            callBack.onFailure(data, "NIO read failure");
+            callBack.onFailure(data, String.valueOf(o));
         }
     }
 
@@ -99,8 +99,10 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
 
     private void write() throws IOException {
         this.socketChannel.write(_writeBuf);
-        if (_writeBuf.remaining() == 0) {
+
+        if (!_writeBuf.hasRemaining()) {
             this.selectionKey.interestOps(SelectionKey.OP_READ);
+            this.selectionKey.selector().wakeup();
         }
     }
 

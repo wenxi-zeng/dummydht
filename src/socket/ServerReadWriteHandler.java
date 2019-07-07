@@ -72,6 +72,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
                 e.printStackTrace();
             }
             this.selectionKey.interestOps(SelectionKey.OP_WRITE);
+            this.selectionKey.selector().wakeup();
         }
     }
 
@@ -100,12 +101,13 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
 
     private void write() throws IOException {
         this.socketChannel.write(_writeBuf);
-        if (_writeBuf.remaining() == 0) {
+        if (!_writeBuf.hasRemaining()) {
             _readBuf.clear();
             _writeBuf.clear();
             bos.reset();
 
             this.selectionKey.interestOps(SelectionKey.OP_READ);
+            this.selectionKey.selector().wakeup();
         }
     }
 

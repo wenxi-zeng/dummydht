@@ -105,7 +105,9 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
             }
         };
         for (PhysicalNode node : dataNode.getPhysicalNodes()) {
-            socketClient.send(node.getAddress(), node.getPort(), request, callBack);
+            if (!node.getFullAddress().equals(dataNode.getAddress()) && !node.getFullAddress().equals(dataNode.getLocalAddress())) {
+                socketClient.send(node.getAddress(), node.getPort(), request, callBack);
+            }
         }
     }
 }
