@@ -4,7 +4,6 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
-import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,26 +25,25 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
     private ByteBuffer _writeBuf = ByteBuffer.allocate(WRiTE_BUF_SIZE);
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
     private SocketServer.EventHandler eventHandler;
+    private boolean processScheduled;
 
     public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler, Queue<Attachable> attchements) throws IOException {
         this.socketChannel = socketChannel;
         this.socketChannel.configureBlocking(false);
         this.eventHandler = eventHandler;
         this.attachments = attchements;
+        this.processScheduled = false;
     }
 
     @Override
     public void run() {
         try {
+            if (!this.selectionKey.isValid() && !this.socketChannel.isOpen()) return;
             if (this.selectionKey.isReadable()) {
-                SimpleLog.v("Server: run, before read");
                 read();
-                SimpleLog.v("Server: run, after read");
             }
             else if (this.selectionKey.isWritable()) {
-                SimpleLog.v("Server: run, before write");
                 write();
-                SimpleLog.v("Server: run, after write");
             }
         }
         catch (IOException ex) {
@@ -79,12 +77,13 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
     private synchronized void read() throws IOException {
         int numBytes = this.socketChannel.read(_readBuf);
 
-        SimpleLog.v("Server: run, reading " + numBytes);
         if (numBytes == -1) {
-            attachments.add(new Recycler(selectionKey));
+            if (!processScheduled) {
+                processScheduled = true;
+                SocketServer.getWorkerPool().execute(this::process);
+            }
         }
         else {
-            boolean readyFully = _readBuf.hasRemaining();
             _readBuf.flip();
             bos.write(ObjectConverter.getBytes(_readBuf));
             if (_readBuf.hasRemaining()) {
@@ -92,22 +91,17 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
             } else {
                 _readBuf.clear();
             }
-
-            if (readyFully) {
-                SocketServer.getWorkerPool().execute(this::process);
-            }
         }
     }
 
     private void write() throws IOException {
         this.socketChannel.write(_writeBuf);
         if (!_writeBuf.hasRemaining()) {
+            this.socketChannel.shutdownOutput();
+            attachments.add(new Recycler(selectionKey));
             _readBuf.clear();
             _writeBuf.clear();
             bos.reset();
-
-            this.selectionKey.interestOps(SelectionKey.OP_READ);
-            this.selectionKey.selector().wakeup();
         }
     }
 

@@ -3,11 +3,12 @@ package socket;
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
-import util.SimpleLog;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -39,7 +40,6 @@ public class SocketServer implements Runnable{
             @Override
             public boolean add(Attachable attachable) {
                 boolean result = super.add(attachable);
-                SimpleLog.v("Server: run, adding attachments");
                 selector.wakeup();
                 return result;
             }
@@ -58,14 +58,11 @@ public class SocketServer implements Runnable{
 
         try {
             while (keepRunning.get()) {
-                SimpleLog.v("Server: run, before select");
                 registerAttachments();
                 selector.select();
-                SimpleLog.v("Server: run, after select");
                 Iterator it = selector.selectedKeys().iterator();
 
                 while (it.hasNext()) {
-                    SimpleLog.v("Server: run, iterating");
                     SelectionKey sk = (SelectionKey) it.next();
                     it.remove();
                     Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
@@ -101,7 +98,8 @@ public class SocketServer implements Runnable{
 
         while (!attachments.isEmpty()) {
             Attachable attachable = attachments.poll();
-            attachable.attach(selector);
+            if (attachable != null)
+                attachable.attach(selector);
         }
     }
 

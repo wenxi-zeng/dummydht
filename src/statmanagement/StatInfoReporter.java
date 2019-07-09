@@ -5,7 +5,6 @@ import socket.UDPClient;
 import util.Config;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,8 +44,8 @@ public class StatInfoReporter {
             try {
                 if (isEnableStatServer) {
                     client.send(info);
+                    repo.put(info);
                 }
-                repo.put(info);
             } catch (IOException e) {
                 e.printStackTrace();
             }

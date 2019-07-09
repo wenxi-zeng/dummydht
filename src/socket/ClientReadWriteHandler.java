@@ -40,15 +40,12 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     @Override
     public void run() {
         try {
+            if (!this.selectionKey.isValid() || !this.socketChannel.isOpen()) return;
             if (this.selectionKey.isReadable()) {
-                SimpleLog.v("Client: run, before read");
                 read();
-                SimpleLog.v("Client: run, after read");
             }
             else if (this.selectionKey.isWritable()) {
-                SimpleLog.v("Client: run, before write");
                 write();
-                SimpleLog.v("Client: run, after write");
             }
         }
         catch (IOException ex) {
@@ -76,8 +73,6 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     private synchronized void read() throws IOException {
         int numBytes = this.socketChannel.read(_readBuf);
 
-        SimpleLog.v("Client: run, reading " + numBytes);
-        boolean readyFully = _readBuf.hasRemaining();
         _readBuf.flip();
         bos.write(ObjectConverter.getBytes(_readBuf));
         if (_readBuf.hasRemaining()) {
@@ -86,7 +81,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
             _readBuf.clear();
         }
 
-        if (readyFully || numBytes == -1) {
+        if (numBytes == -1) {
             attachments.add(new Recycler(selectionKey));
 
             process();
@@ -101,6 +96,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         this.socketChannel.write(_writeBuf);
 
         if (!_writeBuf.hasRemaining()) {
+            this.socketChannel.shutdownOutput();
             this.selectionKey.interestOps(SelectionKey.OP_READ);
             this.selectionKey.selector().wakeup();
         }

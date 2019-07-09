@@ -1,9 +1,10 @@
 package socket;
 
-import util.SimpleLog;
-
 import java.io.IOException;
-import java.nio.channels.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Queue;
 
 public class Acceptor implements Runnable, Attachable {
@@ -25,9 +26,7 @@ public class Acceptor implements Runnable, Attachable {
     @Override
     public void run() {
         try {
-            SimpleLog.v("Server: run, before accept");
             SocketChannel socketChannel = serverSocketChannel.accept();
-            SimpleLog.v("Server: run, after accept");
             if (socketChannel != null) {
                 attachments.add(new ServerReadWriteHandler(socketChannel, eventHandler, attachments));
             }

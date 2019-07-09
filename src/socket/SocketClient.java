@@ -3,7 +3,6 @@ package socket;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
-import util.SimpleLog;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -27,7 +26,6 @@ public class SocketClient implements Runnable{
         @Override
         public boolean add(Attachable attachable) {
             boolean result = super.add(attachable);
-            SimpleLog.v("Client: run, adding attachments");
             selector.wakeup();
             return result;
         }
@@ -94,14 +92,11 @@ public class SocketClient implements Runnable{
     public void run() {
         try {
             while (keepRunning.get()) {
-                SimpleLog.v("Client: run, before select");
                 registerAttachments();
                 selector.select();
-                SimpleLog.v("Client: run, after select");
                 Iterator it = selector.selectedKeys().iterator();
 
                 while (it.hasNext()) {
-                    SimpleLog.v("Client: run, iterating");
                     SelectionKey sk = (SelectionKey) it.next();
                     it.remove();
                     Runnable r = (Runnable) sk.attachment(); // handler or acceptor callback/runnable
@@ -121,7 +116,8 @@ public class SocketClient implements Runnable{
 
         while (!attachments.isEmpty()) {
             Attachable attachable = attachments.poll();
-            attachable.attach(selector);
+            if (attachable != null)
+                attachable.attach(selector);
         }
     }
 

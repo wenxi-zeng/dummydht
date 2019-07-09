@@ -30,13 +30,14 @@ public class Connector implements Runnable, Attachable {
 
     @Override
     public void run() {
+        String address = null;
         try {
-            SimpleLog.v("Client: run, before finishConnect");
+            address = socketChannel.getRemoteAddress().toString();
             socketChannel.finishConnect();
-            SimpleLog.v("Client: run, after finishConnect");
             attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack, attachments));
         }
         catch (IOException ex) {
+            SimpleLog.v("[" + address + "] Client: connection error");
             attachments.add(new Recycler(selectionKey));
             ex.printStackTrace();
         }
