@@ -24,7 +24,7 @@ public class ObjectConverter {
 
             return o;
         } catch(Exception ex){
-            ex.printStackTrace();
+            SimpleLog.e(ex);
             return null;
         }
     }
@@ -41,6 +41,12 @@ public class ObjectConverter {
 
     public static byte[] getBytes(ByteBuffer buffer) {
         byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+        return bytes;
+    }
+
+    public static byte[] getBytes(ByteBuffer buffer, int length) {
+        byte[] bytes = new byte[length];
         buffer.get(bytes);
         return bytes;
     }

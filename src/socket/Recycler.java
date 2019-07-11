@@ -19,6 +19,6 @@ public class Recycler implements Attachable {
 
     private void recycle() throws IOException {
         selectionKey.cancel();
-        selectionKey.channel().close();
+//        selectionKey.channel().close();
     }
 }

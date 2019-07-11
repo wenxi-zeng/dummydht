@@ -45,6 +45,7 @@ public class SocketServer implements Runnable{
             }
         };
         serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.socket().bind(new InetSocketAddress(port));
         serverSocketChannel.configureBlocking(false);
         registerShutdownHook();

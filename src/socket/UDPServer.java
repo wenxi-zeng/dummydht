@@ -31,6 +31,7 @@ public class UDPServer implements Runnable {
         selector = Selector.open();
         datagramChannel = DatagramChannel.open();
         datagramChannel.configureBlocking(false);
+        datagramChannel.socket().setReuseAddress(true);
         datagramChannel.socket().bind(new InetSocketAddress(port));
         registerShutdownHook();
         new Handler(selector, datagramChannel, eventHandler);
