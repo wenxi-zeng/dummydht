@@ -9,9 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SocketClient implements Runnable{
@@ -21,6 +19,8 @@ public class SocketClient implements Runnable{
     private static volatile SocketClient instance = null;
 
     private final AtomicBoolean keepRunning = new AtomicBoolean(true);
+
+    private final Map<String, SocketChannel> channelCache;
 
     private final Queue<Attachable> attachments = new LinkedList<Attachable>() {
         @Override
@@ -32,6 +32,8 @@ public class SocketClient implements Runnable{
     };
 
     private SocketClient() {
+        channelCache = new HashMap<>();
+
         try {
             selector = Selector.open();
         } catch (IOException e) {
@@ -82,10 +84,18 @@ public class SocketClient implements Runnable{
     }
 
     private void registerRequest(InetSocketAddress remote, Request data, ServerCallBack callBack) throws IOException {
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.configureBlocking(false);
-        socketChannel.connect(remote);
-        attachments.add(new Connector(socketChannel, data, attachments, callBack));
+        String key = remote.getHostName() + ":" + remote.getPort();
+        SocketChannel socketChannel = channelCache.get(key);
+        if (socketChannel == null) {
+            socketChannel = SocketChannel.open();
+            socketChannel.configureBlocking(false);
+            socketChannel.connect(remote);
+            attachments.add(new Connector(socketChannel, data, attachments, callBack));
+            channelCache.put(key, socketChannel);
+        }
+        else {
+            attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack, attachments));
+        }
     }
 
     @Override

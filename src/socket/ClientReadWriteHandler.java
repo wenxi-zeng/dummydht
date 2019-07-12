@@ -4,7 +4,6 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
-import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,7 +25,6 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     private ByteBuffer[] _readBuf;
     private ByteBuffer[] _writeBuf;
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    private boolean processScheduled;
     private int size;
 
     public ClientReadWriteHandler(SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack, Queue<Attachable> attachments) throws IOException {
@@ -41,12 +39,11 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         this._writeBuf[0] = ByteBuffer.allocate(Integer.BYTES);
         this._writeBuf[0].putInt(_writeBuf[1].remaining());
         this._writeBuf[0].flip();
-        SimpleLog.v("Client write buffer: position " + _writeBuf[1].position() + ", remaining " + _writeBuf[1].remaining());
+        // SimpleLog.v("Client write buffer: position " + _writeBuf[1].position() + ", remaining " + _writeBuf[1].remaining());
         this._readBuf = new ByteBuffer[2];
         this._readBuf[1] = ByteBuffer.allocate(READ_BUF_SIZE);
         this._readBuf[0] = ByteBuffer.allocate(Integer.BYTES);
 
-        this.processScheduled = false;
         this.size = Integer.MIN_VALUE;
     }
 
@@ -67,35 +64,40 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
     }
 
-    private void process() throws IOException {
+    private void process() {
         byte[] byteArray = bos.toByteArray();
         int respSize = byteArray.length;
         Object o = ObjectConverter.getObject(byteArray);
-        SimpleLog.i(data);
+        // SimpleLog.i(data);
         if (o instanceof Response) {
             Response resp = (Response) o;
             StatInfoManager.getInstance().statResponse(data, resp, respSize);
             callBack.onResponse(data, resp);
         }
         else {
-            SimpleLog.i("[" + socketChannel.getRemoteAddress() + "] Client: process bytes " + respSize + ", object is " + o);
+            // SimpleLog.i("[" + socketChannel.getRemoteAddress() + "] Client: process bytes " + respSize + ", object is " + o);
             StatInfoManager.getInstance().statRoundTripFailure(data);
             callBack.onFailure(data, String.valueOf(o));
         }
     }
 
     private synchronized void read() throws IOException {
-        int numBytes = 0;
-        this.socketChannel.read(_readBuf);
-        _readBuf[0].flip();
+        if (this.socketChannel.read(_readBuf) == -1){
+            this.selectionKey.cancel();
+            this.socketChannel.close();
+            return;
+        }
+
+        int numBytes;
         _readBuf[1].flip();
 
         if (size == Integer.MIN_VALUE) {
+            _readBuf[0].flip();
             size = _readBuf[0].getInt();
-            numBytes = _readBuf[1].remaining();
         }
+        numBytes = _readBuf[1].remaining();
 
-        SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Client: read bytes " + numBytes);
+        // SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Client: read bytes " + numBytes);
 
         if (numBytes >= size) {
             // object fully arrived
@@ -108,14 +110,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
             size -= numBytes;
         }
 
-        if (_readBuf[1].hasRemaining()) {
-            _readBuf[1].compact();
-        } else {
-            _readBuf[1].clear();
-        }
-
         if (size <= 0 && size != Integer.MIN_VALUE) {
-            processScheduled = true;
             attachments.add(new Recycler(selectionKey));
 
             process();
@@ -126,6 +121,9 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
             _writeBuf[0].clear();
             _writeBuf[1].clear();
             bos.reset();
+        }
+        else {
+            _readBuf[1].clear();
         }
     }
 

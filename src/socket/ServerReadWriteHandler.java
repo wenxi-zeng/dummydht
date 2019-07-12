@@ -4,7 +4,6 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
-import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.Queue;
 
 public class ServerReadWriteHandler implements Runnable, Attachable {
@@ -88,17 +86,22 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
     }
 
     private synchronized void read() throws IOException {
-        int numBytes = 0;
-        this.socketChannel.read(_readBuf);
-        _readBuf[0].flip();
+        if (this.socketChannel.read(_readBuf) == -1){
+            this.selectionKey.cancel();
+            this.socketChannel.close();
+            return;
+        }
+
+        int numBytes;
         _readBuf[1].flip();
 
         if (size == Integer.MIN_VALUE) {
+            _readBuf[0].flip();
             size = _readBuf[0].getInt();
-            numBytes = _readBuf[1].remaining();
         }
+        numBytes = _readBuf[1].remaining();
 
-        SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Server: read bytes " + numBytes + ", total size: " + size);
+         // SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Server: read bytes " + numBytes + ", total size: " + size);
 
         if (numBytes >= size) {
             // object fully arrived
@@ -111,17 +114,14 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
             size -= numBytes;
         }
 
-        if (_readBuf[1].hasRemaining()) {
-            _readBuf[1].compact();
-        } else {
-            _readBuf[1].clear();
-        }
-
         if (size <= 0 && size != Integer.MIN_VALUE) {
             if (!processScheduled) {
                 processScheduled = true;
                 SocketServer.getWorkerPool().execute(this::process);
             }
+        }
+        else {
+            _readBuf[1].clear();
         }
     }
 
@@ -129,13 +129,14 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
         this.socketChannel.write(_writeBuf);
 
         if (!_writeBuf[0].hasRemaining() && !_writeBuf[1].hasRemaining()) {
-            attachments.add(new Recycler(selectionKey));
             size = Integer.MIN_VALUE;
             _readBuf[0].clear();
             _readBuf[1].clear();
             _writeBuf[0].clear();
             _writeBuf[1].clear();
             bos.reset();
+            this.selectionKey.interestOps(SelectionKey.OP_READ);
+            this.selectionKey.selector().wakeup();
         }
     }
 
