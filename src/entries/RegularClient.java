@@ -63,13 +63,37 @@ public class RegularClient {
         }
 
         if (args.length == 0) {
-            regularClient.run();
-            regularClient.connect();
+            regularClient.run(new SocketClient.ServerCallBack() {
+                @Override
+                public void onResponse(Request request, Response response) {
+                    if (response.getAttachment() != null) {
+                        regularClient.onTableUpdated(response.getAttachment());
+                        regularClient.connect();
+                    }
+                }
+
+                @Override
+                public void onFailure(Request request, String error) {
+                    SimpleLog.v(error);
+                }
+            });
         }
         else if (args[0].equals("-r")) {
             if (args.length == 2) {
-                regularClient.run();
-                regularClient.generateRequest(args[1]);
+                regularClient.run(new SocketClient.ServerCallBack() {
+                    @Override
+                    public void onResponse(Request request, Response response) {
+                        if (response.getAttachment() != null) {
+                            regularClient.onTableUpdated(response.getAttachment());
+                            regularClient.generateRequest(args[1]);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Request request, String error) {
+                        SimpleLog.v(error);
+                    }
+                });
             }
             else {
                 System.out.println ("Usage: RegularClient -r <filename>");
@@ -161,12 +185,12 @@ public class RegularClient {
         }
     }
 
-    private void run() {
+    private void run(SocketClient.ServerCallBack serverCallBack) {
         SimpleLog.v("Fetching table...");
 
         if (Config.getInstance().getSeeds().size() > 0) {
             Request request = new Request().withHeader(DaemonCommand.FETCH.name());
-            socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
+            socketClient.send(Config.getInstance().getSeeds().get(0), request, serverCallBack);
         }
         else {
             SimpleLog.v("No seed/proxy info found!");
