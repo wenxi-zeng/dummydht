@@ -1,5 +1,7 @@
 package socket;
 
+import util.SimpleLog;
+
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -33,7 +35,7 @@ public class Acceptor implements Runnable, Attachable {
         }
         catch (IOException ex) {
             attachments.add(new Recycler(selectionKey));
-            ex.printStackTrace();
+            SimpleLog.e(ex);
         }
     }
 

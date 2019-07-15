@@ -21,11 +21,7 @@ public class UDPServer implements Runnable {
 
     private final DatagramChannel datagramChannel;
 
-    private static volatile ExecutorService workerPool;
-
     private final AtomicBoolean keepRunning = new AtomicBoolean(true);
-
-    private static final int WORKER_POOL_SIZE = 8;
 
     public UDPServer(int port, EventHandler eventHandler) throws IOException {
         selector = Selector.open();
@@ -35,18 +31,6 @@ public class UDPServer implements Runnable {
         datagramChannel.socket().bind(new InetSocketAddress(port));
         registerShutdownHook();
         new Handler(selector, datagramChannel, eventHandler);
-    }
-
-    public static ExecutorService getWorkerPool() {
-        if (workerPool == null) {
-            synchronized(SocketServer.class) {
-                if (workerPool == null) {
-                    workerPool = Executors.newFixedThreadPool(WORKER_POOL_SIZE);
-                }
-            }
-        }
-
-        return workerPool;
     }
 
     public void run() {
@@ -95,9 +79,10 @@ public class UDPServer implements Runnable {
 
         private final SelectionKey _selectionKey;
 
-        private Object o;
+        private ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         private static final int READ_BUF_SIZE = 128 * 1024;
+
         private ByteBuffer _readBuf = ByteBuffer.allocate(READ_BUF_SIZE);
 
         private Handler(Selector selector, DatagramChannel datagramChannel, EventHandler eventHandler) throws IOException{
@@ -123,14 +108,15 @@ public class UDPServer implements Runnable {
 
             if (sender != null) {
                 _readBuf.flip();
-                o = ObjectConverter.getObject(_readBuf);
-
+                bos.write(ObjectConverter.getBytes(_readBuf));
+                Object o = ObjectConverter.getObject(bos.toByteArray());
+                process(o);
                 _readBuf.clear();
-                getWorkerPool().execute(this::process);
+                bos.reset();
             }
         }
 
-        private synchronized void process() {
+        private void process(Object o) {
             if (o != null) {
                 _eventHandler.onReceived(o);
             }

@@ -3,6 +3,7 @@ package socket;
 import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
+import util.SimpleLog;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -74,7 +75,7 @@ public class SocketServer implements Runnable{
             }
         }
         catch (IOException ex) {
-                ex.printStackTrace();
+            SimpleLog.e(ex);
         }
     }
 

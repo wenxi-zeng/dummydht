@@ -4,11 +4,13 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
+import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -57,7 +59,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
         }
         catch (IOException ex) {
             attachments.add(new Recycler(selectionKey));
-            ex.printStackTrace();
+            SimpleLog.e(ex);
         }
     }
 
@@ -103,6 +105,10 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
 
          // SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Server: read bytes " + numBytes + ", total size: " + size);
 
+        if (size < 0) {
+            reset();
+            return;
+        }
         if (numBytes >= size) {
             // object fully arrived
             bos.write(ObjectConverter.getBytes(_readBuf[1], size));
@@ -129,20 +135,28 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
         this.socketChannel.write(_writeBuf);
 
         if (!_writeBuf[0].hasRemaining() && !_writeBuf[1].hasRemaining()) {
-            size = Integer.MIN_VALUE;
-            _readBuf[0].clear();
-            _readBuf[1].clear();
-            _writeBuf[0].clear();
-            _writeBuf[1].clear();
-            bos.reset();
+            reset();
             this.selectionKey.interestOps(SelectionKey.OP_READ);
             this.selectionKey.selector().wakeup();
         }
     }
 
+    private void reset() {
+        size = Integer.MIN_VALUE;
+        processScheduled = false;
+        _readBuf[0].clear();
+        _readBuf[1].clear();
+        _writeBuf[0].clear();
+        _writeBuf[1].clear();
+        bos.reset();
+    }
+
     @Override
     public void attach(Selector selector) throws IOException {
-        selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
-        selectionKey.attach(this);
+        try {
+            selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
+            selectionKey.attach(this);
+        }
+        catch (CancelledKeyException ignored) {}
     }
 }

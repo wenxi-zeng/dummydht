@@ -4,10 +4,12 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
 import util.ObjectConverter;
+import util.SimpleLog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -60,7 +62,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
         catch (IOException ex) {
             attachments.add(new Recycler(selectionKey));
-            ex.printStackTrace();
+            SimpleLog.e(ex);
         }
     }
 
@@ -68,7 +70,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         byte[] byteArray = bos.toByteArray();
         int respSize = byteArray.length;
         Object o = ObjectConverter.getObject(byteArray);
-        // SimpleLog.i(data);
+
         if (o instanceof Response) {
             Response resp = (Response) o;
             StatInfoManager.getInstance().statResponse(data, resp, respSize);
@@ -99,6 +101,10 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
 
         // SimpleLog.v("[" + socketChannel.getRemoteAddress() + "] Client: read bytes " + numBytes);
 
+        if (size < 0) {
+            reset();
+            return;
+        }
         if (numBytes >= size) {
             // object fully arrived
             bos.write(ObjectConverter.getBytes(_readBuf[1], size));
@@ -112,15 +118,8 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
 
         if (size <= 0 && size != Integer.MIN_VALUE) {
             attachments.add(new Recycler(selectionKey));
-
             process();
-
-            size = Integer.MIN_VALUE;
-            _readBuf[0].clear();
-            _readBuf[1].clear();
-            _writeBuf[0].clear();
-            _writeBuf[1].clear();
-            bos.reset();
+            reset();
         }
         else {
             _readBuf[1].clear();
@@ -136,9 +135,21 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
     }
 
+    private void reset() {
+        size = Integer.MIN_VALUE;
+        _readBuf[0].clear();
+        _readBuf[1].clear();
+        _writeBuf[0].clear();
+        _writeBuf[1].clear();
+        bos.reset();
+    }
+
     @Override
     public void attach(Selector selector) throws IOException {
-        this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
-        this.selectionKey.attach(this);
+        try {
+            this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
+            this.selectionKey.attach(this);
+        }
+        catch (CancelledKeyException ignored) {}
     }
 }
