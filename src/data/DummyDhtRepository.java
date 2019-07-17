@@ -5,13 +5,9 @@ import loadmanagement.LoadInfo;
 import statmanagement.StatInfo;
 import util.Config;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.TimerTask;
 import java.util.concurrent.*;
 
 
@@ -31,8 +27,7 @@ public class DummyDhtRepository {
     private static volatile DummyDhtRepository instance = null;
 
     private DummyDhtRepository() {
-        connector = new Connector();
-        connector.setServer(Config.getInstance().getDataServer());
+        this.connector = new SQLiteConnector();
         executor = Executors.newSingleThreadExecutor();
         queue = new LinkedList<Queueable>(){
             @Override
@@ -43,10 +38,11 @@ public class DummyDhtRepository {
                 return result;
             }
         };
-        String prefix = Config.getInstance().getMode() + "_" + Config.getInstance().getScheme() + "_";
-        TABLE_STAT_INFO = prefix + "statinfo";
-        TABLE_LOAD_INFO = prefix + "loadinfo";
-        TABLE_HISTORICAL_LOAD_INFO = prefix + "historicalloadinfo";
+        String mode = Config.getInstance().getMode();
+        String scheme = Config.getInstance().getScheme();
+        TABLE_STAT_INFO = DummyDhtTables.STAT_INFO.getNameWithPrefix(mode, scheme);
+        TABLE_LOAD_INFO = DummyDhtTables.LOAD_INFO.getNameWithPrefix(mode, scheme);
+        TABLE_HISTORICAL_LOAD_INFO = DummyDhtTables.HISTORICAL_LOAD_INFO.getNameWithPrefix(mode, scheme);
 
         registerShutdownHook();
     }
@@ -124,6 +120,8 @@ public class DummyDhtRepository {
         }
     }
 
+
+
     public void open() {
         if (session == null || !connector.isConnected()) {
             session = connector.reconnect();
@@ -137,5 +135,9 @@ public class DummyDhtRepository {
     public void close() {
         connector.close();
         session = null;
+    }
+
+    public void setConnector(Connector connector) {
+        this.connector = connector;
     }
 }

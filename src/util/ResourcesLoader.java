@@ -54,4 +54,16 @@ public class ResourcesLoader {
 
         return Objects.equals(protocol, "jar");
     }
+
+    public static String getParentDirOfProgramPath() {
+        URL url = ResourcesLoader.class.getProtectionDomain().getCodeSource().getLocation();
+        String jarPath = null;
+        try {
+            jarPath = URLDecoder.decode(url.getFile(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
+    }
 }

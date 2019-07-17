@@ -32,6 +32,7 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
     public static void main(String[] args){
         try {
             Proxy proxy = Proxy.newInstance();
+            Config.with(proxy.daemon.getIp(), proxy.daemon.getPort());
             SimpleLog.with(proxy.daemon.getIp(), proxy.daemon.getPort());
             SimpleLog.i("Proxy: started");
             proxy.exec();

@@ -74,6 +74,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
 
         try {
             DataNodeDaemon daemon = DataNodeDaemon.newInstance(getAddress(), daemonPort);
+            Config.with(daemon.ip, daemon.port);
             SimpleLog.with(daemon.ip, daemon.port);
             SimpleLog.i("Daemon: " + daemonPort + " started");
             daemon.exec();

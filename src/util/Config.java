@@ -86,6 +86,10 @@ public class Config {
 
     private boolean standalone;
 
+    private String address;
+
+    private int port;
+
     public Config() {
         rb = ResourcesLoader.getBundle(CONFIG_PATH);
         numberOfReplicas = Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REPLICAS));
@@ -110,12 +114,25 @@ public class Config {
         return instance;
     }
 
+    public static void with(String address, int port) {
+        Config.getInstance().address = address;
+        Config.getInstance().port = port;
+    }
+
     public static void deleteInstance() {
         instance = null;
     }
 
     public static String getConfigPath() {
         return CONFIG_PATH;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public int getNumberOfHashSlots() {
