@@ -29,8 +29,10 @@ import org.apache.log4j.Logger;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 public class GossipMemberStateRefresher {
   public static final Logger LOGGER = Logger.getLogger(GossipMemberStateRefresher.class);
@@ -40,17 +42,20 @@ public class GossipMemberStateRefresher {
   private final List<GossipListener> listeners = new CopyOnWriteArrayList<>();
   private final Clock clock;
   private final BiFunction<String, String, PerNodeDataMessage> findPerNodeGossipData;
+  private final Supplier<Set<Entry<LocalMember, GossipState>>> watchMembersSupplier;
   private final ExecutorService listenerExecutor;
   private final ScheduledExecutorService scheduledExecutor;
   private final BlockingQueue<Runnable> workQueue;
 
   public GossipMemberStateRefresher(Map<LocalMember, GossipState> members, GossipSettings settings,
                                     GossipListener listener,
-                                    BiFunction<String, String, PerNodeDataMessage> findPerNodeGossipData) {
+                                    BiFunction<String, String, PerNodeDataMessage> findPerNodeGossipData,
+                                    Supplier<Set<Entry<LocalMember, GossipState>>> watchMembersSupplier) {
     this.members = members;
     this.settings = settings;
     listeners.add(listener);
     this.findPerNodeGossipData = findPerNodeGossipData;
+    this.watchMembersSupplier = watchMembersSupplier;
     clock = new SystemClock();
     workQueue = new ArrayBlockingQueue<>(1024);
     listenerExecutor = new ThreadPoolExecutor(1, 20, 1, TimeUnit.SECONDS, workQueue,
@@ -71,7 +76,7 @@ public class GossipMemberStateRefresher {
   }
 
   public void runOnce() {
-    for (Entry<LocalMember, GossipState> entry : members.entrySet()) {
+    for (Entry<LocalMember, GossipState> entry : watchMembersSupplier.get()) {
       boolean userDown = processOptimisticShutdown(entry);
       if (userDown)
         continue;

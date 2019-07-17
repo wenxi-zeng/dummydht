@@ -34,17 +34,16 @@ import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
 import org.apache.gossip.protocol.ProtocolManager;
+import org.apache.gossip.strategy.GossipStrategy;
+import org.apache.gossip.strategy.GossipStrategyFactory;
 import org.apache.gossip.transport.TransportManager;
 import org.apache.gossip.utils.ReflectionUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
@@ -81,6 +80,7 @@ public abstract class GossipManager {
   private final RingStatePersister ringState;
   private final UserDataPersister userDataState;
   private final GossipMemberStateRefresher memberStateRefresher;
+  private final GossipStrategy gossipStrategy;
   
   private final MessageHandler messageHandler;
   private final LockManager lockManager;
@@ -117,7 +117,8 @@ public abstract class GossipManager {
         gossipCore,
         GossipManager.buildPerNodeDataPath(this),
         GossipManager.buildSharedDataPath(this));
-    this.memberStateRefresher = new GossipMemberStateRefresher(members, settings, listener, this::findPerNodeGossipData);
+    this.gossipStrategy = GossipStrategyFactory.createStrategy(this, settings.getActiveGossipClass());
+    this.memberStateRefresher = new GossipMemberStateRefresher(members, settings, listener, this::findPerNodeGossipData, gossipStrategy::getWatchMemberSet);
     readSavedRingState();
     readSavedDataState();
   }
@@ -132,6 +133,10 @@ public abstract class GossipManager {
 
   public GossipSettings getSettings() {
     return settings;
+  }
+
+  public GossipStrategy getGossipStrategy() {
+    return gossipStrategy;
   }
 
   /**
