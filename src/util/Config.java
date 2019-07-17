@@ -45,6 +45,7 @@ public class Config {
     private final static String PROPERTY_LB_UPPER_BOUND = "lb_upper_bound";
     private final static String PROPERTY_LB_LOWER_BOUND = "lb_lower_bound";
     private final static String PROPERTY_LOG_FILTER = "log_filter";
+    private final static String PROPERTY_GOSSIP_STRATEGY = "gossip_strategy";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -65,6 +66,8 @@ public class Config {
     public final static String REQUEST_DISTRIBUTION_UNIFORM = "uniform";
     public final static String REQUEST_DISTRIBUTION_ZIPF = "zipf";
     public final static String REQUEST_DISTRIBUTION_EXP = "exp";
+    public final static String GOSSIP_STRATEGY_SIMPLE = "simple";
+    public final static String GOSSIP_STRATEGY_NEIGHBOR = "neighbor";
 
     private static volatile Config instance = null;
 
@@ -295,6 +298,10 @@ public class Config {
 
     public List<String> getLogFilter() {
         return Arrays.asList(rb.getString(PROPERTY_LOG_FILTER).split(","));
+    }
+
+    public String getGossipStrategy() {
+        return rb.getString(PROPERTY_GOSSIP_STRATEGY);
     }
 
     public boolean isStandalone() {

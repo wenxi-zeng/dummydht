@@ -110,6 +110,12 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         settings.setConvictThreshold(5.2);
         settings.setPersistDataState(false);
         settings.setPersistRingState(false);
+        if (Config.getInstance().getGossipStrategy().equals(Config.GOSSIP_STRATEGY_NEIGHBOR)) {
+            settings.setActiveGossipClass("org.apache.gossip.manager.NeighborAwareActiveGossiper");
+        }
+        else {
+            settings.setActiveGossipClass("org.apache.gossip.manager.SimpleActiveGossiper");
+        }
         List<Member> startupMembers = new ArrayList<>();
 
         for (String seed : dataNode.getSeeds()) {
