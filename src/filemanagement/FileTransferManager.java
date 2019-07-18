@@ -258,21 +258,18 @@ public class FileTransferManager {
     }
 
     private boolean isCompliedWithPolicy(PhysicalNode from, PhysicalNode to) {
-        if (mySelf != null) {
-            switch (policy) {
-                case SenderOnly:
-                    return mySelf.equals(from.getFullAddress());
-                case ReceiverOnly:
-                    return mySelf.equals(to.getFullAddress());
-                case SenderOrReceiver:
-                    return mySelf.equals(from.getFullAddress()) || mySelf.equals(to.getFullAddress());
-                case All:
-                default:
-                    return true;
-            }
+        if (mySelf == null || from == null || to == null) return false;
+        switch (policy) {
+            case SenderOnly:
+                return mySelf.equals(from.getFullAddress());
+            case ReceiverOnly:
+                return mySelf.equals(to.getFullAddress());
+            case SenderOrReceiver:
+                return mySelf.equals(from.getFullAddress()) || mySelf.equals(to.getFullAddress());
+            case All:
+            default:
+                return true;
         }
-
-        return true;
     }
 
     public enum FileTransferPolicy {

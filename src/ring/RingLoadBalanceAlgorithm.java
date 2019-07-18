@@ -20,9 +20,13 @@ public class RingLoadBalanceAlgorithm {
 
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
+            if (successor == null) {
+                SimpleLog.i("Virtual node [hash=" + vnode.getHash() + "] is no longer valid");
+                continue;
+            }
+
             int bound = successor.getHash() - vnode.getHash();
             int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
-
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             increaseLoad(table, dh, vnode);
         }
@@ -60,9 +64,13 @@ public class RingLoadBalanceAlgorithm {
 
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
+            if (predecessor == null) {
+                SimpleLog.i("Virtual node [hash=" + vnode.getHash() + "] is no longer valid");
+                continue;
+            }
+
             int bound = vnode.getHash() - predecessor.getHash();
             int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
-
             SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             decreaseLoad(table, dh, vnode);
         }
@@ -96,6 +104,11 @@ public class RingLoadBalanceAlgorithm {
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             Indexable successor = table.getTable().next(vnode);
+            if (successor == null) {
+                SimpleLog.i("Virtual node [hash=" + vnode.getHash() + "] is no longer valid");
+                continue;
+            }
+
             int bound = successor.getHash() - vnode.getHash();
             hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
         }
@@ -110,6 +123,11 @@ public class RingLoadBalanceAlgorithm {
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             Indexable predecessor = table.getTable().pre(vnode);
+            if (predecessor == null) {
+                SimpleLog.i("Virtual node [hash=" + vnode.getHash() + "] is no longer valid");
+                continue;
+            }
+
             int bound = vnode.getHash() - predecessor.getHash();
             hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
         }
@@ -122,7 +140,12 @@ public class RingLoadBalanceAlgorithm {
         int hf = hi - dh;
         if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
 
-        if (dh == 0 || hf == LookupTable.getInstance().getTable().pre(node).getHash()) {
+        Indexable predecessor = table.getTable().pre(node);
+        if (predecessor == null) {
+            SimpleLog.i("Virtual node [hash=" + node.getHash() + "] is no longer valid");
+            return;
+        }
+        if (dh == 0 || hf == predecessor.getHash()) {
             SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }
@@ -139,7 +162,12 @@ public class RingLoadBalanceAlgorithm {
         int hi = node.getHash();
         int hf = (hi + dh) % Config.getInstance().getNumberOfHashSlots();
 
-        if (dh == 0 || hf == LookupTable.getInstance().getTable().next(node).getHash()) {
+        Indexable successor = table.getTable().next(node);
+        if (successor == null) {
+            SimpleLog.i("Virtual node [hash=" + node.getHash() + "] is no longer valid");
+            return;
+        }
+        if (dh == 0 || hf == successor.getHash()) {
             SimpleLog.i("Invalid hash change, delta h=" + dh);
             return;
         }

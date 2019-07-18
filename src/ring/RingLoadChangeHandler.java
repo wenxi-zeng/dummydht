@@ -30,6 +30,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         Solution bestSolution = null;
         long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
 
+        if (pnode == null || pnode.getVirtualNodes() == null) return null;
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
 

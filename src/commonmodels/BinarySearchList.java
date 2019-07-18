@@ -139,7 +139,10 @@ public class BinarySearchList extends ArrayList<Indexable> implements Serializab
      *          Time Complexity O(1)
      */
     public Indexable pre(Indexable node) {
-        if (node.getIndex() < 0) // no index cache, did you call find() or get()?
+        if (node.getIndex() < 0) // no index cache, call find()
+            node = findNode(node);
+
+        if (node.getIndex() < 0) // still not found? maybe it's already removed
             return null;
         else if (node.getIndex() == 0) // current node is the first element in list
             return get(size() - 1);
