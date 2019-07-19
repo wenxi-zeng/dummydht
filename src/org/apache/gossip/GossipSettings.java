@@ -71,6 +71,8 @@ public class GossipSettings {
   private boolean bulkTransfer = false;
 
   private int bulkTransferSize = StartupSettings.DEFAULT_BULK_TRANSFER_SIZE;
+
+  private int numberOfNeighbors = 2;
   
   /**
    * Construct GossipSettings with default settings.
@@ -278,5 +280,13 @@ public class GossipSettings {
 
   public void setBulkTransferSize(int bulkTransferSize) {
     this.bulkTransferSize = bulkTransferSize;
+  }
+
+  public int getNumberOfNeighbors() {
+    return numberOfNeighbors;
+  }
+
+  public void setNumberOfNeighbors(int numberOfNeighbors) {
+    this.numberOfNeighbors = numberOfNeighbors;
   }
 }

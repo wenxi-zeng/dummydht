@@ -108,8 +108,11 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         settings.setGossipInterval(1000);
         settings.setCleanupInterval(10 * 60 * 1000);
         settings.setConvictThreshold(5.2);
+        settings.setWindowSize(5 * 60 * 1000);
+        settings.setMinimumSamples(30);
         settings.setPersistDataState(false);
         settings.setPersistRingState(false);
+        settings.setNumberOfNeighbors(Config.getInstance().getNumberOfGossipNeighbors());
         if (Config.getInstance().getGossipStrategy().equals(Config.GOSSIP_STRATEGY_NEIGHBOR)) {
             settings.setActiveGossipClass("org.apache.gossip.manager.NeighborAwareActiveGossiper");
         }

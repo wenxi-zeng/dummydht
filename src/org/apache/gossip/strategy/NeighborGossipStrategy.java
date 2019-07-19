@@ -32,14 +32,20 @@ public class NeighborGossipStrategy extends GossipStrategy{
     }
 
     private List<LocalMember> neighbors(List<LocalMember> members){
-        int numOfNeighbors = (int) Math.ceil(Math.sqrt(members.size()) / 2);
+        int numOfNeighbors = gossipManager.getSettings ().getNumberOfNeighbors();
+        if (numOfNeighbors < 0) {
+            numOfNeighbors = (int) Math.ceil(Math.sqrt(members.size()) / 2);
+        }
+        else {
+            numOfNeighbors = (int) Math.ceil(numOfNeighbors / 2);
+        }
 
         int index = members.indexOf(gossipManager.getMyself());
-        if (index < 0) {
+        if (index < 0 || members.size() < 2) {
             return Collections.emptyList();
         }
 
-        List<LocalMember> neighbourList = new ArrayList<>();
+        Set<LocalMember> neighbourList = new HashSet<>();
         int pre;
         int next;
         for (int i = 1; i < numOfNeighbors + 1; i++) {
@@ -48,11 +54,13 @@ public class NeighborGossipStrategy extends GossipStrategy{
             if (pre < 0) pre = members.size() - 1;
             if (next >= members.size()) next = 0;
 
-            neighbourList.add(members.get(pre));
-            neighbourList.add(members.get(next));
+            if (pre != index)
+                neighbourList.add(members.get(pre));
+            if (next != index)
+                neighbourList.add(members.get(next));
         }
 
-        return neighbourList;
+        return new ArrayList<>(neighbourList);
     }
 
     private void sort(List<LocalMember> members) {

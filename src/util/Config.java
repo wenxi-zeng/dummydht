@@ -46,6 +46,7 @@ public class Config {
     private final static String PROPERTY_LB_LOWER_BOUND = "lb_lower_bound";
     private final static String PROPERTY_LOG_FILTER = "log_filter";
     private final static String PROPERTY_GOSSIP_STRATEGY = "gossip_strategy";
+    private final static String PROPERTY_NUMBER_OF_GOSSIP_NEIGHBORS = "number_of_gossip_neighbor";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -302,6 +303,10 @@ public class Config {
 
     public String getGossipStrategy() {
         return rb.getString(PROPERTY_GOSSIP_STRATEGY);
+    }
+
+    public int getNumberOfGossipNeighbors() {
+        return Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_GOSSIP_NEIGHBORS));
     }
 
     public boolean isStandalone() {
