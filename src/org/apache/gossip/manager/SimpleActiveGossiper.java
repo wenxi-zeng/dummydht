@@ -88,7 +88,7 @@ public class SimpleActiveGossiper extends AbstractActiveGossiper {
   }
 
   protected void sendToALiveMember(){
-    LocalMember member = selectPartner(gossipManager.getLiveMembers());
+    LocalMember member = selectPartner(gossipManager.getGossipStrategy().getGossipMembers());
     sendMembershipList(gossipManager.getMyself(), member);
   }
   
@@ -101,7 +101,7 @@ public class SimpleActiveGossiper extends AbstractActiveGossiper {
    * sends an optimistic shutdown message to several clusters nodes
    */
   protected void sendShutdownMessage(){
-    List<LocalMember> l = gossipManager.getLiveMembers();
+    List<LocalMember> l = gossipManager.getGossipStrategy().getGossipMembers();
     int sendTo = l.size() < 3 ? 1 : l.size() / 2;
     for (int i = 0; i < sendTo; i++) {
       threadService.execute(() -> sendShutdownMessage(gossipManager.getMyself(), selectPartner(l)));

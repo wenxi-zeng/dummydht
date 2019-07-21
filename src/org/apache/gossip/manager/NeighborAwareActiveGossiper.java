@@ -3,8 +3,6 @@ package org.apache.gossip.manager;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.LocalMember;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
