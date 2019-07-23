@@ -106,7 +106,7 @@ public abstract class GossipManager {
                 clock.currentTimeMillis(), startupMember.getProperties(), settings.getWindowSize(),
                 settings.getMinimumSamples(), settings.getDistribution());
         //TODO should members start in down state?
-        members.put(member, GossipState.DOWN);
+        members.put(member, GossipState.UP);
       }
     }
     gossipServiceRunning = new AtomicBoolean(true);
@@ -160,6 +160,14 @@ public abstract class GossipManager {
                     .stream()
                     .filter(entry -> GossipState.UP.equals(entry.getValue()))
                     .map(Entry::getKey).collect(Collectors.toList()));
+  }
+
+  /**
+   *
+   * @return a read only list of members found in the UP state
+   */
+  public List<LocalMember> getGossipMembers() {
+    return Collections.unmodifiableList(gossipStrategy.getGossipMembers());
   }
 
   public LocalMember getMyself() {

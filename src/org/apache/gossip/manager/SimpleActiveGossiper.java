@@ -61,11 +61,11 @@ public class SimpleActiveGossiper extends AbstractActiveGossiper {
     }, 0, gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
     scheduledExecutorService.scheduleAtFixedRate(
             () -> sendPerNodeData(gossipManager.getMyself(),
-                    selectPartner(gossipManager.getLiveMembers())),
+                    selectPartner(gossipManager.getGossipMembers())),
             0, gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
     scheduledExecutorService.scheduleAtFixedRate(
             () -> sendSharedData(gossipManager.getMyself(),
-                    selectPartner(gossipManager.getLiveMembers())),
+                    selectPartner(gossipManager.getGossipMembers())),
             0, gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
   }
   

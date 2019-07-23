@@ -25,6 +25,7 @@ import org.apache.gossip.event.GossipState;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.ShutdownMessage;
 import org.apache.log4j.Logger;
+import util.SimpleLog;
 
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class GossipMemberStateRefresher {
   private final List<GossipListener> listeners = new CopyOnWriteArrayList<>();
   private final Clock clock;
   private final BiFunction<String, String, PerNodeDataMessage> findPerNodeGossipData;
-  private final Supplier<Set<Entry<LocalMember, GossipState>>> watchMembersSupplier;
+  private final Supplier<List<LocalMember>> watchMembersSupplier;
   private final ExecutorService listenerExecutor;
   private final ScheduledExecutorService scheduledExecutor;
   private final BlockingQueue<Runnable> workQueue;
@@ -50,7 +51,7 @@ public class GossipMemberStateRefresher {
   public GossipMemberStateRefresher(Map<LocalMember, GossipState> members, GossipSettings settings,
                                     GossipListener listener,
                                     BiFunction<String, String, PerNodeDataMessage> findPerNodeGossipData,
-                                    Supplier<Set<Entry<LocalMember, GossipState>>> watchMembersSupplier) {
+                                    Supplier<List<LocalMember>> watchMembersSupplier) {
     this.members = members;
     this.settings = settings;
     listeners.add(listener);
@@ -76,7 +77,8 @@ public class GossipMemberStateRefresher {
   }
 
   public void runOnce() {
-    for (Entry<LocalMember, GossipState> entry : watchMembersSupplier.get()) {
+    List<LocalMember> gossipMembers = watchMembersSupplier.get();
+    for (Entry<LocalMember, GossipState> entry : members.entrySet()) {
       boolean userDown = processOptimisticShutdown(entry);
       if (userDown)
         continue;
@@ -93,8 +95,12 @@ public class GossipMemberStateRefresher {
       if (entry.getValue() != requiredState) {
         members.put(entry.getKey(), requiredState);
         /* Call listeners asynchronously */
-        for (GossipListener listener: listeners)
-          listenerExecutor.execute(() -> listener.gossipEvent(entry.getKey(), requiredState));
+        if (gossipMembers.contains(entry.getKey())) {
+          if (requiredState == GossipState.DOWN)
+            SimpleLog.i("[" + entry.getKey() + "] calcRequiredState, phiMeasure: " + phiMeasure + "===============================================");
+          for (GossipListener listener : listeners)
+            listenerExecutor.execute(() -> listener.gossipEvent(entry.getKey(), requiredState));
+        }
       }
     }
   }
@@ -133,6 +139,7 @@ public class GossipMemberStateRefresher {
     if (s.getShutdownAtNanos() > l.getKey().getHeartbeat()) {
       members.put(l.getKey(), GossipState.DOWN);
       if (l.getValue() == GossipState.UP) {
+        SimpleLog.i("processOptimisticShutdown===============================================");
         for (GossipListener listener: listeners)
           listenerExecutor.execute(() -> listener.gossipEvent(l.getKey(), GossipState.DOWN));
       }
