@@ -107,7 +107,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         settings.setWindowSize(1000);
         settings.setGossipInterval(1000);
         settings.setCleanupInterval(10 * 60 * 1000);
-        settings.setConvictThreshold(5.2);
+        settings.setConvictThreshold(10.4);
         settings.setWindowSize(5 * 60 * 1000);
         settings.setMinimumSamples(30);
         settings.setPersistDataState(false);
