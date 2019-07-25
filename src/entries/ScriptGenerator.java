@@ -18,6 +18,8 @@ public class ScriptGenerator {
 
     private final static String FILE_START_ALL = "start-all.sh";
 
+    private final static String FILE_START = "launch-daemon.sh";
+
     private final static String FILE_STOP_ALL = "stop-all.sh";
 
     private final static String FILE_CONFIG_ALL = "config-all.sh";
@@ -36,6 +38,7 @@ public class ScriptGenerator {
 
     public static void main(String args[]) {
         SELF = getAddress();
+        generateStart();
         generateStartAll();
         generateStopAll();
         generateUpdateAll();
@@ -46,21 +49,31 @@ public class ScriptGenerator {
         generateClearAll();
     }
 
-    private static void generateStartAll() {
-        String filename = ResourcesLoader.getRelativeFileName(FILE_START_ALL);
+    private static void generateStart() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_START);
         Config config = Config.getInstance();
         int startPort = config.getStartPort();
         int portRange = config.getPortRange();
         StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("for n in {").append(startPort).append("..").append(startPort + portRange).append("}; ")
+                .append("do ")
+                .append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -daemon ").append("$n & ")
+                .append("done\n");
+
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateStartAll() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_START_ALL);
+        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder command = new StringBuilder();
+        command.append(". ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append(FILE_START).append("\n");
 
         for (String node : getNodes()) {
-            StringBuilder command = new StringBuilder();
-            for (int i = 0; i < portRange; i++) {
-                command.append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -daemon ")
-                        .append(startPort + i)
-                        .append(" &").append('\n');
-            }
-
             if (node.contains(SELF))
                 stringBuilder.append(command);
             else
@@ -215,7 +228,7 @@ public class ScriptGenerator {
     private static void generateClearAll() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String node : getNodes()) {
+        for (String node : getAllServers()) {
             StringBuilder command = new StringBuilder();
 
             command.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("*").append('\n');
@@ -245,12 +258,8 @@ public class ScriptGenerator {
 
     private static HashSet<String> getNodes() {
         Config config = Config.getInstance();
-        HashSet<String> nodes = new HashSet<>(Arrays.asList(config.getNodes()));
-        nodes.add(config.getLogServer().substring(0, config.getLogServer().indexOf(':')));
-        nodes.add(config.getStatServer().substring(0, config.getStatServer().indexOf(':')));
-        nodes.add(config.getDataServer().substring(0, config.getDataServer().indexOf(':')));
 
-        return nodes;
+        return new HashSet<>(Arrays.asList(config.getNodes()));
     }
 
     private static HashSet<String> getAllServers() {
