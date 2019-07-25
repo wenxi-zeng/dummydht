@@ -4,28 +4,15 @@ import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 public class StatInfoManager {
-
-    private Queue<StatInfo> queue;
 
     private StatInfoReporter reporter;
 
     private static volatile StatInfoManager instance = null;
 
     private StatInfoManager() {
-        queue = new LinkedList<StatInfo>() {
-            @Override
-            public boolean add(StatInfo info) {
-                boolean result = super.add(info);
-                reporter.report();
-
-                return result;
-            }
-        };
-        reporter = new StatInfoReporter(this);
+        reporter = new StatInfoReporter();
+        reporter.start();
     }
 
     public static StatInfoManager getInstance() {
@@ -38,10 +25,6 @@ public class StatInfoManager {
         }
 
         return instance;
-    }
-
-    public Queue<StatInfo> getQueue() {
-        return queue;
     }
 
     public void statResponse(@NotNull Request request, @NotNull Response response, long respSize) {
@@ -57,8 +40,8 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_ROUND_TRIP)
                 .calcElapsed(request.getTimestamp());
 
-        queue.add(responseStat);
-        queue.add(roundTripStat);
+        reporter.report(responseStat);
+        reporter.report(roundTripStat);
     }
 
     public void statRoundTripFailure(@NotNull Request request) {
@@ -67,7 +50,7 @@ public class StatInfoManager {
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_ROUND_TRIP_FAILURE)
                 .calcElapsed(request.getTimestamp());
-        queue.add(stat);
+        reporter.report(stat);
     }
 
     public void statRequest(@NotNull Request request, long receiveStamp, long reqSize) {
@@ -77,7 +60,7 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_REQUEST)
                 .withSize(reqSize)
                 .calcElapsed(request.getTimestamp(), receiveStamp);
-        queue.add(stat);
+        reporter.report(stat);
     }
 
     public void statExecution(@NotNull Request request, long receiveStamp) {
@@ -87,7 +70,7 @@ public class StatInfoManager {
                 .withType(StatInfo.TYPE_EXECUTION)
                 .calcElapsed(receiveStamp);
         stat.setElapsed(stat.getElapsed() + (long)request.getProcessTime());
-        queue.add(stat);
+        reporter.report(stat);
     }
 
     public long getStamp() {

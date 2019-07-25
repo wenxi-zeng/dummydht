@@ -5,12 +5,13 @@ import socket.UDPClient;
 import util.Config;
 
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StatInfoReporter {
-
-    private final StatInfoManager statInfoManager;
 
     private final DummyDhtRepository repo;
 
@@ -20,11 +21,16 @@ public class StatInfoReporter {
 
     private boolean isEnableStatServer;
 
-    public StatInfoReporter(StatInfoManager statInfoManager) {
-        this.statInfoManager = statInfoManager;
+    private BlockingQueue<StatInfo> queue;
+
+    private AtomicBoolean reporting;
+
+    public StatInfoReporter() {
         this.repo = DummyDhtRepository.getInstance();
-        this.executor = Executors.newSingleThreadExecutor();
+        this.executor = Executors.newFixedThreadPool(2);
         this.isEnableStatServer = Config.getInstance().isEnableStatServer();
+        this.queue = new LinkedBlockingQueue<>();
+        this.reporting = new AtomicBoolean(true);
         //if (this.isEnableStatServer) {
             try {
                 this.client = new UDPClient(Config.getInstance().getStatServer());
@@ -34,21 +40,33 @@ public class StatInfoReporter {
         //}
     }
 
-    public void report() {
-        executor.execute(this::flush);
+    public void start() {
+        executor.execute(this::consume);
     }
 
-    private void flush() {
-        while (!statInfoManager.getQueue().isEmpty()) {
-            StatInfo info = statInfoManager.getQueue().poll();
-            try {
+    public void report(StatInfo statInfo) {
+        executor.execute(() -> produce(statInfo));
+    }
+
+    private void produce(StatInfo statInfo) {
+        try {
+            queue.put(statInfo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void consume() {
+        try {
+            while (reporting.get()) {
+                StatInfo statInfo = queue.take();
                 if (isEnableStatServer) {
-                    client.send(info);
-                    repo.put(info);
+                    client.send(statInfo);
+                    repo.put(statInfo);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
         }
     }
 }

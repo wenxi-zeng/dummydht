@@ -5,10 +5,15 @@ import loadmanagement.LoadInfo;
 import statmanagement.StatInfo;
 import util.Config;
 
-import java.sql.*;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class DummyDhtRepository {
@@ -22,22 +27,17 @@ public class DummyDhtRepository {
 
     private ExecutorService executor;
 
-    private Queue<Queueable> queue;
+    private BlockingQueue<Queueable> queue;
+
+    private AtomicBoolean running;
 
     private static volatile DummyDhtRepository instance = null;
 
     private DummyDhtRepository() {
         this.connector = new SQLiteConnector();
-        executor = Executors.newSingleThreadExecutor();
-        queue = new LinkedList<Queueable>(){
-            @Override
-            public boolean add(Queueable queueable) {
-                boolean result = super.add(queueable);
-                process();
-
-                return result;
-            }
-        };
+        executor = Executors.newFixedThreadPool(2);
+        queue = new LinkedBlockingQueue<>();
+        running = new AtomicBoolean(true);
         String mode = Config.getInstance().getMode();
         String scheme = Config.getInstance().getScheme();
         TABLE_STAT_INFO = DummyDhtTables.STAT_INFO.getNameWithPrefix(mode, scheme);
@@ -45,6 +45,7 @@ public class DummyDhtRepository {
         TABLE_HISTORICAL_LOAD_INFO = DummyDhtTables.HISTORICAL_LOAD_INFO.getNameWithPrefix(mode, scheme);
 
         registerShutdownHook();
+        executor.execute(this::consume);
     }
 
     public static DummyDhtRepository getInstance() {
@@ -59,24 +60,35 @@ public class DummyDhtRepository {
         return instance;
     }
 
-    public void process() {
+    public void start() {
         executor.execute(this::consume);
     }
 
-    private synchronized void consume() {
-        while (!queue.isEmpty()) {
-            open();
-            Queueable queueable = queue.peek();
-            if (queueable instanceof StatInfo)
-                insertStatInfo((StatInfo) queueable);
-            else if (queueable instanceof LoadInfo)
-                insertLoadInfo((LoadInfo) queueable);
-            queue.poll();
+    public void put(Queueable queueable) {
+        executor.execute(() -> produce(queueable));
+    }
+
+    private void produce(Queueable queueable) {
+        try {
+            queue.put(queueable);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    public void put(Queueable queueable) {
-        queue.add(queueable);
+    private void consume() {
+        try {
+            while (running.get()) {
+                open();
+                Queueable queueable = queue.take();
+                if (queueable instanceof StatInfo)
+                    insertStatInfo((StatInfo) queueable);
+                else if (queueable instanceof LoadInfo)
+                    insertLoadInfo((LoadInfo) queueable);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void insertLoadInfo(LoadInfo info) {
