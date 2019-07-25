@@ -69,8 +69,9 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     private void process() {
         byte[] byteArray = bos.toByteArray();
         int respSize = byteArray.length;
-        Object o = ObjectConverter.getObject(byteArray);
+        if (respSize == 0) return;
 
+        Object o = ObjectConverter.getObject(byteArray);
         if (o instanceof Response) {
             Response resp = (Response) o;
             StatInfoManager.getInstance().statResponse(data, resp, respSize);

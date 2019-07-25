@@ -65,6 +65,11 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
 
     private synchronized void process() {
         byte[] byteArray = bos.toByteArray();
+        if (byteArray.length == 0) {
+            reset();
+            return;
+        }
+
         Object o = ObjectConverter.getObject(byteArray);
         if (o instanceof Request) {
             try {
@@ -79,11 +84,16 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
                 _writeBuf[1] = ObjectConverter.getByteBuffer(response);
                 _writeBuf[0].putInt(_writeBuf[1].remaining());
                 _writeBuf[0].flip();
+
+                this.selectionKey.interestOps(SelectionKey.OP_WRITE);
+                this.selectionKey.selector().wakeup();
             } catch (IOException e) {
+                reset();
                 e.printStackTrace();
             }
-            this.selectionKey.interestOps(SelectionKey.OP_WRITE);
-            this.selectionKey.selector().wakeup();
+        }
+        else {
+            reset();
         }
     }
 
