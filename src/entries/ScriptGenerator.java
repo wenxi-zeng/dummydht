@@ -34,6 +34,8 @@ public class ScriptGenerator {
 
     private final static String FILE_CLEAR_ALL = "clear-all.sh";
 
+    private final static String FILE_IMPORT_DATA = "import-data.sh";
+
     private static String SELF;
 
     public static void main(String args[]) {
@@ -47,6 +49,29 @@ public class ScriptGenerator {
         generateAuthorizeAll();
         generateDisableFirewallAll();
         generateClearAll();
+        generateImportData();
+    }
+
+    private static void generateImportData() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : getAllServers()) {
+            if (!node.contains(SELF))
+                stringBuilder.append("sshpass -p alien1 scp -rp ")
+                        .append("root@").append(node).append(":").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*.db ")
+                        .append(File.separator).append("root").append(File.separator).append("dummydhtdb").append("\n");
+        }
+        stringBuilder.append("for filename in ").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*.db; do\n")
+                .append("sqlite3 $filename .dump | ./sqlite3-to-mysql.py -u alien -p alien1 -d dummydht | mysql -u alien -palien1 --default-character-set=utf8\n")
+                .append("done\n");
+
+        String filename = ResourcesLoader.getRelativeFileName(FILE_IMPORT_DATA);
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            //yum -y install sshpass
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void generateStart() {
