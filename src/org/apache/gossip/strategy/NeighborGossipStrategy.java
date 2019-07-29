@@ -5,6 +5,7 @@ import org.apache.gossip.Member;
 import org.apache.gossip.manager.GossipManager;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 public class NeighborGossipStrategy extends GossipStrategy{
 
@@ -14,15 +15,25 @@ public class NeighborGossipStrategy extends GossipStrategy{
 
     @Override
     public List<LocalMember> getGossipMembers() {
-        List<LocalMember> liveMembers = new ArrayList<>(gossipManager.getLiveMembers());
-        sort(liveMembers);
+        Supplier<List<LocalMember>> supplier = gossipManager.getMembershipSupplier();
+        List<LocalMember> liveMembers;
+
+        if (supplier == null) {
+            liveMembers = new ArrayList<>(gossipManager.getLiveMembers());
+            sort(liveMembers, true);
+        }
+        else {
+            liveMembers = supplier.get();
+            sort(liveMembers, false);
+        }
+
         return neighbors(liveMembers);
     }
 
     @Override
     public List<LocalMember> getWatchMemberSet() {
         List<LocalMember> allMembers = new ArrayList<>(gossipManager.getMembers().keySet());
-        sort(allMembers);
+        sort(allMembers, true);
         return neighbors(allMembers);
     }
 
@@ -58,8 +69,8 @@ public class NeighborGossipStrategy extends GossipStrategy{
         return new ArrayList<>(neighbourList);
     }
 
-    private void sort(List<LocalMember> members) {
-        members.add(gossipManager.getMyself());
+    private void sort(List<LocalMember> members, boolean addSelf) {
+        if (addSelf) members.add(gossipManager.getMyself());
         members.sort(Comparator.comparing(Member::getId));
     }
 }

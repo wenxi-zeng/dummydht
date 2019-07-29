@@ -50,6 +50,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class GossipManager {
@@ -84,13 +85,15 @@ public abstract class GossipManager {
   
   private final MessageHandler messageHandler;
   private final LockManager lockManager;
+  private final Supplier<List<LocalMember>> membershipSupplier;
 
   public GossipManager(String cluster,
                        URI uri, String id, Map<String, String> properties, GossipSettings settings,
                        List<Member> gossipMembers, GossipListener listener, MetricRegistry registry,
-                       MessageHandler messageHandler) {
+                       MessageHandler messageHandler, Supplier<List<LocalMember>> membershipSupplier) {
     this.settings = settings;
     this.messageHandler = messageHandler;
+    this. membershipSupplier = membershipSupplier;
 
     clock = new SystemClock();
     me = new LocalMember(cluster, uri, id, clock.currentTimeMillis(), properties,
@@ -392,6 +395,10 @@ public abstract class GossipManager {
 
   public void registerGossipListener(GossipListener listener) {
     memberStateRefresher.register(listener);
+  }
+
+  public Supplier<List<LocalMember>> getMembershipSupplier() {
+    return membershipSupplier;
   }
 
   /**

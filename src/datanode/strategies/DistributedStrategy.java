@@ -136,8 +136,26 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                                 .gossipMembers(startupMembers)
                                 .gossipSettings(settings)
                                 .listener(this)
+                                .membershipSupplier(this::convertPhysicalNodeList)
                                 .build();
         this.gossipService.registerSharedDataSubscriber(this);
+    }
+
+    private List<LocalMember> convertPhysicalNodeList() {
+        List<LocalMember> members = new ArrayList<>();
+        for (PhysicalNode node : dataNode.getPhysicalNodes()) {
+            try {
+                URI uri = URIHelper.getGossipURI(node.getFullAddress());
+                LocalMember member = new LocalMember(dataNode.getClusterName(),
+                        uri,
+                        uri.getHost() + "." + uri.getPort());
+                members.add(member);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return members;
     }
 
     private String printLiveMembers() {

@@ -19,6 +19,7 @@ package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.GossipSettings;
+import org.apache.gossip.LocalMember;
 import org.apache.gossip.Member;
 import org.apache.gossip.StartupSettings;
 import org.apache.gossip.event.GossipListener;
@@ -26,10 +27,8 @@ import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.handlers.MessageHandlerFactory;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Supplier;
 
 public class GossipManagerBuilder {
 
@@ -47,6 +46,7 @@ public class GossipManagerBuilder {
     private MetricRegistry registry;
     private Map<String,String> properties;
     private MessageHandler messageHandler;
+    private Supplier<List<LocalMember>> membershipSupplier;
 
     private ManagerBuilder() {}
 
@@ -110,6 +110,11 @@ public class GossipManagerBuilder {
       return this;
     }
 
+    public ManagerBuilder membershipSupplier(Supplier<List<LocalMember>> membershipSupplier) {
+      this.membershipSupplier = membershipSupplier;
+      return this;
+    }
+
     public GossipManager build() {
       checkArgument(id != null, "You must specify an id");
       checkArgument(cluster != null, "You must specify a cluster name");
@@ -131,7 +136,7 @@ public class GossipManagerBuilder {
       if (messageHandler == null) {
         messageHandler = MessageHandlerFactory.defaultHandler();
       }
-      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, messageHandler) {} ;
+      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, messageHandler, membershipSupplier) {} ;
     }
   }
 

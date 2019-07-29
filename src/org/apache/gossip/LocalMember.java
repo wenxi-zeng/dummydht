@@ -46,6 +46,13 @@ public class LocalMember extends Member {
     detector = new FailureDetector(minSamples, windowSize, distribution);
   }
 
+  public LocalMember(String clusterName, URI uri, String id) {
+    this.clusterName = clusterName;
+    this.uri = uri;
+    this.id = id;
+  }
+
+
   protected LocalMember(){
     
   }

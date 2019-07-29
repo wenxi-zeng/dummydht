@@ -222,7 +222,7 @@ public abstract class AbstractActiveGossiper {
     message.setUriFrom(gossipManager.getMyself().getUri().toASCIIString());
     message.setUuid(UUID.randomUUID().toString());
     message.getMembers().add(convert(me));
-    for (LocalMember other : gossipManager.getMembers().keySet()) {
+    for (LocalMember other : gossipManager.getGossipStrategy().getWatchMemberSet()) {
       message.getMembers().add(convert(other));
     }
     Response r = gossipCore.send(message, member.getUri());
