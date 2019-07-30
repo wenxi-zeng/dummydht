@@ -36,6 +36,8 @@ public class ScriptGenerator {
 
     private final static String FILE_IMPORT_DATA = "import-data.sh";
 
+    private final static String FILE_CLEAR_DATA = "clear-data.sh";
+
     private static String SELF;
 
     public static void main(String args[]) {
@@ -49,6 +51,7 @@ public class ScriptGenerator {
         generateAuthorizeAll();
         generateDisableFirewallAll();
         generateClearAll();
+        generateClearData();
         generateImportData();
     }
 
@@ -263,6 +266,26 @@ public class ScriptGenerator {
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_CLEAR_ALL);
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateClearData() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : getAllServers()) {
+            StringBuilder command = new StringBuilder();
+
+            command.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*").append('\n');
+            stringBuilder.append(command);
+            if (!node.contains(SELF))
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        String filename = ResourcesLoader.getRelativeFileName(FILE_CLEAR_DATA);
         try (PrintStream out = new PrintStream(createFile(filename))) {
             out.println(stringBuilder.toString());
         } catch (FileNotFoundException e) {
