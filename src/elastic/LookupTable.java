@@ -1,9 +1,6 @@
 package elastic;
 
-import commonmodels.LoadBalancingCallBack;
-import commonmodels.MembershipCallBack;
-import commonmodels.PhysicalNode;
-import commonmodels.ReadWriteCallBack;
+import commonmodels.*;
 import filemanagement.DummyFile;
 import filemanagement.FileBucket;
 import util.Config;
@@ -11,7 +8,7 @@ import util.Config;
 import java.io.Serializable;
 import java.util.*;
 
-public class LookupTable implements Serializable {
+public class LookupTable extends Transportable implements Serializable {
 
     private long epoch;
 

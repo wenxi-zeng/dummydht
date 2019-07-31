@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LookupTable implements Serializable {
+public class LookupTable extends Transportable implements Serializable {
 
     private long epoch;
 

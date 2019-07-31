@@ -12,7 +12,7 @@ import util.MathX;
 import java.io.Serializable;
 import java.util.*;
 
-public class ClusterMap implements Serializable {
+public class ClusterMap extends Transportable implements Serializable {
 
     private Clusterable root;
 

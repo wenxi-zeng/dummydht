@@ -1,11 +1,12 @@
 package elastic;
 
 import commonmodels.Indexable;
+import commonmodels.Transportable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BucketNode implements Indexable {
+public class BucketNode extends Transportable implements Indexable {
 
     private int hash;
 

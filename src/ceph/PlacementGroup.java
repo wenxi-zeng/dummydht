@@ -1,10 +1,11 @@
 package ceph;
 
 import commonmodels.Indexable;
+import commonmodels.Transportable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class PlacementGroup implements Indexable {
+public class PlacementGroup extends Transportable implements Indexable {
 
     private String id;
 

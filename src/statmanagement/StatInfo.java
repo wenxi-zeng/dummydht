@@ -1,39 +1,21 @@
 package statmanagement;
 
-import java.io.Serializable;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import commonmodels.Queueable;
+import commonmodels.Transportable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-        "start_time",
-        "end_time",
-        "header",
-        "token",
-        "elapsed",
-        "type",
-        "size"
-})
-public class StatInfo implements Serializable, Queueable
+import java.io.Serializable;
+
+public class StatInfo extends Transportable implements Serializable, Queueable
 {
-    @JsonProperty("start_time")
     private long startTime;
-    @JsonProperty("end_time")
     private long endTime;
-    @JsonProperty("header")
     private String header;
-    @JsonProperty("token")
     private String token;
-    @JsonProperty("elapsed")
     private long elapsed;
-    @JsonProperty("type")
     private String type;
-    @JsonProperty("size")
     private long size;
     private final static long serialVersionUID = -3973190766843360141L;
 
@@ -50,33 +32,10 @@ public class StatInfo implements Serializable, Queueable
     public StatInfo() {
     }
 
-    /**
-     *
-     * @param startTime
-     * @param endTime
-     * @param header
-     * @param token
-     * @param elapsed
-     * @param type
-     * @param size
-     */
-    public StatInfo(long startTime, long endTime, String header, String token, long elapsed, String type, long size) {
-        super();
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.header = header;
-        this.token = token;
-        this.elapsed = elapsed;
-        this.type = type;
-        this.size = size;
-    }
-
-    @JsonProperty("start_time")
     public long getStartTime() {
         return startTime;
     }
 
-    @JsonProperty("start_time")
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
@@ -86,12 +45,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("end_time")
     public long getEndTime() {
         return endTime;
     }
 
-    @JsonProperty("end_time")
     public void setEndTime(long endTime) {
         this.endTime = endTime;
     }
@@ -101,12 +58,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("header")
     public String getHeader() {
         return header;
     }
 
-    @JsonProperty("header")
     public void setHeader(String header) {
         this.header = header;
     }
@@ -116,12 +71,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("token")
     public String getToken() {
         return token;
     }
 
-    @JsonProperty("token")
     public void setToken(String token) {
         this.token = token;
     }
@@ -131,12 +84,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("elapsed")
     public long getElapsed() {
         return elapsed;
     }
 
-    @JsonProperty("elapsed")
     public void setElapsed(long elapsed) {
         this.elapsed = elapsed;
     }
@@ -160,12 +111,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("type")
     public String getType() {
         return type;
     }
 
-    @JsonProperty("type")
     public void setType(String type) {
         this.type = type;
     }
@@ -175,12 +124,10 @@ public class StatInfo implements Serializable, Queueable
         return this;
     }
 
-    @JsonProperty("size")
     public long getSize() {
         return size;
     }
 
-    @JsonProperty("size")
     public void setSize(long size) {
         this.size = size;
     }

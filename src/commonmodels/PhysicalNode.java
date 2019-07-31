@@ -8,7 +8,7 @@ import java.util.List;
 
 import static util.Config.STATUS_ACTIVE;
 
-public class PhysicalNode implements Clusterable, Serializable {
+public class PhysicalNode extends Transportable implements Clusterable, Serializable {
 
     private String address;
 

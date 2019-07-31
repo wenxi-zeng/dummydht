@@ -1,12 +1,13 @@
 package ceph;
 
 import commonmodels.Clusterable;
+import commonmodels.Transportable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Cluster implements Clusterable, Serializable {
+public class Cluster extends Transportable implements Clusterable, Serializable {
 
     private String id;
 

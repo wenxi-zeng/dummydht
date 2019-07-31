@@ -1,8 +1,9 @@
 package ring;
 
 import commonmodels.Indexable;
+import commonmodels.Transportable;
 
-public class VirtualNode implements Indexable {
+public class VirtualNode extends Transportable implements Indexable {
 
     private int hash;
 

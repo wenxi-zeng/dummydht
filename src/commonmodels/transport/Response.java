@@ -1,12 +1,13 @@
 package commonmodels.transport;
 
+import commonmodels.Transportable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
-public class Response implements Serializable
+public class Response extends Transportable implements Serializable
 {
     private String header;
     private short status;
@@ -35,20 +36,6 @@ public class Response implements Serializable
             this.header = request.getHeader();
             this.token = request.getToken();
         }
-    }
-
-    /**
-     * @param header
-     * @param message
-     * @param status
-     * @param attachment
-     */
-    public Response(String header, short status, String message, Object attachment) {
-        this();
-        this.header = header;
-        this.status = status;
-        this.message = message;
-        this.attachment = attachment;
     }
 
     public String getHeader() {

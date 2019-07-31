@@ -1,12 +1,13 @@
 package filemanagement;
 
+import commonmodels.Transportable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
-public class FileBucket implements Serializable, Cloneable, Comparable<FileBucket> {
+public class FileBucket extends Transportable implements Serializable, Cloneable, Comparable<FileBucket> {
 
     private int key;
 
