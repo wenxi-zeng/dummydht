@@ -1,5 +1,6 @@
 package socket;
 
+import commonmodels.Transportable;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
@@ -37,7 +38,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         this.attachments = attachments;
 
         this._writeBuf = new ByteBuffer[2];
-        this._writeBuf[1] = ObjectConverter.getByteBuffer(data);
+        this._writeBuf[1] = JsonProtocolManager.getInstance().writeGzip(data);
         this._writeBuf[0] = ByteBuffer.allocate(Integer.BYTES);
         this._writeBuf[0].putInt(_writeBuf[1].remaining());
         this._writeBuf[0].flip();
@@ -71,7 +72,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         int respSize = byteArray.length;
         if (respSize == 0) return;
 
-        Object o = ObjectConverter.getObject(byteArray);
+        Transportable o = JsonProtocolManager.getInstance().readGzip(byteArray);
         if (o instanceof Response) {
             Response resp = (Response) o;
             StatInfoManager.getInstance().statResponse(data, resp, respSize);

@@ -1,5 +1,7 @@
 package socket;
 
+import commonmodels.Transportable;
+import commonmodels.TransportableString;
 import util.ObjectConverter;
 
 import java.io.IOException;
@@ -19,8 +21,12 @@ public class UDPClient {
         channel = datagramChannel.connect(socketAddress);
     }
 
-    public void send(Object msg) throws IOException {
-        ByteBuffer _writeBuf = ObjectConverter.getByteBuffer(msg);
+    public void send(Transportable msg) throws IOException {
+        ByteBuffer _writeBuf = JsonProtocolManager.getInstance().writeGzip(msg);
         channel.write(_writeBuf);
+    }
+
+    public void send(String msg) throws IOException {
+        send(new TransportableString(msg));
     }
 }

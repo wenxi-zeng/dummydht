@@ -1,5 +1,6 @@
 package socket;
 
+import commonmodels.Transportable;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
@@ -70,7 +71,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
             return;
         }
 
-        Object o = ObjectConverter.getObject(byteArray);
+        Transportable o = JsonProtocolManager.getInstance().readGzip(byteArray);
         if (o instanceof Request) {
             try {
                 Request req = (Request) o;
@@ -81,7 +82,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
                 req.setSender(inetSocketAddress.getHostName() + ":" + inetSocketAddress.getPort());
                 Response response = eventHandler.onReceived(req);
                 StatInfoManager.getInstance().statExecution(req, stamp);
-                _writeBuf[1] = ObjectConverter.getByteBuffer(response);
+                _writeBuf[1] = JsonProtocolManager.getInstance().writeGzip(response);
                 _writeBuf[0].putInt(_writeBuf[1].remaining());
                 _writeBuf[0].flip();
 

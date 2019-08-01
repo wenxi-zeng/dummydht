@@ -109,7 +109,7 @@ public class UDPServer implements Runnable {
             if (sender != null) {
                 _readBuf.flip();
                 bos.write(ObjectConverter.getBytes(_readBuf));
-                Object o = ObjectConverter.getObject(bos.toByteArray());
+                Object o = JsonProtocolManager.getInstance().readGzip(bos.toByteArray());
                 process(o);
                 _readBuf.clear();
                 bos.reset();

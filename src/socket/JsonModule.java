@@ -6,10 +6,7 @@ import ceph.PlacementGroup;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import commonmodels.BinarySearchList;
-import commonmodels.Clusterable;
-import commonmodels.Indexable;
-import commonmodels.PhysicalNode;
+import commonmodels.*;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.BucketNode;
@@ -233,6 +230,12 @@ abstract class ClusterMapMixin {
     @JsonProperty("physicalNodeMap") abstract HashMap<String, PhysicalNode> getPhysicalNodeMap();
 }
 
+abstract class TransportableStringMixin {
+    @JsonCreator
+    TransportableStringMixin(@JsonProperty("value") String value) { }
+    @JsonProperty("value") abstract String getValue();
+}
+
 public class JsonModule extends SimpleModule {
 
     private static final long serialVersionUID = 6134836523275023419L;
@@ -256,6 +259,7 @@ public class JsonModule extends SimpleModule {
         context.setMixInAnnotations(ring.LookupTable.class, RingLookupTableMixin.class);
         context.setMixInAnnotations(StatInfo.class, StatInfoMixin.class);
         context.setMixInAnnotations(VirtualNode.class, VirtualNodeMixin.class);
+        context.setMixInAnnotations(TransportableString.class, TransportableStringMixin.class);
     }
 
 }

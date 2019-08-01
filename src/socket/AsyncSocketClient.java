@@ -1,5 +1,6 @@
 package socket;
 
+import commonmodels.TransportableString;
 import util.ObjectConverter;
 
 import java.io.IOException;
@@ -65,10 +66,10 @@ public class AsyncSocketClient extends Thread {
         CountDownLatch requestLatch = new CountDownLatch(1);
         Thread requestThread = Thread.currentThread();
         try {
-            ByteBuffer buffer = ObjectConverter.getByteBuffer(msg);
+            ByteBuffer buffer = JsonProtocolManager.getInstance().writeGzip(new TransportableString(msg));
             channel.write(buffer, buffer, new WriteHandler(channel, requestLatch, requestThread));
             requestLatch.await();
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
             requestLatch.countDown();
         }

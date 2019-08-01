@@ -30,7 +30,8 @@ import statmanagement.StatInfo;
         @JsonSubTypes.Type(value = Response.class, name = "Response"),
         @JsonSubTypes.Type(value = ring.LookupTable.class, name = "ring.LookupTable"),
         @JsonSubTypes.Type(value = StatInfo.class, name = "StatInfo"),
-        @JsonSubTypes.Type(value = VirtualNode.class, name = "VirtualNode")
+        @JsonSubTypes.Type(value = VirtualNode.class, name = "VirtualNode"),
+        @JsonSubTypes.Type(value = TransportableString.class, name = "TransportableString")
 })
 public class Transportable {
 }
