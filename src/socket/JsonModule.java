@@ -95,7 +95,7 @@ abstract class BucketNodeMixin {
             @JsonProperty("physicalNodes") List<String> physicalNodes
     ) { }
     @JsonProperty("hash") abstract int getHash();
-    @JsonProperty("index") abstract List<String> getPhysicalNodes();
+    @JsonProperty("physicalNodes") abstract List<String> getPhysicalNodes();
 }
 
 abstract class VirtualNodeMixin {

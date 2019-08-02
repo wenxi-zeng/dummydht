@@ -1,6 +1,8 @@
 package socket;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import commonmodels.Transportable;
 
@@ -22,6 +24,12 @@ public class JsonProtocolManager {
         objectMapper.enableDefaultTyping();
         objectMapper.registerModule(new JsonModule());
         objectMapper.configure(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.setVisibility(
+                objectMapper.getSerializationConfig().
+                        getDefaultVisibilityChecker().
+                        withFieldVisibility(JsonAutoDetect.Visibility.ANY).
+                        withGetterVisibility(JsonAutoDetect.Visibility.NONE));
     }
 
     public static JsonProtocolManager getInstance() {

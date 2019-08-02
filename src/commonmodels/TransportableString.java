@@ -12,4 +12,9 @@ public class TransportableString extends Transportable {
         return value;
     }
 
+    @Override
+    public String toString() {
+        return value;
+    }
+
 }
