@@ -120,10 +120,14 @@ public class ElasticLoadBalanceAlgorithm {
             lookupTable.getLoadBalancingCallBack().onFinished();
     }
 
-    public void onTableExpand(LookupTable table) {
+    public void onTableExpand(LookupTable table, int size) {
         SimpleLog.i("Expanding table...");
 
         int originalSize = table.getTable().length;
+        if (size <= originalSize || size % originalSize != 0) {
+            SimpleLog.i("Failed to expand table. Desired size is smaller than the current, or is not multiplier of current");
+            return;
+        }
         table.expandTable();
 
         for (int i = 0; i< originalSize; i++) {

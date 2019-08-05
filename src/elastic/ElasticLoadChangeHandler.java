@@ -46,10 +46,17 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
         List<Solution> solutions = evaluate(sortedTargets, loadInfo, fileBuckets, target, upperBound);
         List<Request> requests = new ArrayList<>();
         if (solutions != null) {
-            for (Solution solution : solutions) {
-                requests.add(new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
-                        .withReceiver(loadInfo.getNodeId())
-                        .withAttachment(loadInfo.getNodeId() + " " + solution.getTargetNodeId() + " " + StringUtils.join(solution.getBuckets(), ',')));
+            if (solutions.size() < 1) {
+                requests.add(new Request()
+                        .withHeader(ElasticCommand.EXPAND.name())
+                        .withAttachment(String.valueOf(table.getTable().length * 2)));
+            }
+            else {
+                for (Solution solution : solutions) {
+                    requests.add(new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
+                            .withReceiver(loadInfo.getNodeId())
+                            .withAttachment(loadInfo.getNodeId() + " " + solution.getTargetNodeId() + " " + StringUtils.join(solution.getBuckets(), ',')));
+                }
             }
         }
 

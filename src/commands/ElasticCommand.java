@@ -343,20 +343,21 @@ public enum ElasticCommand implements Command {
     EXPAND {
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            if (args.length !=  1 && args.length != 2)  {
+            if (args.length > 3)  {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
-            Request request = new Request().withHeader(ElasticCommand.EXPAND.name());
-            if (args.length == 2)
-                request.setReceiver(args[1]);
+            Request request = new Request().withHeader(ElasticCommand.EXPAND.name())
+                    .withAttachment(args[1]);
+            if (args.length == 3)
+                request.setReceiver(args[2]);
 
             return request;
         }
 
         @Override
         public Response execute(Request request) {
-            LookupTable.getInstance().expand();
+            LookupTable.getInstance().expand(Integer.valueOf(request.getAttachment()));
             String result = "Table expanded";
 
             return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
@@ -365,9 +366,9 @@ public enum ElasticCommand implements Command {
         @Override
         public String getParameterizedString() {
             if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED))
-                return ElasticCommand.EXPAND.name() + " %s";
+                return ElasticCommand.EXPAND.name() + "<new size> %s";
             else
-                return ElasticCommand.EXPAND.name();
+                return ElasticCommand.EXPAND.name() + "<new size>";
         }
 
         @Override

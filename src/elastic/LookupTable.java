@@ -195,8 +195,8 @@ public class LookupTable extends Transportable implements Serializable {
             return readWriteAlgorithm.writeOnly(this, file);
     }
 
-    public void expand() {
-        loadBalanceAlgorithm.onTableExpand(this);
+    public void expand(int size) {
+        loadBalanceAlgorithm.onTableExpand(this, size);
     }
 
     public void shrink() {
