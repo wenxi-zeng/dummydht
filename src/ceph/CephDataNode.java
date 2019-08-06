@@ -3,7 +3,6 @@ package ceph;
 import commands.CephCommand;
 import commonmodels.*;
 import commonmodels.transport.Request;
-import ring.LookupTable;
 import util.MathX;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class CephDataNode extends DataNode {
 
     @Override
     public long getEpoch() {
-        return LookupTable.getInstance().getEpoch();
+        return ClusterMap.getInstance().getEpoch();
     }
 
     @Override
@@ -119,6 +118,11 @@ public class CephDataNode extends DataNode {
     @Override
     public void setReadWriteCallBack(ReadWriteCallBack callBack) {
         ClusterMap.getInstance().setReadWriteCallBack(callBack);
+    }
+
+    @Override
+    public void setTableDeltaSupplier() {
+        ClusterMap.getInstance().setDeltaSupplier(this::getTableDelta);
     }
 
 }

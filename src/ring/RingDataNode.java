@@ -116,4 +116,9 @@ public class RingDataNode extends DataNode {
     public void setReadWriteCallBack(ReadWriteCallBack callBack) {
         LookupTable.getInstance().setReadWriteCallBack(callBack);
     }
+
+    @Override
+    public void setTableDeltaSupplier() {
+        LookupTable.getInstance().setDeltaSupplier(this::getTableDelta);
+    }
 }

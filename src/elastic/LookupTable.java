@@ -7,6 +7,7 @@ import util.Config;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class LookupTable extends Transportable implements Serializable {
 
@@ -27,6 +28,8 @@ public class LookupTable extends Transportable implements Serializable {
     private transient MembershipCallBack membershipCallBack;
 
     private transient ReadWriteCallBack readWriteCallBack;
+
+    private transient Supplier deltaSupplier;
 
     private static volatile LookupTable instance = null;
 
@@ -138,6 +141,14 @@ public class LookupTable extends Transportable implements Serializable {
         physicalNodes.sort(Comparator.comparingInt(o -> o.getVirtualNodes().size()));
 
         return physicalNodes;
+    }
+
+    public Supplier getDeltaSupplier() {
+        return deltaSupplier;
+    }
+
+    public void setDeltaSupplier(Supplier deltaSupplier) {
+        this.deltaSupplier = deltaSupplier;
     }
 
     public void update() {

@@ -117,4 +117,9 @@ public class ElasticDataNode extends DataNode {
         LookupTable.getInstance().setReadWriteCallBack(callBack);
     }
 
+    @Override
+    public void setTableDeltaSupplier() {
+        LookupTable.getInstance().setDeltaSupplier(this::getTableDelta);
+    }
+
 }

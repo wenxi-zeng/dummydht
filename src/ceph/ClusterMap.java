@@ -11,6 +11,7 @@ import util.MathX;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class ClusterMap extends Transportable implements Serializable {
 
@@ -33,6 +34,8 @@ public class ClusterMap extends Transportable implements Serializable {
     private transient MembershipCallBack membershipCallBack;
 
     private transient ReadWriteCallBack readWriteCallBack;
+
+    private transient Supplier deltaSupplier;
 
     private transient PhysicalNode self;
 
@@ -137,6 +140,14 @@ public class ClusterMap extends Transportable implements Serializable {
 
     public void setReadWriteCallBack(ReadWriteCallBack readWriteCallBack) {
         this.readWriteCallBack = readWriteCallBack;
+    }
+
+    public Supplier getDeltaSupplier() {
+        return deltaSupplier;
+    }
+
+    public void setDeltaSupplier(Supplier deltaSupplier) {
+        this.deltaSupplier = deltaSupplier;
     }
 
     public Clusterable findCluster(String id) {

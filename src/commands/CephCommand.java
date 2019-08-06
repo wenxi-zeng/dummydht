@@ -97,8 +97,14 @@ public enum CephCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (request.getEpoch() < ClusterMap.getInstance().getEpoch())
-                response.setAttachment(ClusterMap.getInstance());
+            if (request.getEpoch() < ClusterMap.getInstance().getEpoch()){
+                @SuppressWarnings("unchecked")
+                List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
+                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                    response.setAttachment(ClusterMap.getInstance());
+                else
+                    response.setAttachment(delta);
+            }
 
             return response;
         }
@@ -149,8 +155,14 @@ public enum CephCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch())
-                response.setAttachment(ClusterMap.getInstance());
+            if (shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch()) {
+                @SuppressWarnings("unchecked")
+                List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
+                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                    response.setAttachment(ClusterMap.getInstance());
+                else
+                    response.setAttachment(delta);
+            }
 
             return response;
         }

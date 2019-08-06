@@ -23,6 +23,8 @@ public abstract class DataNode {
 
     protected String mode;
 
+    protected BoundedQueue<Request> delta;
+
     public DataNode() {
         useDynamicAddress = false;
         loadProperties();
@@ -102,6 +104,7 @@ public abstract class DataNode {
         seeds = config.getSeeds();
         clusterName = config.getClusterName();
         mode = config.getMode();
+        delta = new BoundedQueue<>(config.getTableDeltaSize());
     }
 
     public void createTable() {
@@ -109,15 +112,20 @@ public abstract class DataNode {
     }
 
     public Response execute(String command) throws InvalidRequestException {
-        return execute(command.split("\\s+"));
+        return execute(terminal.translate(command));
     }
 
     public Response execute(String[] args) throws InvalidRequestException {
-        return terminal.process(args);
+        return execute(terminal.translate(args));
     }
 
     public Response execute(Request request) {
-        return terminal.process(request);
+        long oldEpoch = getEpoch();
+        Response response = terminal.process(request);
+        if (oldEpoch > 0 && oldEpoch != getEpoch()) {
+            recordTableDelta(request);
+        }
+        return response;
     }
 
     public Request prepareAddNodeCommand(String address) {
@@ -128,6 +136,14 @@ public abstract class DataNode {
     public Request prepareRemoveNodeCommand(String address) {
         String[] addressStr = address.split(":");
         return prepareRemoveNodeCommand(addressStr[0], Integer.valueOf(addressStr[1]));
+    }
+
+    public void recordTableDelta(Request request) {
+        delta.add(request);
+    }
+
+    public List<Request> getTableDelta() {
+        return delta.toList();
     }
 
     public LoadChangeHandler getLoadChangeHandler() {
@@ -150,4 +166,5 @@ public abstract class DataNode {
     public abstract void setLoadBalancingCallBack(LoadBalancingCallBack callBack);
     public abstract void setMembershipCallBack(MembershipCallBack callBack);
     public abstract void setReadWriteCallBack(ReadWriteCallBack callBack);
+    public abstract void setTableDeltaSupplier();
 }

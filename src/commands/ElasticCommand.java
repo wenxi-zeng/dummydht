@@ -101,8 +101,14 @@ public enum ElasticCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (request.getEpoch() < LookupTable.getInstance().getEpoch())
-                response.setAttachment(LookupTable.getInstance());
+            if (request.getEpoch() < LookupTable.getInstance().getEpoch()) {
+                @SuppressWarnings("unchecked")
+                List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
+                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                    response.setAttachment(LookupTable.getInstance());
+                else
+                    response.setAttachment(delta);
+            }
 
             return response;
         }
@@ -153,8 +159,14 @@ public enum ElasticCommand implements Command {
                         .withMessage(fileBucket.toString());
             }
 
-            if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch())
-                response.setAttachment(LookupTable.getInstance());
+            if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch()) {
+                @SuppressWarnings("unchecked")
+                List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
+                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                    response.setAttachment(LookupTable.getInstance());
+                else
+                    response.setAttachment(delta);
+            }
 
             return response;
         }
