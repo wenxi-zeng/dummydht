@@ -19,7 +19,9 @@ import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.SharedDataMessage;
+import socket.JsonProtocolManager;
 import socket.SocketClient;
+import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 import util.URIHelper;
@@ -189,12 +191,16 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
         if (newValue == null) return;
 
         // SimpleLog.i("from: " + key + ", oldValue: " + oldValue + ", newValue: " + newValue);
+        long stamp = System.currentTimeMillis();
         @SuppressWarnings("unchecked")
         GrowOnlySet<Request> digests = (GrowOnlySet<Request>)newValue;
         List<Request> requests = getUndigestedRequests(vectorTime.getOrDefault(key, 0L), digests.value());
         for (Request r : requests) {
             // SimpleLog.i("Digesting request: " + r.toCommand());
+            long size = JsonProtocolManager.getInstance().sizeOf(r);
+            StatInfoManager.getInstance().statRequest(r, stamp, size);
             dataNode.execute(r);
+            StatInfoManager.getInstance().statExecution(r, stamp);
             vectorTime.put(key, r.getTimestamp());
         }
     }

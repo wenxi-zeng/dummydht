@@ -75,6 +75,18 @@ public class JsonProtocolManager {
         return null;
     }
 
+    public long sizeOf(Transportable message) {
+        try {
+            byte[] bytes = write(message);
+            byte[] compressedBytes = compress(bytes);
+            return compressedBytes.length;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     private byte[] compress(byte[] bytes) throws IOException  {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         GZIPOutputStream gzip = new GZIPOutputStream(out);
