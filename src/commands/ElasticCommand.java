@@ -17,7 +17,9 @@ import util.MathX;
 import util.SimpleLog;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public enum ElasticCommand implements Command {
 
@@ -104,10 +106,13 @@ public enum ElasticCommand implements Command {
             if (request.getEpoch() < LookupTable.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
                     response.setAttachment(LookupTable.getInstance());
                 else
-                    response.setAttachment(delta);
+                    response.setAttachment(delta.stream()
+                            .filter((d) -> d.getTimestamp() > request.getEpoch())
+                            .sorted(Comparator.comparingLong(Request::getTimestamp))
+                            .collect(Collectors.toList()));
             }
 
             return response;
@@ -162,10 +167,13 @@ public enum ElasticCommand implements Command {
             if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
                     response.setAttachment(LookupTable.getInstance());
                 else
-                    response.setAttachment(delta);
+                    response.setAttachment(delta.stream()
+                            .filter((d) -> d.getTimestamp() > request.getEpoch())
+                            .sorted(Comparator.comparingLong(Request::getTimestamp))
+                            .collect(Collectors.toList()));
             }
 
             return response;

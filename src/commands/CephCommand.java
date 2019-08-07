@@ -13,7 +13,9 @@ import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public enum CephCommand implements Command {
 
@@ -100,10 +102,13 @@ public enum CephCommand implements Command {
             if (request.getEpoch() < ClusterMap.getInstance().getEpoch()){
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
                     response.setAttachment(ClusterMap.getInstance());
                 else
-                    response.setAttachment(delta);
+                    response.setAttachment(delta.stream()
+                            .filter((d) -> d.getTimestamp() > request.getEpoch())
+                            .sorted(Comparator.comparingLong(Request::getTimestamp))
+                            .collect(Collectors.toList()));
             }
 
             return response;
@@ -158,10 +163,13 @@ public enum CephCommand implements Command {
             if (shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() <= delta.get(0).getTimestamp())
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
                     response.setAttachment(ClusterMap.getInstance());
                 else
-                    response.setAttachment(delta);
+                    response.setAttachment(delta.stream()
+                            .filter((d) -> d.getTimestamp() > request.getEpoch())
+                            .sorted(Comparator.comparingLong(Request::getTimestamp))
+                            .collect(Collectors.toList()));
             }
 
             return response;
