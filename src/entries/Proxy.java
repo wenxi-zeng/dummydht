@@ -1,10 +1,9 @@
 package entries;
 
-import commands.DaemonCommand;
 import commands.ProxyCommand;
 import commonmodels.Daemon;
-import commonmodels.LoadBalancingCallBack;
 import commonmodels.PhysicalNode;
+import commonmodels.TableChangedHandler;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;
@@ -14,14 +13,12 @@ import loadmanagement.AbstractLoadMonitor;
 import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
-import socket.SocketServer;
 import util.Config;
 import util.SimpleLog;
 
-import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
 
-public class Proxy implements Daemon, LoadBalancingCallBack {
+public class Proxy implements Daemon, TableChangedHandler {
 
     private DataNodeDaemon daemon;
 
@@ -56,23 +53,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
         return getInstance();
     }
 
-    private void propagateTable(Request request) {
-        for (PhysicalNode node : daemon.getDataNodeServer().getPhysicalNodes()) {
-            send(node.getAddress(), node.getPort(), request, this);
-        }
-        GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
-    }
-
-    @Override
-    public void onFinished() {
-        // propagate table when load balancing is done
-        Request request = new Request()
-                .withHeader(DaemonCommand.UPDATE.name())
-                .withLargeAttachment(daemon.getDataNodeServer().getDataNodeTable());
-        propagateTable(request);
-        SimpleLog.v(String.valueOf(request.getLargeAttachment()));
-    }
-
     @Override
     public void exec() throws Exception {
         daemon.exec();
@@ -85,7 +65,6 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
 
     @Override
     public void initSubscriptions() {
-        daemon.getDataNodeServer().setLoadBalancingCallBack(this);
         FileTransferManager.getInstance().subscribe(this);
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
@@ -260,5 +239,10 @@ public class Proxy implements Daemon, LoadBalancingCallBack {
                 .getDataNode()
                 .prepareAddNodeCommand(followupAddress);
         processDataNodeCommand(request);
+    }
+
+    @Override
+    public void onTableChanged(Request delta, Object newTable) {
+        daemon.propagateTableChanges(delta);
     }
 }

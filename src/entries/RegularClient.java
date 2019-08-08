@@ -217,22 +217,12 @@ public class RegularClient {
     }
 
     private void onTableUpdated(Object table) {
-        if (table instanceof List<?>) {
-            @SuppressWarnings("unchecked")
-            List<Request> delta = (List<Request>) table;
-            for (Request r : delta) {
-                Response response = terminal.process(r);
-                SimpleLog.v(String.valueOf(response));
-            }
-        }
-        else {
-            Request request = new Request()
-                    .withHeader(DaemonCommand.UPDATE.name())
-                    .withLargeAttachment(table);
+        Request request = new Request()
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(table);
 
-            Response response = terminal.process(request);
-            SimpleLog.v(String.valueOf(response));
-        }
+        Response response = terminal.process(request);
+        SimpleLog.v(String.valueOf(response));
     }
 
     private PhysicalNode choseServer(String attachment) {

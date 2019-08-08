@@ -29,8 +29,6 @@ public class ClusterMap extends Transportable implements Serializable {
 
     private transient WeightDistributeStrategy weightDistributeStrategy;
 
-    private transient LoadBalancingCallBack loadBalancingCallBack;
-
     private transient MembershipCallBack membershipCallBack;
 
     private transient ReadWriteCallBack readWriteCallBack;
@@ -116,14 +114,6 @@ public class ClusterMap extends Transportable implements Serializable {
 
     public void setWeightDistributeStrategy(WeightDistributeStrategy weightDistributeStrategy) {
         this.weightDistributeStrategy = weightDistributeStrategy;
-    }
-
-    public LoadBalancingCallBack getLoadBalancingCallBack() {
-        return loadBalancingCallBack;
-    }
-
-    public void setLoadBalancingCallBack(LoadBalancingCallBack loadBalancingCallBack) {
-        this.loadBalancingCallBack = loadBalancingCallBack;
     }
 
     public MembershipCallBack getMembershipCallBack() {
@@ -265,11 +255,6 @@ public class ClusterMap extends Transportable implements Serializable {
     public void changeWeight(PhysicalNode node, float deltaWeight) {
         loadBalanceAlgorithm.changeWeight(this, node, deltaWeight);
         update(); // commit the change, gossip to other nodes
-    }
-
-    public void propagateTableChanges() {
-        loadBalanceAlgorithm.propagateTableChanges(this);
-        update();
     }
 
     public List<PhysicalNode> lookup(String filename) {

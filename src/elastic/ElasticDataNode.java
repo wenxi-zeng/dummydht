@@ -103,11 +103,6 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
-    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
-        LookupTable.getInstance().setLoadBalancingCallBack(callBack);
-    }
-
-    @Override
     public void setMembershipCallBack(MembershipCallBack callBack) {
         LookupTable.getInstance().setMembershipCallBack(callBack);
     }
@@ -118,7 +113,7 @@ public class ElasticDataNode extends DataNode {
     }
 
     @Override
-    public void setTableDeltaSupplier() {
+    protected void initTableDeltaSupplier() {
         LookupTable.getInstance().setDeltaSupplier(this::getTableDelta);
     }
 

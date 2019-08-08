@@ -30,9 +30,6 @@ public class RingLoadBalanceAlgorithm {
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             increaseLoad(table, dh, vnode);
         }
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     public void increaseLoad(LookupTable table, PhysicalNode node, int[] hashVal) {
@@ -48,9 +45,6 @@ public class RingLoadBalanceAlgorithm {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             increaseLoad(table, hashVal[i], vnode);
         }
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     public void decreaseLoad(LookupTable table, PhysicalNode node) {
@@ -74,9 +68,6 @@ public class RingLoadBalanceAlgorithm {
             SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
             decreaseLoad(table, dh, vnode);
         }
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     public void decreaseLoad(LookupTable table, PhysicalNode node, int[] hashVal) {
@@ -92,9 +83,6 @@ public class RingLoadBalanceAlgorithm {
             Indexable vnode = pnode.getVirtualNodes().get(i);
             decreaseLoad(table, hashVal[i], vnode);
         }
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     public int[] randomIncreaseRange(LookupTable table, PhysicalNode node) {
@@ -199,9 +187,6 @@ public class RingLoadBalanceAlgorithm {
         }
 
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] added");
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     public void nodeLeave(LookupTable table, Indexable node) {
@@ -225,9 +210,6 @@ public class RingLoadBalanceAlgorithm {
         }
 
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
-
-        if (table.getLoadBalancingCallBack() != null)
-            table.getLoadBalancingCallBack().onFinished();
     }
 
     private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {

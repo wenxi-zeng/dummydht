@@ -12,10 +12,7 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
-import loadmanagement.AbstractLoadMonitor;
-import loadmanagement.DecentralizedLoadInfoBroker;
-import loadmanagement.DecentralizedLoadMonitor;
-import loadmanagement.LoadInfoManager;
+import loadmanagement.*;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
@@ -298,6 +295,21 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     public void onFileWritten(String file, List<PhysicalNode> replicas) {
         // replicate file to other replicas
         executor.execute(() -> backupFile(file, replicas));
+    }
+
+    public void propagateTable() {
+        Request request = new Request()
+                .withHeader(DaemonCommand.UPDATE.name())
+                .withLargeAttachment(dataNodeServer.getDataNodeTable());
+
+        propagateTableChanges(request);
+    }
+
+    public void propagateTableChanges(Request request) {
+        for (PhysicalNode node : dataNodeServer.getPhysicalNodes()) {
+            send(node.getAddress(), node.getPort(), request, this);
+        }
+        GlobalLoadInfoBroker.getInstance().update(dataNodeServer.getPhysicalNodes());
     }
 
     private void backupFile(String file, List<PhysicalNode> replicas) {

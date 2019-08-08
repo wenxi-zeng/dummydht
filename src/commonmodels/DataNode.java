@@ -25,6 +25,8 @@ public abstract class DataNode {
 
     protected BoundedQueue<Request> delta;
 
+    protected TableChangedHandler tableChangedHandler;
+
     public DataNode() {
         useDynamicAddress = false;
         loadProperties();
@@ -109,6 +111,7 @@ public abstract class DataNode {
 
     public void createTable() {
         terminal.initialize();
+        initTableDeltaSupplier();
     }
 
     public Response execute(String command) throws InvalidRequestException {
@@ -140,6 +143,8 @@ public abstract class DataNode {
 
     public void recordTableDelta(Request request) {
         delta.add(request);
+        if (tableChangedHandler != null)
+            tableChangedHandler.onTableChanged(request, getTable());
     }
 
     public List<Request> getTableDelta() {
@@ -148,6 +153,14 @@ public abstract class DataNode {
 
     public LoadChangeHandler getLoadChangeHandler() {
         return new LoadChangeHandlerFactory().getHandler(mode, Config.getInstance().getScheme(), getTable());
+    }
+
+    public TableChangedHandler getTableChangedHandler() {
+        return tableChangedHandler;
+    }
+
+    public void setTableChangedHandler(TableChangedHandler tableChangedHandler) {
+        this.tableChangedHandler = tableChangedHandler;
     }
 
     public abstract void createTerminal();
@@ -163,8 +176,7 @@ public abstract class DataNode {
     public abstract Request prepareLoadBalancingCommand(String... addresses);
     public abstract Request prepareIncreaseLoadCommand(String... addresses);
     public abstract Request prepareDecreaseLoadCommand(String... addresses);
-    public abstract void setLoadBalancingCallBack(LoadBalancingCallBack callBack);
     public abstract void setMembershipCallBack(MembershipCallBack callBack);
     public abstract void setReadWriteCallBack(ReadWriteCallBack callBack);
-    public abstract void setTableDeltaSupplier();
+    protected abstract void initTableDeltaSupplier();
 }

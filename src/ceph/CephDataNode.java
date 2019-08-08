@@ -106,11 +106,6 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
-    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
-        ClusterMap.getInstance().setLoadBalancingCallBack(callBack);
-    }
-
-    @Override
     public void setMembershipCallBack(MembershipCallBack callBack) {
         ClusterMap.getInstance().setMembershipCallBack(callBack);
     }
@@ -121,7 +116,7 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
-    public void setTableDeltaSupplier() {
+    protected void initTableDeltaSupplier() {
         ClusterMap.getInstance().setDeltaSupplier(this::getTableDelta);
     }
 

@@ -333,8 +333,25 @@ public enum DaemonCommand implements Command {
                 return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
             }
             else {
-                DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
-                return new Response(request).withStatus(Response.STATUS_SUCCESS);
+                Object attachment = request.getLargeAttachment();
+                Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+                try {
+                    if (attachment instanceof List<?>) {
+                        @SuppressWarnings("unchecked")
+                        List<Request> delta = (List<Request>) attachment;
+                        for (Request r : delta) {
+                            DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
+                        }
+                    } else if (attachment instanceof Request) {
+                        DataNodeDaemon.getInstance().getDataNodeServer().processCommand((Request) attachment);
+                    } else {
+                        DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
+                    }
+                } catch (Exception e) {
+                    response.withStatus(Response.STATUS_FAILED).withMessage(e.getMessage());
+                }
+
+                return response;
             }
         }
 
@@ -365,6 +382,29 @@ public enum DaemonCommand implements Command {
         @Override
         public String getParameterizedString() {
             return DaemonCommand.LOADHANDSHAKE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    PROPAGATE {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(DaemonCommand.PROPAGATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            DataNodeDaemon.getInstance().propagateTable();
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage("Table propagated.");
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return DaemonCommand.PROPAGATE.name();
         }
 
         @Override

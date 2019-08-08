@@ -91,10 +91,6 @@ public class DataNodeServer {
         return dataNode;
     }
 
-    public void setLoadBalancingCallBack(LoadBalancingCallBack callBack) {
-        dataNode.setLoadBalancingCallBack(callBack);
-    }
-
     public void setMembershipCallBack(MembershipCallBack callBack) {
         dataNode.setMembershipCallBack(callBack);
     }

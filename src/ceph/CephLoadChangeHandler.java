@@ -1,13 +1,12 @@
 package ceph;
 
-import commands.CephCommand;
+import commands.DaemonCommand;
 import commonmodels.Clusterable;
 import commonmodels.LoadChangeHandler;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import loadmanagement.LoadInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,7 +72,7 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
 
     @Override
     public void optimize(List<Request> requests) {
-        requests.add(new Request().withHeader(CephCommand.PROPAGATE.name()));
+        requests.add(new Request().withHeader(DaemonCommand.PROPAGATE.name()));
     }
 
     @Override

@@ -23,8 +23,6 @@ public class LookupTable extends Transportable implements Serializable {
 
     private transient ElasticReadWriteAlgorithm readWriteAlgorithm;
 
-    private transient LoadBalancingCallBack loadBalancingCallBack;
-
     private transient MembershipCallBack membershipCallBack;
 
     private transient ReadWriteCallBack readWriteCallBack;
@@ -110,14 +108,6 @@ public class LookupTable extends Transportable implements Serializable {
 
     public void setPhysicalNodeMap(HashMap<String, PhysicalNode> physicalNodeMap) {
         this.physicalNodeMap = physicalNodeMap;
-    }
-
-    public LoadBalancingCallBack getLoadBalancingCallBack() {
-        return loadBalancingCallBack;
-    }
-
-    public void setLoadBalancingCallBack(LoadBalancingCallBack loadBalancingCallBack) {
-        this.loadBalancingCallBack = loadBalancingCallBack;
     }
 
     public MembershipCallBack getMembershipCallBack() {
