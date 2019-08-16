@@ -116,7 +116,7 @@ public class CephDataNode extends DataNode {
     }
 
     @Override
-    protected void initTableDeltaSupplier() {
+    public void initTableDeltaSupplier() {
         ClusterMap.getInstance().setDeltaSupplier(this::getTableDelta);
     }
 

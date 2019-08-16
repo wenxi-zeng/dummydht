@@ -15,6 +15,7 @@ import util.MathX;
 import util.SimpleLog;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -133,13 +134,17 @@ public enum RingCommand implements Command {
             if (request.getEpoch() < LookupTable.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
+                delta.sort(Comparator.comparingLong(Request::getTimestamp));
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp()) {
                     response.setAttachment(LookupTable.getInstance());
-                else
-                    response.setAttachment(delta.stream()
-                            .filter((d) -> d.getTimestamp() > request.getEpoch())
-                            .sorted(Comparator.comparingLong(Request::getTimestamp))
-                            .collect(Collectors.toList()));
+                }
+                else {
+                    List attachment = delta.stream()
+                            .filter(d -> d.getTimestamp() > request.getEpoch())
+                            .collect(Collectors.toList());
+                    if (attachment.size() > 0)
+                        response.setAttachment(attachment);
+                }
             }
 
             return response;
@@ -194,13 +199,17 @@ public enum RingCommand implements Command {
             if (shouldReplicate && request.getEpoch() < LookupTable.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)LookupTable.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
+                delta.sort(Comparator.comparingLong(Request::getTimestamp));
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp()) {
                     response.setAttachment(LookupTable.getInstance());
-                else
-                    response.setAttachment(delta.stream()
-                            .filter((d) -> d.getTimestamp() > request.getEpoch())
-                            .sorted(Comparator.comparingLong(Request::getTimestamp))
-                            .collect(Collectors.toList()));
+                }
+                else {
+                    List attachment = delta.stream()
+                            .filter(d -> d.getTimestamp() > request.getEpoch())
+                            .collect(Collectors.toList());
+                    if (attachment.size() > 0)
+                        response.setAttachment(attachment);
+                }
             }
 
             return response;
@@ -476,8 +485,37 @@ public enum RingCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result).withAttachment(request.getLargeAttachment());
+            Object attachment = request.getLargeAttachment();
+
+            // SimpleLog.v("Attachment: ====================================\n" + attachment);
+            Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+            try {
+                if (attachment instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Request> delta = (List<Request>) attachment;
+                    for (Request r : delta) {
+                        // SimpleLog.i("Apply delta: " + r);
+                        if (r.getTimestamp() > LookupTable.getInstance().getEpoch()) {
+                            RingCommand cmd = RingCommand.valueOf(r.getHeader());
+                            response = cmd.execute(r);
+                        }
+                    }
+                } else if (attachment instanceof Request) {
+                    Request r = (Request) attachment;
+                    // SimpleLog.i("Apply delta: " + r);
+                    if (r.getTimestamp() > LookupTable.getInstance().getEpoch()) {
+                        RingCommand cmd = RingCommand.valueOf(r.getHeader());
+                        response = cmd.execute(r);
+                    }
+                } else {
+                    String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
+                    response.setMessage(result);
+                }
+            } catch (Exception e) {
+                response.withStatus(Response.STATUS_FAILED).withMessage(e.getMessage());
+            }
+
+            return response.withAttachment(LookupTable.getInstance().getTable());
         }
 
         @Override

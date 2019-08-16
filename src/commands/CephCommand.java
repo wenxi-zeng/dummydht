@@ -102,13 +102,17 @@ public enum CephCommand implements Command {
             if (request.getEpoch() < ClusterMap.getInstance().getEpoch()){
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
+                delta.sort(Comparator.comparingLong(Request::getTimestamp));
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp()) {
                     response.setAttachment(ClusterMap.getInstance());
-                else
-                    response.setAttachment(delta.stream()
-                            .filter((d) -> d.getTimestamp() > request.getEpoch())
-                            .sorted(Comparator.comparingLong(Request::getTimestamp))
-                            .collect(Collectors.toList()));
+                }
+                else {
+                    List attachment = delta.stream()
+                            .filter(d -> d.getTimestamp() > request.getEpoch())
+                            .collect(Collectors.toList());
+                    if (attachment.size() > 0)
+                        response.setAttachment(attachment);
+                }
             }
 
             return response;
@@ -163,13 +167,17 @@ public enum CephCommand implements Command {
             if (shouldReplicate && request.getEpoch() < ClusterMap.getInstance().getEpoch()) {
                 @SuppressWarnings("unchecked")
                 List<Request> delta = (List<Request>)ClusterMap.getInstance().getDeltaSupplier().get();
-                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp())
+                delta.sort(Comparator.comparingLong(Request::getTimestamp));
+                if (delta.size() < 1 || request.getEpoch() < delta.get(0).getTimestamp()) {
                     response.setAttachment(ClusterMap.getInstance());
-                else
-                    response.setAttachment(delta.stream()
-                            .filter((d) -> d.getTimestamp() > request.getEpoch())
-                            .sorted(Comparator.comparingLong(Request::getTimestamp))
-                            .collect(Collectors.toList()));
+                }
+                else {
+                    List attachment = delta.stream()
+                            .filter(d -> d.getTimestamp() > request.getEpoch())
+                            .collect(Collectors.toList());
+                    if (attachment.size() > 0)
+                        response.setAttachment(attachment);
+                }
             }
 
             return response;
@@ -408,11 +416,36 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
-            String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
-            if (result.equals(ClusterMap.UPDATE_STATUS_DONE)) {
-                ClusterMap.getInstance().scheduleLoadBalancing();
+            Object attachment = request.getLargeAttachment();
+
+            // SimpleLog.v("Attachment: ====================================\n" + attachment);
+            Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+            try {
+                if (attachment instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Request> delta = (List<Request>) attachment;
+                    for (Request r : delta) {
+                        // SimpleLog.i("Apply delta: " + r);
+                        CephCommand cmd = CephCommand.valueOf(r.getHeader());
+                        response = cmd.execute(r);
+                    }
+                } else if (attachment instanceof Request) {
+                    Request r = (Request) attachment;
+                    // SimpleLog.i("Apply delta: " + r);
+                    CephCommand cmd = CephCommand.valueOf(r.getHeader());
+                    response = cmd.execute(r);
+                } else {
+                    String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
+                    if (result.equals(ClusterMap.UPDATE_STATUS_DONE)) {
+                        ClusterMap.getInstance().scheduleLoadBalancing();
+                    }
+                    response.setMessage(result);
+                }
+            } catch (Exception e) {
+                response.withStatus(Response.STATUS_FAILED).withMessage(e.getMessage());
             }
-            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+
+            return response;
         }
 
         @Override

@@ -29,6 +29,9 @@ public class FileBucket extends Transportable implements Serializable, Cloneable
 
     private final static long serialVersionUID = -607052110101868742L;
 
+    public FileBucket() {
+    }
+
     public FileBucket(int key) {
         this.key = key;
         this.locked = false;

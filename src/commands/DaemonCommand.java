@@ -10,6 +10,7 @@ import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import loadmanagement.DecentralizedLoadInfoBroker;
 import loadmanagement.LoadInfo;
+import util.SimpleLog;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -334,16 +335,21 @@ public enum DaemonCommand implements Command {
             }
             else {
                 Object attachment = request.getLargeAttachment();
+
+                SimpleLog.v("Attachment: ====================================\n" + attachment);
                 Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
                 try {
-                    if (attachment instanceof List<?>) {
+                    if (attachment instanceof List) {
                         @SuppressWarnings("unchecked")
                         List<Request> delta = (List<Request>) attachment;
                         for (Request r : delta) {
+                            SimpleLog.i("Apply delta: " + r);
                             DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
                         }
                     } else if (attachment instanceof Request) {
-                        DataNodeDaemon.getInstance().getDataNodeServer().processCommand((Request) attachment);
+                        Request r = (Request) attachment;
+                        SimpleLog.i("Apply delta: " + r);
+                        DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
                     } else {
                         DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
                     }

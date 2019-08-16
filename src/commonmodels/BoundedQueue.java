@@ -1,5 +1,6 @@
 package commonmodels;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,7 +14,8 @@ public class BoundedQueue<T> extends LinkedList<T> {
 
     @Override
     public boolean add(T t) {
-        if (capacity < size()) {
+        if (contains(t)) return false;
+        if (size() < capacity) {
             return super.add(t);
         }
         else {
@@ -23,6 +25,6 @@ public class BoundedQueue<T> extends LinkedList<T> {
     }
 
     public List<T> toList() {
-        return super.subList(0, size() - 1);
+        return new ArrayList<>(this);
     }
 }

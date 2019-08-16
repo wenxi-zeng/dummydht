@@ -4,6 +4,7 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.Config;
+import util.SimpleLog;
 
 import java.util.List;
 
@@ -111,7 +112,6 @@ public abstract class DataNode {
 
     public void createTable() {
         terminal.initialize();
-        initTableDeltaSupplier();
     }
 
     public Response execute(String command) throws InvalidRequestException {
@@ -142,6 +142,7 @@ public abstract class DataNode {
     }
 
     public void recordTableDelta(Request request) {
+        SimpleLog.i("recordTableDelta: " + request.toCommand() + " =========================");
         delta.add(request);
         if (tableChangedHandler != null)
             tableChangedHandler.onTableChanged(request, getTable());
@@ -178,5 +179,5 @@ public abstract class DataNode {
     public abstract Request prepareDecreaseLoadCommand(String... addresses);
     public abstract void setMembershipCallBack(MembershipCallBack callBack);
     public abstract void setReadWriteCallBack(ReadWriteCallBack callBack);
-    protected abstract void initTableDeltaSupplier();
+    public abstract void initTableDeltaSupplier();
 }

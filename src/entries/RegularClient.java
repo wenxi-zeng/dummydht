@@ -222,7 +222,7 @@ public class RegularClient {
                 .withLargeAttachment(table);
 
         Response response = terminal.process(request);
-        SimpleLog.v(String.valueOf(response));
+        SimpleLog.v("**************************\nRequest:\n" + request.getLargeAttachment() + "\n" + response + "\n**************************\n");
     }
 
     private PhysicalNode choseServer(String attachment) {

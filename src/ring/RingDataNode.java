@@ -113,7 +113,7 @@ public class RingDataNode extends DataNode {
     }
 
     @Override
-    protected void initTableDeltaSupplier() {
+    public void initTableDeltaSupplier() {
         LookupTable.getInstance().setDeltaSupplier(this::getTableDelta);
     }
 }
