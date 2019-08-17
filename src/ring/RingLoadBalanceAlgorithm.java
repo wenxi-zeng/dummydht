@@ -25,10 +25,11 @@ public class RingLoadBalanceAlgorithm {
                 continue;
             }
 
-            int bound = successor.getHash() - vnode.getHash();
-            int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
-            SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + dh);
-            increaseLoad(table, dh, vnode);
+            int bound = range(vnode.getHash(), successor.getHash());
+            int delta = MathX.nextInt(bound);
+            int hf = (vnode.getHash() + delta) % Config.getInstance().getNumberOfHashSlots();
+            SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + delta);
+            increaseLoad(table, hf, vnode);
         }
     }
 
@@ -63,10 +64,12 @@ public class RingLoadBalanceAlgorithm {
                 continue;
             }
 
-            int bound = vnode.getHash() - predecessor.getHash();
-            int dh = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
-            SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + dh);
-            decreaseLoad(table, dh, vnode);
+            int bound = range(predecessor.getHash(), vnode.getHash());
+            int delta = MathX.nextInt(bound);
+            int hf = vnode.getHash() - delta;
+            if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
+            SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + delta);
+            decreaseLoad(table, hf, vnode);
         }
     }
 
@@ -97,8 +100,10 @@ public class RingLoadBalanceAlgorithm {
                 continue;
             }
 
-            int bound = successor.getHash() - vnode.getHash();
-            hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+            int bound = range(vnode.getHash(), successor.getHash());
+            int delta = MathX.nextInt(bound);
+            int hf = (vnode.getHash() + delta) % Config.getInstance().getNumberOfHashSlots();
+            hashVals[i] = hf;
         }
 
         return hashVals;
@@ -116,54 +121,56 @@ public class RingLoadBalanceAlgorithm {
                 continue;
             }
 
-            int bound = vnode.getHash() - predecessor.getHash();
-            hashVals[i] = MathX.nextInt(bound < 0 ? Config.getInstance().getNumberOfHashSlots() + bound : bound);
+            int bound = range(predecessor.getHash(), vnode.getHash());
+            int delta = MathX.nextInt(bound);
+            int hf = vnode.getHash() - delta;
+            if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
+            hashVals[i] = hf;
         }
 
         return hashVals;
     }
 
-    public void decreaseLoad(LookupTable table, int dh, Indexable node) {
+    public void decreaseLoad(LookupTable table, int hf, Indexable node) {
         int hi = node.getHash();
-        int hf = hi - dh;
-        if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
 
         Indexable predecessor = table.getTable().pre(node);
         if (predecessor == null) {
             SimpleLog.i("Virtual node [hash=" + node.getHash() + "] is no longer valid");
             return;
         }
-        if (dh == 0 || hf == predecessor.getHash()) {
-            SimpleLog.i("Invalid hash change, delta h=" + dh);
+        if (!inRange(hf, predecessor.getHash(), hi)) {
+            SimpleLog.i("Invalid hash change, hf=" + hf + " not in range (" + predecessor.getHash() + ", " + hi + ")");
             return;
         }
 
         Indexable toNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
 
-        node.setHash(hf);
+        // node.setHash(hf);
+        table.getTable().get(node.getIndex()).setHash(hf);
         SimpleLog.i("Decreased load for virtual node " + hi + " to " + hf);
         SimpleLog.i("Updated node info: " + node.toString());
     }
 
-    public void increaseLoad(LookupTable table, int dh, Indexable node) {
+    public void increaseLoad(LookupTable table, int hf, Indexable node) {
         int hi = node.getHash();
-        int hf = (hi + dh) % Config.getInstance().getNumberOfHashSlots();
 
         Indexable successor = table.getTable().next(node);
         if (successor == null) {
             SimpleLog.i("Virtual node [hash=" + node.getHash() + "] is no longer valid");
             return;
         }
-        if (dh == 0 || hf == successor.getHash()) {
-            SimpleLog.i("Invalid hash change, delta h=" + dh);
+        if (!inRange(hf, hi, successor.getHash())) {
+            SimpleLog.i("Invalid hash change, hf=" + hf + " not in range (" + hi + ", " + successor.getHash() + ")");
             return;
         }
 
         Indexable fromNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
 
-        node.setHash(hf);
+        // node.setHash(hf);
+        table.getTable().get(node.getIndex()).setHash(hf);
         SimpleLog.i("Increased load for virtual node " + hi + " to " + hf);
         SimpleLog.i("Updated node info: " + node.toString());
     }
@@ -210,6 +217,26 @@ public class RingLoadBalanceAlgorithm {
         }
 
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
+    }
+
+    private boolean inRange(int bucket, int start, int end) {
+        if (start > end) {
+            return (bucket > start && bucket < Config.getInstance().getNumberOfHashSlots()) ||
+                    (bucket >= 0 && bucket < end);
+        }
+        else {
+            return bucket > start && bucket < end;
+        }
+    }
+
+    private int range(int start, int end) {
+        if (start > end) {
+            return end - start;
+        }
+        else {
+            int bound = Config.getInstance().getNumberOfHashSlots();
+            return bound - start + end;
+        }
     }
 
     private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {

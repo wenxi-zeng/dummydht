@@ -97,9 +97,9 @@ public class RingDataNode extends DataNode {
 
     @Override
     public Request prepareDecreaseLoadCommand(String... addresses) {
-        int[] deltaHash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
+        int[] hash = LookupTable.getInstance().randomDecreaseRange(new PhysicalNode(addresses[0]));
         return new Request().withHeader(RingCommand.DECREASELOAD.name())
-                .withAttachments(addresses[0], StringUtils.join(deltaHash, ','));
+                .withAttachments(addresses[0], StringUtils.join(hash, ','));
     }
 
     @Override

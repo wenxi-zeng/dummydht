@@ -45,18 +45,22 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
         if (bestSolution == null) return null;
 
-        List<Integer> deltaHashList = new ArrayList<>();
+        List<Integer> hashList = new ArrayList<>();
         for (Indexable vnode : pnode.getVirtualNodes()) {
-            if (vnode.getHash() == bestSolution.getVnodeHash())
-                deltaHashList.add(bestSolution.getDelta());
-            else
-                deltaHashList.add(0);
+            if (vnode.getHash() == bestSolution.getVnodeHash()) {
+                int hf = vnode.getHash() - bestSolution.getDelta();
+                if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
+                hashList.add(hf);
+            }
+            else {
+                hashList.add(vnode.getHash());
+            }
         }
 
         List<Request> requests = new ArrayList<>();
         requests.add(new Request().withHeader(RingCommand.DECREASELOAD.name())
                 .withReceiver(loadInfo.getNodeId())
-                .withAttachments(loadInfo.getNodeId(), StringUtils.join(deltaHashList, ',')));
+                .withAttachments(loadInfo.getNodeId(), StringUtils.join(hashList, ',')));
         return requests;
     }
 
