@@ -86,6 +86,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     protected void bootstrapped() {
+        super.bootstrapped();
         selector = new PeerSelector(gossipService, socketClient);
         if (!dataNode.getPhysicalNodes().contains(new PhysicalNode(dataNode.getAddress()))) {
             Request r = dataNode.prepareAddNodeCommand();
@@ -236,6 +237,10 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
             Request request = new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name())
                     .withLargeAttachment(loadInfo);
             selector.start(myLoadLevel, request);
+            SimpleLog.i("onLoadInfoReported: myLoadLevel " + myLoadLevel);
+        }
+        else {
+            SimpleLog.i("Node overloaded. Load level: " + myLoadLevel);
         }
 
         this.gossipService.getMyself().getProperties()

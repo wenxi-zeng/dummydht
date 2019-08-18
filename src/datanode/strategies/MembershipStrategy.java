@@ -81,13 +81,12 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
             SimpleLog.i("Creating table");
             dataNode.setMembershipCallBack(this);
             dataNode.createTable();
-            dataNode.initTableDeltaSupplier();
         }
         bootstrapped();
     }
 
     protected void bootstrapped() {
-        // stub
+        dataNode.initTableDeltaSupplier();
     }
 
     @Override
