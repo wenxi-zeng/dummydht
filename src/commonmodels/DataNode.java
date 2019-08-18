@@ -123,12 +123,11 @@ public abstract class DataNode {
     }
 
     public Response execute(Request request) {
-        long oldEpoch = getEpoch();
-        Response response = terminal.process(request);
-        if (oldEpoch > 0 && oldEpoch != getEpoch()) {
+        if (terminal.isRequestCauseTableUpdates(request)) {
             recordTableDelta(request);
         }
-        return response;
+
+        return terminal.process(request);
     }
 
     public Request prepareAddNodeCommand(String address) {

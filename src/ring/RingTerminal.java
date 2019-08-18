@@ -7,7 +7,20 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.URIHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RingTerminal implements Terminal {
+
+    private List<String> tableChangeCommand;
+
+    public RingTerminal() {
+        tableChangeCommand = new ArrayList<>();
+        tableChangeCommand.add(RingCommand.ADDNODE.name());
+        tableChangeCommand.add(RingCommand.REMOVENODE.name());
+        tableChangeCommand.add(RingCommand.INCREASELOAD.name());
+        tableChangeCommand.add(RingCommand.DECREASELOAD.name());
+    }
 
     @Override
     public void initialize() {
@@ -71,6 +84,11 @@ public class RingTerminal implements Terminal {
     @Override
     public Request translate(String command) throws InvalidRequestException {
         return translate(command.split(" "));
+    }
+
+    @Override
+    public boolean isRequestCauseTableUpdates(Request request) {
+        return tableChangeCommand.contains(request.getHeader());
     }
 
 }

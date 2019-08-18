@@ -13,4 +13,5 @@ public interface Terminal {
     Response process(Request request);
     Request translate(String[] args) throws InvalidRequestException;
     Request translate(String command) throws InvalidRequestException;
+    boolean isRequestCauseTableUpdates(Request request);
 }

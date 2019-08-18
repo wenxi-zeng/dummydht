@@ -7,14 +7,25 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.URIHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CephTerminal implements Terminal {
 
     private String machineAddress;
 
+
+    private List<String> tableChangeCommand;
+
     public CephTerminal() {
+        tableChangeCommand = new ArrayList<>();
+        tableChangeCommand.add(CephCommand.ADDNODE.name());
+        tableChangeCommand.add(CephCommand.REMOVENODE.name());
+        tableChangeCommand.add(CephCommand.CHANGEWEIGHT.name());
     }
 
     public CephTerminal(String machineAddress) {
+        this();
         this.machineAddress = machineAddress;
     }
 
@@ -79,5 +90,10 @@ public class CephTerminal implements Terminal {
     @Override
     public Request translate(String command) throws InvalidRequestException {
         return translate(command.split(" "));
+    }
+
+    @Override
+    public boolean isRequestCauseTableUpdates(Request request) {
+        return tableChangeCommand.contains(request.getHeader());
     }
 }

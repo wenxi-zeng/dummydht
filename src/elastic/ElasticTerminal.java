@@ -7,7 +7,21 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.URIHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ElasticTerminal implements Terminal {
+
+    private List<String> tableChangeCommand;
+
+    public ElasticTerminal() {
+        tableChangeCommand = new ArrayList<>();
+        tableChangeCommand.add(ElasticCommand.ADDNODE.name());
+        tableChangeCommand.add(ElasticCommand.REMOVENODE.name());
+        tableChangeCommand.add(ElasticCommand.MOVEBUCKET.name());
+        tableChangeCommand.add(ElasticCommand.EXPAND.name());
+        tableChangeCommand.add(ElasticCommand.SHRINK.name());
+    }
 
     @Override
     public void initialize() {
@@ -72,6 +86,11 @@ public class ElasticTerminal implements Terminal {
     @Override
     public Request translate(String command) throws InvalidRequestException {
         return translate(command.split(" "));
+    }
+
+    @Override
+    public boolean isRequestCauseTableUpdates(Request request) {
+        return tableChangeCommand.contains(request.getHeader());
     }
 }
 

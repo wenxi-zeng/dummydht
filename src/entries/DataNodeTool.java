@@ -267,6 +267,11 @@ public class DataNodeTool {
         public Request translate(String command) throws InvalidRequestException {
             return translate(command.split(" "));
         }
+
+        @Override
+        public boolean isRequestCauseTableUpdates(Request request) {
+            return false;
+        }
     }
 
     public class ControlRequestGenerator extends RequestGenerator {
