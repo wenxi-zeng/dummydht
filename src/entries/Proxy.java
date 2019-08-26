@@ -72,6 +72,7 @@ public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCall
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
         GlobalLoadInfoBroker.getInstance().subscribe(loadMonitor);
         loadMonitor.subscribe(this);
+        daemon.getDataNodeServer().getDataNode().setTableChangedHandler(this);
     }
 
     @Override
@@ -246,6 +247,7 @@ public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCall
     @Override
     public void onTableChanged(Request delta, Object newTable) {
         daemon.propagateTableChanges(delta);
+        GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
     }
 
     @Override

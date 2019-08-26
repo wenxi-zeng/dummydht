@@ -12,11 +12,13 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
-import loadmanagement.*;
+import loadmanagement.AbstractLoadMonitor;
+import loadmanagement.DecentralizedLoadInfoBroker;
+import loadmanagement.DecentralizedLoadMonitor;
+import loadmanagement.LoadInfoManager;
 import org.apache.commons.lang3.StringUtils;
 import socket.SocketClient;
 import socket.SocketServer;
-import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 
@@ -309,7 +311,6 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
         for (PhysicalNode node : dataNodeServer.getPhysicalNodes()) {
             send(node.getAddress(), node.getPort(), request, this);
         }
-        GlobalLoadInfoBroker.getInstance().update(dataNodeServer.getPhysicalNodes());
     }
 
     private void backupFile(String file, List<PhysicalNode> replicas) {
