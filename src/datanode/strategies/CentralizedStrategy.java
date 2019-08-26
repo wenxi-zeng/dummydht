@@ -1,12 +1,13 @@
 package datanode.strategies;
 
-import commands.ProxyCommand;
+import commands.CommonCommand;
 import commonmodels.DataNode;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import loadmanagement.LoadInfo;
 import socket.SocketClient;
 import util.Config;
+import util.SimpleLog;
 
 public class CentralizedStrategy extends MembershipStrategy implements SocketClient.ServerCallBack {
 
@@ -22,7 +23,7 @@ public class CentralizedStrategy extends MembershipStrategy implements SocketCli
     @Override
     public void onLoadInfoReported(LoadInfo loadInfo) {
         Request request = new Request()
-                .withHeader(ProxyCommand.UPDATELOAD.name())
+                .withHeader(CommonCommand.UPDATELOAD.name())
                 .withLargeAttachment(loadInfo);
         socketClient.send(
                 Config.getInstance().getSeeds().get(0),
@@ -33,11 +34,9 @@ public class CentralizedStrategy extends MembershipStrategy implements SocketCli
 
     @Override
     public void onResponse(Request request, Response response) {
-
     }
 
     @Override
     public void onFailure(Request request, String error) {
-
     }
 }

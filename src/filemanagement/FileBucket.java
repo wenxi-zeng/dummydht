@@ -43,13 +43,15 @@ public class FileBucket extends Transportable implements Serializable, Cloneable
         this.size = size;
     }
 
-    public void merge(FileBucket bucket) {
+    public FileBucket merge(FileBucket bucket) {
         this.numberOfWrites += bucket.numberOfWrites;
         this.sizeOfWrites += bucket.sizeOfWrites;
         this.numberOfReads += bucket.numberOfReads;
         this.numberOfWrites += bucket.numberOfWrites;
         this.numberOfFiles += bucket.numberOfFiles;
         this.size += bucket.size;
+
+        return this;
     }
 
     public void reset() {

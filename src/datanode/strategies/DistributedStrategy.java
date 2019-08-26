@@ -1,6 +1,6 @@
 package datanode.strategies;
 
-import commands.DaemonCommand;
+import commands.CommonCommand;
 import commonmodels.DataNode;
 import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
@@ -100,7 +100,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
 
     @Override
     public Response getMembersStatus() {
-        return new Response().withHeader(DaemonCommand.STATUS.name())
+        return new Response().withHeader(CommonCommand.STATUS.name())
                 .withStatus(Response.STATUS_SUCCESS)
                 .withMessage(printLiveMembers() + printDeadMembers());
     }
@@ -234,7 +234,7 @@ public class DistributedStrategy extends MembershipStrategy implements GossipLis
                 myLoadLevel != LoadInfo.LEVEL_VERY_HEAVY &&
                 myLoadLevel != LoadInfo.LEVEL_MEDIAN_HEAVY &&
                 myLoadLevel != LoadInfo.LEVEL_HEAVY ) {
-            Request request = new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name())
+            Request request = new Request().withHeader(CommonCommand.LOADHANDSHAKE.name())
                     .withLargeAttachment(loadInfo);
             selector.start(myLoadLevel, request);
             SimpleLog.i("onLoadInfoReported: myLoadLevel " + myLoadLevel);

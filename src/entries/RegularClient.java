@@ -1,7 +1,7 @@
 package entries;
 
 import ceph.CephTerminal;
-import commands.DaemonCommand;
+import commands.CommonCommand;
 import commands.RingCommand;
 import commonmodels.PhysicalNode;
 import commonmodels.Terminal;
@@ -189,7 +189,7 @@ public class RegularClient {
         SimpleLog.v("Fetching table...");
 
         if (Config.getInstance().getSeeds().size() > 0) {
-            Request request = new Request().withHeader(DaemonCommand.FETCH.name());
+            Request request = new Request().withHeader(CommonCommand.FETCH.name());
             socketClient.send(Config.getInstance().getSeeds().get(0), request, serverCallBack);
         }
         else {
@@ -218,7 +218,7 @@ public class RegularClient {
 
     private void onTableUpdated(Object table) {
         Request request = new Request()
-                .withHeader(DaemonCommand.UPDATE.name())
+                .withHeader(CommonCommand.UPDATE.name())
                 .withLargeAttachment(table);
 
         Response response = terminal.process(request);

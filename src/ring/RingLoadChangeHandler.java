@@ -81,7 +81,7 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
     private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long target) {
         Solution solution = new Solution(loadInfo.getLoad(), current.getHash());
         Map<Integer, FileBucket> map = loadInfo.getBucketInfoList().stream().collect(
-                Collectors.toMap(FileBucket::getKey, bucket -> bucket));
+                Collectors.toMap(FileBucket::getKey, bucket -> bucket, FileBucket::merge));
 
         int iterator = current.getHash();
         int start = predecessor.getHash() + 1; // the hash of predecessor needs to be excluded

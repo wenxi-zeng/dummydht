@@ -11,15 +11,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Queue;
 
 public class ServerReadWriteHandler implements Runnable, Attachable {
     private final SocketChannel socketChannel;
-    private final Queue<Attachable> attachments;
     private SelectionKey selectionKey;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
@@ -31,11 +28,9 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
     private boolean processScheduled;
     private int size;
 
-    public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler, Queue<Attachable> attchements) throws IOException {
+    public ServerReadWriteHandler(SocketChannel socketChannel, SocketServer.EventHandler eventHandler) {
         this.socketChannel = socketChannel;
-        this.socketChannel.configureBlocking(false);
         this.eventHandler = eventHandler;
-        this.attachments = attchements;
         this.processScheduled = false;
 
         this._writeBuf = new ByteBuffer[2];
@@ -59,7 +54,6 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
             }
         }
         catch (IOException ex) {
-            attachments.add(new Recycler(selectionKey));
             SimpleLog.e(ex);
         }
     }
@@ -86,8 +80,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
                 _writeBuf[0].putInt(_writeBuf[1].remaining());
                 _writeBuf[0].flip();
 
-                this.selectionKey.interestOps(SelectionKey.OP_WRITE);
-                this.selectionKey.selector().wakeup();
+                switchMode(SelectionKey.OP_WRITE);
             } catch (IOException e) {
                 reset();
                 e.printStackTrace();
@@ -147,8 +140,7 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
 
         if (!_writeBuf[0].hasRemaining() && !_writeBuf[1].hasRemaining()) {
             reset();
-            this.selectionKey.interestOps(SelectionKey.OP_READ);
-            this.selectionKey.selector().wakeup();
+            switchMode(SelectionKey.OP_READ);
         }
     }
 
@@ -162,12 +154,14 @@ public class ServerReadWriteHandler implements Runnable, Attachable {
         bos.reset();
     }
 
+    private void switchMode(int mode) {
+        this.selectionKey.selector().wakeup();
+        this.selectionKey.interestOps(mode);
+    }
+
     @Override
     public void attach(Selector selector) throws IOException {
-        try {
-            selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
-            selectionKey.attach(this);
-        }
-        catch (CancelledKeyException ignored) {}
+        selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
+        selectionKey.attach(this);
     }
 }

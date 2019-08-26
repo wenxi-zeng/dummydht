@@ -1,8 +1,10 @@
 package socket;
 
+import commands.CommonCommand;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import statmanagement.StatInfoManager;
+import util.SimpleLog;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,7 +22,7 @@ public class SocketClient implements Runnable{
 
     private final AtomicBoolean keepRunning = new AtomicBoolean(true);
 
-    private final Map<String, SocketChannel> channelCache;
+    private final Map<String, ClientHandler> handlerCache;
 
     private final Queue<Attachable> attachments = new LinkedList<Attachable>() {
         @Override
@@ -32,7 +34,7 @@ public class SocketClient implements Runnable{
     };
 
     private SocketClient() {
-        channelCache = new HashMap<>();
+        handlerCache = new HashMap<>();
 
         try {
             selector = Selector.open();
@@ -85,16 +87,22 @@ public class SocketClient implements Runnable{
 
     private void registerRequest(InetSocketAddress remote, Request data, ServerCallBack callBack) throws IOException {
         String key = remote.getHostName() + ":" + remote.getPort();
-        SocketChannel socketChannel = channelCache.get(key);
-        if (socketChannel == null) {
-            socketChannel = SocketChannel.open();
+        ClientHandler handler = handlerCache.get(key);
+        if (handler == null || !handler.isConnected()) {
+            SocketChannel socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
             socketChannel.connect(remote);
-            attachments.add(new Connector(socketChannel, data, attachments, callBack));
-            channelCache.put(key, socketChannel);
+            ClientHandler connector = new Connector(socketChannel, data,
+                    (selectionKey, dataPool) -> {
+                        ClientHandler ch = new ClientReadWriteHandler(selectionKey, dataPool, callBack);
+                        handlerCache.put(key, ch);
+                        attachments.add(ch);
+                    });
+            handlerCache.put(key, connector);
+            attachments.add(connector);
         }
         else {
-            attachments.add(new ClientReadWriteHandler(socketChannel, data, callBack, attachments));
+            handler.put(data);
         }
     }
 
@@ -118,6 +126,7 @@ public class SocketClient implements Runnable{
         }
         catch (IOException ex) {
             ex.printStackTrace();
+            SimpleLog.e(ex);
         }
     }
 

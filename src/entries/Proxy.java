@@ -1,7 +1,8 @@
 package entries;
 
-import commands.ProxyCommand;
+import commands.CommonCommand;
 import commonmodels.Daemon;
+import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
 import commonmodels.TableChangedHandler;
 import commonmodels.transport.Request;
@@ -13,12 +14,13 @@ import loadmanagement.AbstractLoadMonitor;
 import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadMonitor;
 import socket.SocketClient;
+import statmanagement.StatInfoManager;
 import util.Config;
 import util.SimpleLog;
 
 import java.util.List;
 
-public class Proxy implements Daemon, TableChangedHandler {
+public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCallback {
 
     private DataNodeDaemon daemon;
 
@@ -69,7 +71,7 @@ public class Proxy implements Daemon, TableChangedHandler {
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
         GlobalLoadInfoBroker.getInstance().subscribe(loadMonitor);
-        loadMonitor.subscribe(daemon);
+        loadMonitor.subscribe(this);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class Proxy implements Daemon, TableChangedHandler {
     @Override
     public Response processCommonCommand(Request o) {
         try {
-            ProxyCommand command = ProxyCommand.valueOf(o.getHeader());
+            CommonCommand command = CommonCommand.valueOf(o.getHeader());
             return command.execute(o);
         }
         catch (IllegalArgumentException e) {
@@ -175,13 +177,13 @@ public class Proxy implements Daemon, TableChangedHandler {
     private void followup(String followupAddress, Response response) {
         if (response.getStatus() == Response.STATUS_FAILED) return;
 
-        if (response.getHeader().equals(ProxyCommand.ADDNODE.name())) {
+        if (response.getHeader().equals(CommonCommand.ADDNODE.name())) {
             onFollowupAddNode(followupAddress, response);
         }
-        else if (response.getHeader().equals(ProxyCommand.REMOVENODE.name())) {
+        else if (response.getHeader().equals(CommonCommand.REMOVENODE.name())) {
             onFollowupRemoveNode(followupAddress, response);
         }
-        else if (response.getHeader().equals(ProxyCommand.FETCH.name())) {
+        else if (response.getHeader().equals(CommonCommand.FETCH.name())) {
             onFollowupFetch(followupAddress, response);
         }
     }
@@ -244,5 +246,13 @@ public class Proxy implements Daemon, TableChangedHandler {
     @Override
     public void onTableChanged(Request delta, Object newTable) {
         daemon.propagateTableChanges(delta);
+    }
+
+    @Override
+    public void onRequestAvailable(List<Request> requests) {
+        for (Request request : requests) {
+            processDataNodeCommand(request);
+            StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
+        }
     }
 }

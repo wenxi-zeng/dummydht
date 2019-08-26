@@ -1,6 +1,6 @@
 package datanode.strategies;
 
-import commands.DaemonCommand;
+import commands.CommonCommand;
 import commonmodels.DataNode;
 import commonmodels.LoadInfoReportHandler;
 import commonmodels.MembershipCallBack;
@@ -65,7 +65,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
 
         for (String seed : dataNode.getSeeds()) {
             if (!seed.equals(dataNode.getAddress()) && !seed.equals(dataNode.getLocalAddress())) {
-                Request request = new Request().withHeader(DaemonCommand.FETCH.name())
+                Request request = new Request().withHeader(CommonCommand.FETCH.name())
                                                 .withFollowup(dataNode.getAddress());
                 socketClient.send(seed, request, callBack);
                 try {
@@ -92,7 +92,7 @@ public abstract class MembershipStrategy implements LoadInfoReportHandler, Membe
     @Override
     public void onInitialized() {
         Request request = new Request()
-                .withHeader(DaemonCommand.START.name());
+                .withHeader(CommonCommand.START.name());
         SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response o) {

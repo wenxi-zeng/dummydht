@@ -9,6 +9,7 @@ import entries.DataNodeDaemon;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
 import loadmanagement.DecentralizedLoadInfoBroker;
+import loadmanagement.GlobalLoadInfoBroker;
 import loadmanagement.LoadInfo;
 import util.SimpleLog;
 
@@ -16,12 +17,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public enum DaemonCommand implements Command {
+public enum CommonCommand implements Command {
 
     START {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.START.name())
+            return new Request().withHeader(CommonCommand.START.name())
                     .withReceiver(args[1]);
         }
 
@@ -40,7 +41,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.START.name();
+            return CommonCommand.START.name();
         }
 
         @Override
@@ -52,7 +53,7 @@ public enum DaemonCommand implements Command {
     STOP {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.STOP.name())
+            return new Request().withHeader(CommonCommand.STOP.name())
                     .withReceiver(args[1]);
         }
 
@@ -72,7 +73,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.STOP.name();
+            return CommonCommand.STOP.name();
         }
 
         @Override
@@ -84,7 +85,7 @@ public enum DaemonCommand implements Command {
     STATUS {
         @Override
         public Request convertToRequest(String[] args) {
-            Request request = new Request().withHeader(DaemonCommand.STATUS.name());
+            Request request = new Request().withHeader(CommonCommand.STATUS.name());
             if (args.length > 1) request.setReceiver(args[1]);
             return request;
         }
@@ -107,7 +108,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.STATUS.name();
+            return CommonCommand.STATUS.name();
         }
 
         @Override
@@ -119,7 +120,7 @@ public enum DaemonCommand implements Command {
     FETCH {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.FETCH.name());
+            return new Request().withHeader(CommonCommand.FETCH.name());
         }
 
         @Override
@@ -143,7 +144,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.FETCH.name();
+            return CommonCommand.FETCH.name();
         }
 
         @Override
@@ -160,7 +161,7 @@ public enum DaemonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(DaemonCommand.TRANSFER.name())
+                    .withHeader(CommonCommand.TRANSFER.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -197,7 +198,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.TRANSFER.name() + " %s:%s %s:%s %s";
+            return CommonCommand.TRANSFER.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -214,7 +215,7 @@ public enum DaemonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(DaemonCommand.COPY.name())
+                    .withHeader(CommonCommand.COPY.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -251,7 +252,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.COPY.name() + " %s:%s %s:%s %s";
+            return CommonCommand.COPY.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -268,7 +269,7 @@ public enum DaemonCommand implements Command {
             }
 
             return new Request()
-                    .withHeader(DaemonCommand.RECEIVED.name())
+                    .withHeader(CommonCommand.RECEIVED.name())
                     .withSender(args[0])
                     .withReceiver(args[1])
                     .withAttachment(args[2]);
@@ -307,7 +308,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.RECEIVED.name() + " %s:%s %s:%s %s";
+            return CommonCommand.RECEIVED.name() + " %s:%s %s:%s %s";
         }
 
         @Override
@@ -319,7 +320,7 @@ public enum DaemonCommand implements Command {
     UPDATE {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.UPDATE.name());
+            return new Request().withHeader(CommonCommand.UPDATE.name());
         }
 
         @Override
@@ -363,7 +364,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.STATUS.name();
+            return CommonCommand.STATUS.name();
         }
 
         @Override
@@ -375,7 +376,7 @@ public enum DaemonCommand implements Command {
     LOADHANDSHAKE{
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            return new Request().withHeader(DaemonCommand.LOADHANDSHAKE.name());
+            return new Request().withHeader(CommonCommand.LOADHANDSHAKE.name());
         }
 
         @Override
@@ -387,7 +388,7 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.LOADHANDSHAKE.name();
+            return CommonCommand.LOADHANDSHAKE.name();
         }
 
         @Override
@@ -399,7 +400,7 @@ public enum DaemonCommand implements Command {
     PROPAGATE {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(DaemonCommand.PROPAGATE.name());
+            return new Request().withHeader(CommonCommand.PROPAGATE.name());
         }
 
         @Override
@@ -410,7 +411,104 @@ public enum DaemonCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return DaemonCommand.PROPAGATE.name();
+            return CommonCommand.PROPAGATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    ADDNODE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            String attachment;
+
+            if (args.length == 2) {
+                attachment = args[1];
+            }
+            else if (args.length == 3) {
+                attachment = args[1] + " " + args[2];
+            }
+            else  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            return new Request().withHeader(CommonCommand.ADDNODE.name())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            Request followupRequest = new Request()
+                    .withHeader(CommonCommand.START.name())
+                    .withReceiver(request.getAttachment());
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS)
+                    .withAttachment(followupRequest);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CommonCommand.ADDNODE.name() + " %s:%s %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<ip>", "<port>", "[bucket1,bucket2,...]");
+        }
+
+    },
+
+    REMOVENODE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 2)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            return new Request().withHeader(RingCommand.REMOVENODE.name())
+                    .withAttachment(args[1]);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            Request followupRequest = new Request()
+                    .withHeader(CommonCommand.STOP.name())
+                    .withReceiver(request.getAttachment());
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS)
+                    .withAttachment(followupRequest);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return RingCommand.REMOVENODE.name() + " %s:%s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<ip>", "<port>");
+        }
+    },
+
+    UPDATELOAD{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            return new Request().withHeader(CommonCommand.UPDATELOAD.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            GlobalLoadInfoBroker.getInstance().update((LoadInfo) request.getLargeAttachment());
+            return new Response(request)
+                    .withStatus(Response.STATUS_SUCCESS);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CommonCommand.UPDATELOAD.name();
         }
 
         @Override

@@ -50,7 +50,8 @@ public class SocketServer implements Runnable{
         serverSocketChannel.socket().bind(new InetSocketAddress(port));
         serverSocketChannel.configureBlocking(false);
         registerShutdownHook();
-        attachments.add(new Acceptor(serverSocketChannel, attachments, eventHandler));
+        attachments.add(new Acceptor(serverSocketChannel,
+                socketChannel -> attachments.add(new ServerReadWriteHandler(socketChannel, eventHandler))));
     }
 
     @Override

@@ -2,7 +2,7 @@ package entries;
 
 import ceph.CephDataNode;
 import commands.CephCommand;
-import commands.DaemonCommand;
+import commands.CommonCommand;
 import commands.ElasticCommand;
 import commands.RingCommand;
 import commonmodels.DataNode;
@@ -34,7 +34,7 @@ public class DataNodeTool {
 
         @Override
         public void onResponse(Request request, Response o) {
-            if (o.getHeader().equals(DaemonCommand.FETCH.name())) {
+            if (o.getHeader().equals(CommonCommand.FETCH.name())) {
                 onTableFetched(o.getAttachment());
             }
             SimpleLog.v(String.valueOf(o));
@@ -114,7 +114,7 @@ public class DataNodeTool {
         SimpleLog.v("Fetching table...");
 
         if (Config.getInstance().getSeeds().size() > 0) {
-            Request request = new Request().withHeader(DaemonCommand.FETCH.name());
+            Request request = new Request().withHeader(CommonCommand.FETCH.name());
             socketClient.send(Config.getInstance().getSeeds().get(0), request, callBack);
         }
         else {
@@ -124,7 +124,7 @@ public class DataNodeTool {
 
     private void onTableFetched(Object table) {
         Request request = new Request()
-                .withHeader(DaemonCommand.UPDATE.name())
+                .withHeader(CommonCommand.UPDATE.name())
                 .withLargeAttachment(table);
 
         Response response = dataNode.execute(request);
@@ -169,10 +169,10 @@ public class DataNodeTool {
         }
         else {
             if (request.getHeader().equals(RingCommand.ADDNODE.name())) {
-                request.setHeader(DaemonCommand.START.name());
+                request.setHeader(CommonCommand.START.name());
             }
             else if (request.getHeader().equals(RingCommand.REMOVENODE.name())) {
-                request.setHeader(DaemonCommand.STOP.name());
+                request.setHeader(CommonCommand.STOP.name());
             }
         }
 
@@ -254,7 +254,7 @@ public class DataNodeTool {
         @Override
         public Request translate(String[] args) throws InvalidRequestException {
             try {
-                DaemonCommand cmd = DaemonCommand.valueOf(args[0].toUpperCase());
+                CommonCommand cmd = CommonCommand.valueOf(args[0].toUpperCase());
                 URIHelper.verifyAddress(args);
                 return cmd.convertToRequest(args);
             }

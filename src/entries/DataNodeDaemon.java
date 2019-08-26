@@ -1,6 +1,6 @@
 package entries;
 
-import commands.DaemonCommand;
+import commands.CommonCommand;
 import commands.RingCommand;
 import commonmodels.Daemon;
 import commonmodels.NotableLoadChangeCallback;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadChangeCallback {
+public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     private SocketServer socketServer;
 
@@ -151,7 +151,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
 
             AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler(), LoadInfoManager.getInstance());
             DecentralizedLoadInfoBroker.getInstance().subscribe(loadMonitor);
-            loadMonitor.subscribe(this);
+            // loadMonitor.subscribe(this);
             loadMonitor.subscribe((NotableLoadChangeCallback) dataNodeServer.getMembershipStrategy());
         }
     }
@@ -200,7 +200,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     public void onTransferring(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         // send request to the "from" node, ask "from" to transfer the buckets
         Request request = new Request()
-                .withHeader(DaemonCommand.TRANSFER.name())
+                .withHeader(CommonCommand.TRANSFER.name())
                 .withSender(from.getFullAddress())
                 .withReceiver(toNode.getFullAddress())
                 .withAttachment(StringUtils.join(buckets, ','));
@@ -211,7 +211,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     public void onReplicating(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         // send request to the "from" node, ask "from" to copy the buckets
         Request request = new Request()
-                .withHeader(DaemonCommand.COPY.name())
+                .withHeader(CommonCommand.COPY.name())
                 .withSender(from.getFullAddress())
                 .withReceiver(toNode.getFullAddress())
                 .withAttachment(StringUtils.join(buckets, ','));
@@ -222,7 +222,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     public void onTransmitted(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
         // send request to the "toNode" node, ask "toNode" to receive the buckets
         Request request = new Request()
-                .withHeader(DaemonCommand.RECEIVED.name())
+                .withHeader(CommonCommand.RECEIVED.name())
                 .withSender(from.getFullAddress())
                 .withReceiver(toNode.getFullAddress())
                 .withLargeAttachment(buckets);
@@ -247,7 +247,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
     @Override
     public Response processCommonCommand(Request o) {
         try {
-            DaemonCommand command = DaemonCommand.valueOf(o.getHeader());
+            CommonCommand command = CommonCommand.valueOf(o.getHeader());
             return command.execute(o);
         }
         catch (IllegalArgumentException e) {
@@ -299,7 +299,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
 
     public void propagateTable() {
         Request request = new Request()
-                .withHeader(DaemonCommand.UPDATE.name())
+                .withHeader(CommonCommand.UPDATE.name())
                 .withLargeAttachment(dataNodeServer.getDataNodeTable());
 
         propagateTableChanges(request);
@@ -320,14 +320,6 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack, NotableLoadCha
         for (PhysicalNode node : replicas) {
             if (!node.getFullAddress().equals(dataNodeServer.getDataNode().getAddress()))
                 send(node.getAddress(), node.getPort(), request, this);
-        }
-    }
-
-    @Override
-    public void onRequestAvailable(List<Request> requests) {
-        for (Request request : requests) {
-            processDataNodeCommand(request);
-            StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
         }
     }
 }

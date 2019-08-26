@@ -10,17 +10,16 @@ import util.SimpleLog;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 import java.util.Queue;
 
-public class ClientReadWriteHandler implements Runnable, Attachable {
+public class ClientReadWriteHandler implements Runnable, ClientHandler {
     private final SocketChannel socketChannel;
     private final SocketClient.ServerCallBack callBack;
-    private final Request data;
-    private final Queue<Attachable> attachments;
+    private final Queue<Request> dataPool;
 
     private static final int READ_BUF_SIZE = 32 * 1024;
 
@@ -28,26 +27,21 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
     private ByteBuffer[] _readBuf;
     private ByteBuffer[] _writeBuf;
     private ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    private Request currentData = null;
     private int size;
 
-    public ClientReadWriteHandler(SocketChannel socketChannel, Request data, SocketClient.ServerCallBack callBack, Queue<Attachable> attachments) throws IOException {
-        this.socketChannel = socketChannel;
-        this.socketChannel.configureBlocking(false);
-        this.data = data;
+    public ClientReadWriteHandler(SelectionKey selectionKey, Queue<Request> dataPool, SocketClient.ServerCallBack callBack) {
+        this.selectionKey = selectionKey;
+        this.socketChannel = (SocketChannel)selectionKey.channel();
         this.callBack = callBack;
-        this.attachments = attachments;
+        this.dataPool = new LinkedList<>(dataPool);
+    }
 
-        this._writeBuf = new ByteBuffer[2];
-        this._writeBuf[1] = JsonProtocolManager.getInstance().writeGzip(data);
-        this._writeBuf[0] = ByteBuffer.allocate(Integer.BYTES);
-        this._writeBuf[0].putInt(_writeBuf[1].remaining());
-        this._writeBuf[0].flip();
-        // SimpleLog.v("Client write buffer: position " + _writeBuf[1].position() + ", remaining " + _writeBuf[1].remaining());
-        this._readBuf = new ByteBuffer[2];
-        this._readBuf[1] = ByteBuffer.allocate(READ_BUF_SIZE);
-        this._readBuf[0] = ByteBuffer.allocate(Integer.BYTES);
-
-        this.size = Integer.MIN_VALUE;
+    @Override
+    public void put(Request data) {
+        dataPool.add(data);
+        if (currentData == null)
+            switchMode(SelectionKey.OP_WRITE);
     }
 
     @Override
@@ -62,7 +56,6 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
             }
         }
         catch (IOException ex) {
-            attachments.add(new Recycler(selectionKey));
             SimpleLog.e(ex);
         }
     }
@@ -75,13 +68,13 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         Transportable o = JsonProtocolManager.getInstance().readGzip(byteArray);
         if (o instanceof Response) {
             Response resp = (Response) o;
-            StatInfoManager.getInstance().statResponse(data, resp, respSize);
-            callBack.onResponse(data, resp);
+            StatInfoManager.getInstance().statResponse(currentData, resp, respSize);
+            callBack.onResponse(currentData, resp);
         }
         else {
             // SimpleLog.i("[" + socketChannel.getRemoteAddress() + "] Client: process bytes " + respSize + ", object is " + o);
-            StatInfoManager.getInstance().statRoundTripFailure(data);
-            callBack.onFailure(data, String.valueOf(o));
+            StatInfoManager.getInstance().statRoundTripFailure(currentData);
+            callBack.onFailure(currentData, String.valueOf(o));
         }
     }
 
@@ -89,6 +82,7 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         if (this.socketChannel.read(_readBuf) == -1){
             this.selectionKey.cancel();
             this.socketChannel.close();
+            SimpleLog.i("client read -1. closing channel");
             return;
         }
 
@@ -119,22 +113,47 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         }
 
         if (size <= 0 && size != Integer.MIN_VALUE) {
-            attachments.add(new Recycler(selectionKey));
             process();
             reset();
+            switchMode(SelectionKey.OP_WRITE);
         }
         else {
             _readBuf[1].clear();
         }
     }
 
+    private void serveData() {
+        currentData = dataPool.poll();
+        if (currentData == null) return;
+
+        this._writeBuf = new ByteBuffer[2];
+        this._writeBuf[1] = JsonProtocolManager.getInstance().writeGzip(currentData);
+        this._writeBuf[0] = ByteBuffer.allocate(Integer.BYTES);
+        this._writeBuf[0].putInt(_writeBuf[1].remaining());
+        this._writeBuf[0].flip();
+        // SimpleLog.v("Client write buffer: position " + _writeBuf[1].position() + ", remaining " + _writeBuf[1].remaining());
+        this._readBuf = new ByteBuffer[2];
+        this._readBuf[1] = ByteBuffer.allocate(READ_BUF_SIZE);
+        this._readBuf[0] = ByteBuffer.allocate(Integer.BYTES);
+
+        this.size = Integer.MIN_VALUE;
+    }
+
     private void write() throws IOException {
+        if (currentData == null)
+            serveData();
+        if (currentData == null) return;
+
         this.socketChannel.write(_writeBuf);
 
         if (!_writeBuf[0].hasRemaining() && !_writeBuf[1].hasRemaining()) {
-            this.selectionKey.interestOps(SelectionKey.OP_READ);
-            this.selectionKey.selector().wakeup();
+            switchMode(SelectionKey.OP_READ);
         }
+    }
+
+    private void switchMode(int mode) {
+        this.selectionKey.selector().wakeup();
+        this.selectionKey.interestOps(mode);
     }
 
     private void reset() {
@@ -144,14 +163,17 @@ public class ClientReadWriteHandler implements Runnable, Attachable {
         _writeBuf[0].clear();
         _writeBuf[1].clear();
         bos.reset();
+        currentData = null;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return socketChannel != null && socketChannel.isOpen() && socketChannel.isConnected();
     }
 
     @Override
     public void attach(Selector selector) throws IOException {
-        try {
-            this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
-            this.selectionKey.attach(this);
-        }
-        catch (CancelledKeyException ignored) {}
+        this.selectionKey = this.socketChannel.register(selector, SelectionKey.OP_WRITE);
+        this.selectionKey.attach(this);
     }
 }
