@@ -142,15 +142,16 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
         FileTransferManager.getInstance().subscribe(this);
         LoadInfoManager.with(dataNodeServer.getDataNode().getAddress());
         LoadInfoManager.getInstance().setLoadInfoReportHandler(dataNodeServer.getMembershipStrategy());
-        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
-            // in decentralized mode, node are only responsible for transferring files
-            // that they are involved
-            // if it happens that they receive request to transfer files between other
-            // nodes, the following settings make the node only update the table,
-            // thus avoiding unnecessary file transfer
-            FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
-            FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
 
+        // node are only responsible for transferring files
+        // that they are involved
+        // if it happens that they receive request to transfer files between other
+        // nodes, the following settings make the node only update the table,
+        // thus avoiding unnecessary file transfer
+        FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
+        FileTransferManager.getInstance().setMySelf(dataNodeServer.getDataNode().getAddress());
+
+        if (Config.getInstance().getMode().equals(Config.MODE_DISTRIBUTED)) {
             AbstractLoadMonitor loadMonitor = new DecentralizedLoadMonitor(dataNodeServer.getDataNode().getLoadChangeHandler(), LoadInfoManager.getInstance());
             DecentralizedLoadInfoBroker.getInstance().subscribe(loadMonitor);
             // loadMonitor.subscribe(this);

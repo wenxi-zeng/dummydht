@@ -20,7 +20,7 @@ import util.SimpleLog;
 
 import java.util.List;
 
-public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCallback {
+public class Proxy implements Daemon, NotableLoadChangeCallback {
 
     private DataNodeDaemon daemon;
 
@@ -68,11 +68,12 @@ public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCall
     @Override
     public void initSubscriptions() {
         FileTransferManager.getInstance().subscribe(this);
+        FileTransferManager.getInstance().setPolicy(FileTransferManager.FileTransferPolicy.SenderOrReceiver);
+        FileTransferManager.getInstance().setMySelf(daemon.getDataNodeServer().getDataNode().getAddress());
         loadMonitor = new LoadMonitor(daemon.getDataNodeServer().getDataNode().getLoadChangeHandler());
         GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
         GlobalLoadInfoBroker.getInstance().subscribe(loadMonitor);
         loadMonitor.subscribe(this);
-        daemon.getDataNodeServer().getDataNode().setTableChangedHandler(this);
     }
 
     @Override
@@ -245,16 +246,15 @@ public class Proxy implements Daemon, TableChangedHandler, NotableLoadChangeCall
     }
 
     @Override
-    public void onTableChanged(Request delta, Object newTable) {
-        daemon.propagateTableChanges(delta);
-        GlobalLoadInfoBroker.getInstance().update(daemon.getDataNodeServer().getPhysicalNodes());
-    }
-
-    @Override
     public void onRequestAvailable(List<Request> requests) {
         for (Request request : requests) {
             processDataNodeCommand(request);
             StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
         }
+
+        Request delta = new Request()
+                .withHeader(CommonCommand.UPDATE.name())
+                .withLargeAttachment(requests);
+        daemon.propagateTableChanges(delta);
     }
 }

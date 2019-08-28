@@ -337,19 +337,16 @@ public enum CommonCommand implements Command {
             else {
                 Object attachment = request.getLargeAttachment();
 
-                SimpleLog.v("Attachment: ====================================\n" + attachment);
                 Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
                 try {
                     if (attachment instanceof List) {
                         @SuppressWarnings("unchecked")
                         List<Request> delta = (List<Request>) attachment;
                         for (Request r : delta) {
-                            SimpleLog.i("Apply delta: " + r);
                             DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
                         }
                     } else if (attachment instanceof Request) {
                         Request r = (Request) attachment;
-                        SimpleLog.i("Apply delta: " + r);
                         DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
                     } else {
                         DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());

@@ -48,7 +48,7 @@ public class DataNodeTool {
 
     private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = (request, client) -> {
         try {
-            process(request.toCommand());
+            process(request);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -151,12 +151,16 @@ public class DataNodeTool {
         Request request;
         try {
             request = dataNode.getTerminal().translate(command);
-            dataNode.execute(request);
         }
         catch (InvalidRequestException ignored) {
             request = new CommonTerminal().translate(command);
         }
 
+        process(request);
+    }
+
+    private void process(Request request) throws Exception {
+        dataNode.execute(request);
         Config config = Config.getInstance();
         if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
             if (config.getSeeds().size() > 0) {
