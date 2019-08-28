@@ -51,7 +51,7 @@ public class RegularClient {
         client.send(server.getFullAddress(), request, callBack);
     };
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         RegularClient regularClient;
 
         try {
@@ -79,13 +79,15 @@ public class RegularClient {
             });
         }
         else if (args[0].equals("-r")) {
-            if (args.length == 2) {
+            if (args.length >= 2) {
                 regularClient.run(new SocketClient.ServerCallBack() {
                     @Override
                     public void onResponse(Request request, Response response) {
                         if (response.getAttachment() != null) {
                             regularClient.onTableUpdated(response.getAttachment());
-                            regularClient.generateRequest(args[1]);
+                            int numOfRequests = -1;
+                            if (args.length == 3) numOfRequests = Integer.valueOf(args[2]);
+                            regularClient.generateRequest(args[1], numOfRequests);
                         }
                     }
 
@@ -96,7 +98,7 @@ public class RegularClient {
                 });
             }
             else {
-                System.out.println ("Usage: RegularClient -r <filename>");
+                System.out.println ("Usage: RegularClient -r <filename> [number of requests]");
             }
         }
         else {
@@ -197,7 +199,7 @@ public class RegularClient {
         }
     }
 
-    private void generateRequest(String filename) {
+    private void generateRequest(String filename, int numOfRequests) {
         StaticTree tree;
         try {
             tree = StaticTree.getStaticTree(filename);
@@ -210,10 +212,12 @@ public class RegularClient {
         int numThreads = Config.getInstance().getNumberOfThreads();
         RequestService service = new RequestService(numThreads,
                 Config.getInstance().getReadWriteInterArrivalTime(),
+                numOfRequests,
                 generator,
                 requestGenerateThreadCallBack);
 
         service.start();
+        System.exit(0);
     }
 
     private void onTableUpdated(Object table) {

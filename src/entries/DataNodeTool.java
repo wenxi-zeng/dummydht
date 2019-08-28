@@ -136,6 +136,7 @@ public class DataNodeTool {
         int numThreads = Config.getInstance().getNumberOfThreads();
         RequestService service = new RequestService(numThreads,
                 Config.getInstance().getLoadBalancingInterArrivalTime(),
+                -1,
                 generator,
                 requestGenerateThreadCallBack);
 
