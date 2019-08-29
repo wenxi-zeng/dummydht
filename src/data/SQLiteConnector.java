@@ -82,7 +82,7 @@ public class SQLiteConnector implements Connector{
     }
 
     private void createHistoricalLoadInfoTable(String mode, String scheme) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.HISTORICAL_LOAD_INFO.getNameWithPrefix(mode, scheme) +"(\n" +
+        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.HISTORICAL_LOAD_INFO.getName() +"(\n" +
                 "            report_time INTEGER,\n" +
                 "            node_id TEXT,\n" +
                 "            file_load INTEGER,\n" +
@@ -91,7 +91,8 @@ public class SQLiteConnector implements Connector{
                 "            write_load INTEGER,\n" +
                 "            number_of_miss INTEGER,\n" +
                 "            number_of_lock_conflicts INTEGER,\n" +
-                "            number_of_hits INTEGER\n" +
+                "            number_of_hits INTEGER,\n" +
+                "            tag INTEGER\n" +
                 ");";
 
         try{
@@ -103,7 +104,7 @@ public class SQLiteConnector implements Connector{
     }
 
     private void createLoadInfoTable(String mode, String scheme) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.LOAD_INFO.getNameWithPrefix(mode, scheme) + "(\n" +
+        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.LOAD_INFO.getName() + "(\n" +
                 "            report_time INTEGER,\n" +
                 "            node_id TEXT,\n" +
                 "            file_load INTEGER,\n" +
@@ -112,7 +113,8 @@ public class SQLiteConnector implements Connector{
                 "            write_load INTEGER,\n" +
                 "            number_of_miss INTEGER,\n" +
                 "            number_of_lock_conflicts INTEGER,\n" +
-                "            number_of_hits INTEGER\n" +
+                "            number_of_hits INTEGER,\n" +
+                "            tag INTEGER\n" +
                 ");";
 
         try{
@@ -124,14 +126,15 @@ public class SQLiteConnector implements Connector{
     }
 
     private void createStatInfoTable (String mode, String scheme) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.STAT_INFO.getNameWithPrefix(mode, scheme) + "(\n" +
+        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.STAT_INFO.getName() + "(\n" +
                 "            start_time INTEGER,\n" +
                 "            end_time INTEGER,\n" +
                 "            elapsed INTEGER,\n" +
                 "            header TEXT,\n" +
                 "            entry_token TEXT,\n" +
                 "            type TEXT,\n" +
-                "            size INTEGER\n" +
+                "            size INTEGER,\n" +
+                "            tag INTEGER\n" +
                 ");";
 
         try{

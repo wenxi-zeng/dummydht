@@ -31,6 +31,8 @@ public class DummyDhtRepository {
 
     private AtomicBoolean running;
 
+    private final int tag;
+
     private static volatile DummyDhtRepository instance = null;
 
     private DummyDhtRepository() {
@@ -40,9 +42,10 @@ public class DummyDhtRepository {
         running = new AtomicBoolean(true);
         String mode = Config.getInstance().getMode();
         String scheme = Config.getInstance().getScheme();
-        TABLE_STAT_INFO = DummyDhtTables.STAT_INFO.getNameWithPrefix(mode, scheme);
-        TABLE_LOAD_INFO = DummyDhtTables.LOAD_INFO.getNameWithPrefix(mode, scheme);
-        TABLE_HISTORICAL_LOAD_INFO = DummyDhtTables.HISTORICAL_LOAD_INFO.getNameWithPrefix(mode, scheme);
+        tag = Config.getInstance().getTrialTag();
+        TABLE_STAT_INFO = DummyDhtTables.STAT_INFO.getName();
+        TABLE_LOAD_INFO = DummyDhtTables.LOAD_INFO.getName();
+        TABLE_HISTORICAL_LOAD_INFO = DummyDhtTables.HISTORICAL_LOAD_INFO.getName();
 
         registerShutdownHook();
         executor.execute(this::consume);
@@ -95,8 +98,8 @@ public class DummyDhtRepository {
         try {
             String table = info.isConsolidated() ? TABLE_HISTORICAL_LOAD_INFO : TABLE_LOAD_INFO;
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + table + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load) " +
-                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?)");
+                    "INSERT INTO " + table + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load, tag) " +
+                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?, ?)");
             statement.setTimestamp(1, new Timestamp(info.getReportTime()));
             statement.setString(2, info.getNodeId());
             statement.setLong(3, info.getFileLoad());
@@ -106,6 +109,7 @@ public class DummyDhtRepository {
             statement.setLong(7, info.getReadLoad());
             statement.setLong(8, info.getSizeOfFiles());
             statement.setLong(9, info.getWriteLoad());
+            statement.setInt(10, tag);
 
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -116,8 +120,8 @@ public class DummyDhtRepository {
     private void insertStatInfo(StatInfo info) {
         try {
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type, size) " +
-                            "VALUES (?, ?, ?, ? , ? , ?, ?)");
+                    "INSERT INTO " + TABLE_STAT_INFO + " (entry_token, start_time, header, elapsed, end_time, type, size, tag) " +
+                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?)");
             statement.setString(1, info.getToken());
             statement.setTimestamp(2, new Timestamp(info.getStartTime()));
             statement.setString(3, info.getHeader());
@@ -125,6 +129,7 @@ public class DummyDhtRepository {
             statement.setTimestamp(5, new Timestamp(info.getEndTime()));
             statement.setString(6, info.getType());
             statement.setLong(7, info.getSize());
+            statement.setInt(8, tag);
 
             statement.executeUpdate();
         } catch (SQLException e) {

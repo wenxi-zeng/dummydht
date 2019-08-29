@@ -70,6 +70,7 @@ public class Config {
     public final static String REQUEST_DISTRIBUTION_EXP = "exp";
     public final static String GOSSIP_STRATEGY_SIMPLE = "simple";
     public final static String GOSSIP_STRATEGY_NEIGHBOR = "neighbor";
+    private static final String PROPERTY_TRIAL_TAG = "trial_tag";
 
     private static volatile Config instance = null;
 
@@ -320,5 +321,9 @@ public class Config {
 
     public void setStandalone(boolean standalone) {
         this.standalone = standalone;
+    }
+
+    public int getTrialTag() {
+        return Integer.valueOf(rb.getString(PROPERTY_TRIAL_TAG));
     }
 }
