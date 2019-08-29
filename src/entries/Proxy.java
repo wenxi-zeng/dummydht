@@ -4,7 +4,6 @@ import commands.CommonCommand;
 import commonmodels.Daemon;
 import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
-import commonmodels.TableChangedHandler;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import datanode.DataNodeServer;

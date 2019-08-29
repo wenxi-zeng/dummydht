@@ -31,13 +31,13 @@ public class StatInfoReporter {
         this.isEnableStatServer = Config.getInstance().isEnableStatServer();
         this.queue = new LinkedBlockingQueue<>();
         this.reporting = new AtomicBoolean(true);
-        //if (this.isEnableStatServer) {
+        if (this.isEnableStatServer) {
             try {
                 this.client = new UDPClient(Config.getInstance().getStatServer());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        //}
+        }
     }
 
     public void start() {
@@ -62,8 +62,8 @@ public class StatInfoReporter {
                 StatInfo statInfo = queue.take();
                 if (isEnableStatServer) {
                     client.send(statInfo);
-                    repo.put(statInfo);
                 }
+                repo.put(statInfo);
             }
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();

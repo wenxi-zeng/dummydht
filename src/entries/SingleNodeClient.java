@@ -10,7 +10,7 @@ import util.Config;
 import java.util.Scanner;
 
 public class SingleNodeClient {
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         String scheme = Config.getInstance().getScheme();
         Config.getInstance().setStandalone(true);
         Terminal terminal;

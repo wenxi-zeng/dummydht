@@ -20,7 +20,7 @@ public class ScriptGenerator {
 
     private final static String FILE_START = "launch-daemon.sh";
 
-    private final static String FILE_STOP_ALL = "stop-all.sh";
+    public final static String FILE_STOP_ALL = "stop-all.sh";
 
     private final static String FILE_CONFIG_ALL = "config-all.sh";
 
@@ -38,9 +38,11 @@ public class ScriptGenerator {
 
     private final static String FILE_CLEAR_DATA = "clear-data.sh";
 
+    private final static String FILE_GENERATE_ALL = "generate-all.sh";
+
     private static String SELF;
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         SELF = getAddress();
         generateStart();
         generateStartAll();
@@ -53,11 +55,34 @@ public class ScriptGenerator {
         generateClearAll();
         generateClearData();
         generateImportData();
+        generateGenerateAll();
+    }
+
+    private static void generateGenerateAll() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String node : getAllServers()) {
+            if (!node.contains(SELF))
+                stringBuilder.append("sshpass -p alien1 ssh root@")
+                        .append(node)
+                        .append(" \"java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -S\"").append("\n");
+        }
+
+        stringBuilder
+                .append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -S").append("\n");
+        String filename = ResourcesLoader.getRelativeFileName(FILE_GENERATE_ALL);
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            //yum -y install sshpass
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void generateImportData() {
         StringBuilder stringBuilder = new StringBuilder();
 
+        stringBuilder.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*").append('\n');
         for (String node : getAllServers()) {
             if (!node.contains(SELF))
                 stringBuilder.append("sshpass -p alien1 scp -rp ")
@@ -144,6 +169,7 @@ public class ScriptGenerator {
                         .append("root").append("\n");
         }
 
+        stringBuilder.append(".").append(File.separator).append(FILE_GENERATE_ALL).append("\n");
         String filename = ResourcesLoader.getRelativeFileName(FILE_UPDATE_ALL);
         try (PrintStream out = new PrintStream(createFile(filename))) {
             //yum -y install sshpass
@@ -275,14 +301,18 @@ public class ScriptGenerator {
 
     private static void generateClearData() {
         StringBuilder stringBuilder = new StringBuilder();
+        Config config = Config.getInstance();
+        String dataServer = config.getDataServer().substring(0, config.getDataServer().indexOf(':'));
 
         for (String node : getAllServers()) {
-            StringBuilder command = new StringBuilder();
+            if (!node.contains(dataServer)) {
+                StringBuilder command = new StringBuilder();
 
-            command.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*").append('\n');
-            stringBuilder.append(command);
-            if (!node.contains(SELF))
-                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+                command.append("rm -rf ").append(File.separator).append("root").append(File.separator).append("dummydhtdb").append(File.separator).append("*").append('\n');
+                stringBuilder.append(command);
+                if (!node.contains(SELF))
+                    stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+            }
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_CLEAR_DATA);

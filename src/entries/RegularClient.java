@@ -17,14 +17,13 @@ import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
 import util.MathX;
+import util.ResourcesLoader;
 import util.SimpleLog;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class RegularClient {
 
@@ -85,9 +84,11 @@ public class RegularClient {
                     public void onResponse(Request request, Response response) {
                         if (response.getAttachment() != null) {
                             regularClient.onTableUpdated(response.getAttachment());
-                            int numOfRequests = -1;
-                            if (args.length == 3) numOfRequests = Integer.valueOf(args[2]);
-                            regularClient.generateRequest(args[1], numOfRequests);
+                            int numOfRequests = Config.getInstance().getNumberOfRequests();
+                            int delayToStopAll = Config.getInstance().getDelayToStopAll();
+                            if (args.length >= 3) numOfRequests = Integer.valueOf(args[2]);
+                            if (args.length == 4) delayToStopAll = Integer.valueOf(args[3]);
+                            regularClient.generateRequest(args[1], numOfRequests, delayToStopAll);
                         }
                     }
 
@@ -199,7 +200,7 @@ public class RegularClient {
         }
     }
 
-    private void generateRequest(String filename, int numOfRequests) {
+    private void generateRequest(String filename, int numOfRequests, int delayToStopAll) {
         StaticTree tree;
         try {
             tree = StaticTree.getStaticTree(filename);
@@ -217,6 +218,15 @@ public class RegularClient {
                 requestGenerateThreadCallBack);
 
         service.start();
+        try {
+            if (delayToStopAll > 0) {
+                Thread.sleep(delayToStopAll * 1000);
+                String[] cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_STOP_ALL)};
+                Runtime.getRuntime().exec(cmd);
+            }
+        } catch (Exception ignored) {
+
+        }
         System.exit(0);
     }
 

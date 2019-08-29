@@ -71,6 +71,8 @@ public class Config {
     public final static String GOSSIP_STRATEGY_SIMPLE = "simple";
     public final static String GOSSIP_STRATEGY_NEIGHBOR = "neighbor";
     private static final String PROPERTY_TRIAL_TAG = "trial_tag";
+    private static final String PROPERTY_NUMBER_OF_REQUESTS = "num_of_requests";
+    private static final String PROPERTY_DELAY_TO_STOP_ALL = "delay_to_stop_all";
 
     private static volatile Config instance = null;
 
@@ -325,5 +327,13 @@ public class Config {
 
     public int getTrialTag() {
         return Integer.valueOf(rb.getString(PROPERTY_TRIAL_TAG));
+    }
+
+    public int getNumberOfRequests() {
+        return Integer.valueOf(rb.getString(PROPERTY_NUMBER_OF_REQUESTS));
+    }
+
+    public int getDelayToStopAll() {
+        return Integer.valueOf(rb.getString(PROPERTY_DELAY_TO_STOP_ALL));
     }
 }
