@@ -9,6 +9,7 @@ import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
+import org.apache.commons.lang3.time.StopWatch;
 import req.RequestGenerator;
 import req.RequestService;
 import req.RequestThread;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class RegularClient {
 
@@ -217,15 +219,21 @@ public class RegularClient {
                 generator,
                 requestGenerateThreadCallBack);
 
+        StopWatch watch = new StopWatch();
+        watch.start();
         service.start();
         try {
             if (delayToStopAll > 0) {
                 Thread.sleep(delayToStopAll * 1000);
+                watch.stop();
+                SimpleLog.v("Time Elapsed: " + watch.getTime(TimeUnit.MINUTES));
+
                 String[] cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_STOP_ALL)};
                 Runtime.getRuntime().exec(cmd);
             }
         } catch (Exception ignored) {
-
+            watch.stop();
+            SimpleLog.v("Time Elapsed: " + watch.getTime(TimeUnit.MINUTES));
         }
         System.exit(0);
     }
