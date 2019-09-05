@@ -27,6 +27,12 @@ public class StatInfoManager {
         return instance;
     }
 
+    public static void deleteInstance() {
+        if (instance != null)
+            instance.reporter.stop();
+        instance = null;
+    }
+
     public void statResponse(@NotNull Request request, @NotNull Response response, long respSize) {
         StatInfo responseStat = new StatInfo()
                 .withHeader(request.getHeader())

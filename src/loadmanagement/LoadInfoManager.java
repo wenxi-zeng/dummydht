@@ -31,6 +31,12 @@ public class LoadInfoManager {
         return instance;
     }
 
+    public static void deleteInstance() {
+        if (instance != null)
+            instance.reporter.stop();
+        instance = null;
+    }
+
     public static void with(String id) {
         nodeId =id;
         getInstance().reporter.start();

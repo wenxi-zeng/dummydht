@@ -1,7 +1,6 @@
 package util;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -28,6 +27,13 @@ public class ResourcesLoader {
         ClassLoader loader = new URLClassLoader(urls);
 
         return ResourceBundle.getBundle(filename, Locale.getDefault(), loader);
+    }
+
+    public static String getRelativePathToRes(String filename) throws FileNotFoundException {
+        if (runInJar())
+            return getProgramPath() + File.separator + "res" + File.separator + filename;
+        else
+            return  "res" + File.separator + filename;
     }
 
     public static String getRelativeFileName(String filename) {

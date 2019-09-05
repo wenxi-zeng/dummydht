@@ -44,6 +44,10 @@ public class JsonProtocolManager {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public byte[] write(Transportable message) throws IOException {
         return objectMapper.writeValueAsBytes(message);
     }

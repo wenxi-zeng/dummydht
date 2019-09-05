@@ -34,6 +34,9 @@ public class DummyDht {
         else if (driver.equals("-scriptgen") || driver.equals("-S")) {
             ScriptGenerator.main(subArgs);
         }
+        else if (driver.equals("-auto") || driver.equals("-a")) {
+            AutoTester.main(subArgs);
+        }
     }
 
 }

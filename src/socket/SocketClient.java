@@ -12,6 +12,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SocketClient implements Runnable{
@@ -23,6 +26,8 @@ public class SocketClient implements Runnable{
     private final AtomicBoolean keepRunning = new AtomicBoolean(true);
 
     private final Map<String, ClientHandler> handlerCache;
+
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final Queue<Attachable> attachments = new LinkedList<Attachable>() {
         @Override
@@ -48,7 +53,7 @@ public class SocketClient implements Runnable{
             synchronized(SocketClient.class) {
                 if (instance == null) {
                     instance = new SocketClient();
-                    new Thread(instance).start();
+                    instance.start();
                 }
             }
         }
@@ -58,8 +63,21 @@ public class SocketClient implements Runnable{
 
     public static SocketClient newInstance() {
         SocketClient client = new SocketClient();
-        new Thread(client).start();
+        client.start();
         return client;
+    }
+
+    public static void deleteInstance() {
+        instance = null;
+    }
+
+    public void start() {
+        executor.execute(this);
+    }
+
+    public void stop() {
+        executor.shutdownNow();
+        deleteInstance();
     }
 
     public void send(int port, Request data, ServerCallBack callBack) {

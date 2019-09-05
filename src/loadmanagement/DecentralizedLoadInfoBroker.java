@@ -22,6 +22,10 @@ public class DecentralizedLoadInfoBroker extends LoadInfoBroker {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     @Override
     public void update(LoadInfo loadInfo) {
         List<LoadInfo> loadInfoList = new ArrayList<>();

@@ -12,11 +12,10 @@ import commonmodels.transport.Response;
 import datanode.DataNodeServer;
 import filemanagement.FileBucket;
 import filemanagement.FileTransferManager;
-import loadmanagement.AbstractLoadMonitor;
-import loadmanagement.DecentralizedLoadInfoBroker;
-import loadmanagement.DecentralizedLoadMonitor;
-import loadmanagement.LoadInfoManager;
+import filemanagement.LocalFileManager;
+import loadmanagement.*;
 import org.apache.commons.lang3.StringUtils;
+import socket.JsonProtocolManager;
 import socket.SocketClient;
 import socket.SocketServer;
 import util.Config;
@@ -99,6 +98,10 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
         return getInstance();
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     private DataNodeDaemon(String ip, int port) {
         this.ip = ip;
         this.port = port;
@@ -108,6 +111,18 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void stop() {
+        dataNodeServer.stop();
+        socketClient.stop();
+        executor.shutdownNow();
+        DecentralizedLoadInfoBroker.deleteInstance();
+        GlobalLoadInfoBroker.deleteInstance();
+        FileTransferManager.deleteInstance();
+        JsonProtocolManager.deleteInstance();
+        LocalFileManager.deleteInstance();
+        deleteInstance();
     }
 
     public String getIp() {

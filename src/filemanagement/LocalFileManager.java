@@ -42,6 +42,10 @@ public class LocalFileManager {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public Map<Integer, FileBucket> getLocalBuckets() {
         return localBuckets;
     }

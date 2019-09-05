@@ -16,31 +16,35 @@ import java.util.HashSet;
 
 public class ScriptGenerator {
 
-    private final static String FILE_START_ALL = "start-all.sh";
+    public final static String FILE_START_ALL = "start-all.sh";
 
-    private final static String FILE_START = "launch-daemon.sh";
+    public final static String FILE_START = "launch-daemon.sh";
 
     public final static String FILE_STOP_ALL = "stop-all.sh";
 
-    private final static String FILE_CONFIG_ALL = "config-all.sh";
+    public final static String FILE_CONFIG_ALL = "config-all.sh";
 
-    private final static String FILE_UPDATE_ALL = "update-all.sh";
+    public final static String FILE_UPDATE_ALL = "update-all.sh";
 
-    private final static String FILE_MKDIR_ALL = "mkdir-all.sh";
+    public final static String FILE_MKDIR_ALL = "mkdir-all.sh";
 
-    private final static String FILE_AUTH_ALL = "auth-all.sh";
+    public final static String FILE_AUTH_ALL = "auth-all.sh";
 
-    private final static String FILE_DISABLE_FIERWALL_ALL = "disable-firewall-all.sh";
+    public final static String FILE_DISABLE_FIERWALL_ALL = "disable-firewall-all.sh";
 
-    private final static String FILE_CLEAR_ALL = "clear-all.sh";
+    public final static String FILE_CLEAR_ALL = "clear-all.sh";
 
-    private final static String FILE_IMPORT_DATA = "import-data.sh";
+    public final static String FILE_IMPORT_DATA = "import-data.sh";
 
-    private final static String FILE_CLEAR_DATA = "clear-data.sh";
+    public final static String FILE_CLEAR_DATA = "clear-data.sh";
 
-    private final static String FILE_GENERATE_ALL = "generate-all.sh";
+    public final static String FILE_GENERATE_ALL = "generate-all.sh";
 
-    private static String SELF;
+    public final static String FILE_START_PROXY = "start-proxy.sh";
+
+    public final static String FILE_STOP_ALL_BUT_CLIENT = "stop-all-but_client.sh";
+
+    public static String SELF;
 
     public static void main(String[] args) {
         SELF = getAddress();
@@ -56,6 +60,8 @@ public class ScriptGenerator {
         generateClearData();
         generateImportData();
         generateGenerateAll();
+        generateStartProxy();
+        generateStopAllButClient();
     }
 
     private static void generateGenerateAll() {
@@ -63,7 +69,7 @@ public class ScriptGenerator {
 
         for (String node : getAllServers()) {
             if (!node.contains(SELF))
-                stringBuilder.append("sshpass -p alien1 ssh root@")
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@")
                         .append(node)
                         .append(" \"java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -S\"").append("\n");
         }
@@ -147,7 +153,7 @@ public class ScriptGenerator {
             if (node.contains(SELF))
                 stringBuilder.append("ps aux | pgrep java | xargs kill -9").append('\n');
             else
-                stringBuilder.append("sshpass -p alien1 ssh root@").append(node).append(" \"ps aux | pgrep java | xargs kill -9\"").append('\n');
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" \"ps aux | pgrep java | xargs kill -9\"").append('\n');
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_STOP_ALL);
@@ -203,7 +209,7 @@ public class ScriptGenerator {
 
         for (String node : getAllServers()) {
             if (!node.contains(SELF))
-                stringBuilder.append("sshpass -p alien1 ssh root@")
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@")
                         .append(node)
                         .append(" \"mkdir -m 777 /root/dummydht\"").append("\n");
         }
@@ -316,6 +322,46 @@ public class ScriptGenerator {
         }
 
         String filename = ResourcesLoader.getRelativeFileName(FILE_CLEAR_DATA);
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateStartProxy() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_START_PROXY);
+        Config config = Config.getInstance();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String node : config.getSeeds()) {
+            if (!node.contains(SELF))
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@")
+                        .append(node, 0, config.getLogServer().indexOf(':')).append(" << EOF").append('\n')
+                        .append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -p &").append("\n")
+                        .append("exit").append('\n').append("EOF").append('\n');
+        }
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateStopAllButClient() {
+        StringBuilder stringBuilder = new StringBuilder();
+        Config config = Config.getInstance();
+        String client = config.getRequestClient().substring(0, config.getRequestClient().indexOf(':'));
+
+        for (String node : getAllServers()) {
+            if (node.contains(client))
+                continue;
+            if (node.contains(SELF))
+                stringBuilder.append("ps aux | pgrep java | xargs kill -9").append('\n');
+            else
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" \"ps aux | pgrep java | xargs kill -9\"").append('\n');
+        }
+
+        String filename = ResourcesLoader.getRelativeFileName(FILE_STOP_ALL_BUT_CLIENT);
         try (PrintStream out = new PrintStream(createFile(filename))) {
             out.println(stringBuilder.toString());
         } catch (FileNotFoundException e) {

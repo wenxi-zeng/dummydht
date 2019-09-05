@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class RegularClient {
@@ -32,6 +33,8 @@ public class RegularClient {
     private SocketClient socketClient;
 
     private Terminal terminal;
+
+    private Semaphore semaphore = new Semaphore(0);
 
     private SocketClient.ServerCallBack callBack = new SocketClient.ServerCallBack() {
         @Override
@@ -196,6 +199,11 @@ public class RegularClient {
         if (Config.getInstance().getSeeds().size() > 0) {
             Request request = new Request().withHeader(CommonCommand.FETCH.name());
             socketClient.send(Config.getInstance().getSeeds().get(0), request, serverCallBack);
+            try {
+                semaphore.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         else {
             SimpleLog.v("No seed/proxy info found!");
@@ -222,19 +230,22 @@ public class RegularClient {
         StopWatch watch = new StopWatch();
         watch.start();
         service.start();
+        socketClient.stop();
+        terminal.destroy();
         try {
             if (delayToStopAll > 0) {
                 Thread.sleep(delayToStopAll * 1000);
                 watch.stop();
                 SimpleLog.v("Time Elapsed: " + watch.getTime(TimeUnit.MINUTES));
 
-                String[] cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_STOP_ALL)};
-                Runtime.getRuntime().exec(cmd);
+//                String[] cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_STOP_ALL_BUT_CLIENT)};
+//                Runtime.getRuntime().exec(cmd);
             }
         } catch (Exception ignored) {
             watch.stop();
             SimpleLog.v("Time Elapsed: " + watch.getTime(TimeUnit.MINUTES));
         }
+        semaphore.release();
         System.exit(0);
     }
 

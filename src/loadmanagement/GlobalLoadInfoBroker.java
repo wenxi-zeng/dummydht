@@ -41,6 +41,12 @@ public class GlobalLoadInfoBroker extends LoadInfoBroker {
         return instance;
     }
 
+    public static void deleteInstance() {
+        if (instance != null)
+            DummyDhtRepository.deleteInstance();
+        instance = null;
+    }
+
     public List<LoadInfo> getGlobalLoadInfo() {
         return new ArrayList<>(globalLoadInfo.values());
     }

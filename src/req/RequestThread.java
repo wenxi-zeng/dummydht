@@ -35,6 +35,7 @@ public class RequestThread implements Runnable {
             numOfRequests--;
         }
         else {
+            socketClient.stop();
             latch.countDown();
             Thread.currentThread().interrupt();
         }

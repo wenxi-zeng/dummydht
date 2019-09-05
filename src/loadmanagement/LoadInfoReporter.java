@@ -37,6 +37,11 @@ public class LoadInfoReporter {
         );
     }
 
+    public void stop () {
+        DummyDhtRepository.deleteInstance();
+        scheduledExecutorService.shutdownNow();
+    }
+
     private void report() {
         LoadInfo loadInfo = loadInfoManager.getLoadInfo();
         loadInfo.setReportTime(System.currentTimeMillis());

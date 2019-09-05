@@ -38,6 +38,10 @@ public class SimpleLog {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public static synchronized void i(String message) {
         switch (Config.getInstance().getLogMode()) {
             case Config.LOG_MODE_SCREEN:

@@ -44,6 +44,11 @@ public class StatInfoReporter {
         executor.execute(this::consume);
     }
 
+    public void stop () {
+        DummyDhtRepository.deleteInstance();
+        executor.shutdownNow();
+    }
+
     public void report(StatInfo statInfo) {
         executor.execute(() -> produce(statInfo));
     }

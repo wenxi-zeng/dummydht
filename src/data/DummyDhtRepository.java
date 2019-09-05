@@ -63,8 +63,18 @@ public class DummyDhtRepository {
         return instance;
     }
 
+
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public void start() {
         executor.execute(this::consume);
+    }
+
+    public void stop() {
+        executor.shutdownNow();
+        deleteInstance();
     }
 
     public void put(Queueable queueable) {

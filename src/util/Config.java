@@ -70,9 +70,9 @@ public class Config {
     public final static String REQUEST_DISTRIBUTION_EXP = "exp";
     public final static String GOSSIP_STRATEGY_SIMPLE = "simple";
     public final static String GOSSIP_STRATEGY_NEIGHBOR = "neighbor";
-    private static final String PROPERTY_TRIAL_TAG = "trial_tag";
-    private static final String PROPERTY_NUMBER_OF_REQUESTS = "num_of_requests";
-    private static final String PROPERTY_DELAY_TO_STOP_ALL = "delay_to_stop_all";
+    public static final String PROPERTY_TRIAL_TAG = "trial_tag";
+    public static final String PROPERTY_NUMBER_OF_REQUESTS = "num_of_requests";
+    public static final String PROPERTY_DELAY_TO_STOP_ALL = "delay_to_stop_all";
 
     private static volatile Config instance = null;
 

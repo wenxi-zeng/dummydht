@@ -40,6 +40,10 @@ public class FileTransferManager {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public FileTransferPolicy getPolicy() {
         return policy;
     }

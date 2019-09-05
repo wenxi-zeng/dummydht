@@ -49,6 +49,10 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
         return instance;
     }
 
+    public static void deleteInstance() {
+        instance = null;
+    }
+
     public static Proxy newInstance() {
         instance = new Proxy();
         return getInstance();
