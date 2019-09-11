@@ -1,10 +1,10 @@
 package req;
 
 import commonmodels.transport.Request;
-import req.Rand.ExpGenerator;
-import req.Rand.RandomGenerator;
-import req.Rand.UniformGenerator;
-import req.Rand.ZipfGenerator;
+import req.rand.ExpGenerator;
+import req.rand.RandomGenerator;
+import req.rand.UniformGenerator;
+import req.rand.ZipfGenerator;
 import util.Config;
 
 import java.util.Map;

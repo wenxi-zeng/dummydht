@@ -1,4 +1,4 @@
-package req.Rand;
+package req.rand;
 
 public interface RandomGenerator{
 	int nextInt();

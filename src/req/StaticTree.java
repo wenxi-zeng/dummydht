@@ -1,7 +1,7 @@
 package req;
 
-import req.Rand.RandomGenerator;
-import req.Rand.UniformGenerator;
+import req.rand.RandomGenerator;
+import req.rand.UniformGenerator;
 import util.Log;
 
 import java.io.BufferedReader;

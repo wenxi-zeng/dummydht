@@ -1,4 +1,4 @@
-package req.Rand;
+package req.rand;
 
 import java.util.concurrent.ThreadLocalRandom;
 

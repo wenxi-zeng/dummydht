@@ -1,4 +1,4 @@
-package req.Rand;
+package req.rand;
 
 import org.apache.commons.math3.util.FastMath;
 

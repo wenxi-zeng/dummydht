@@ -1,4 +1,4 @@
-package req.Rand;
+package req.rand;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
