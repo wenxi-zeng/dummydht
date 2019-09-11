@@ -21,8 +21,7 @@ import util.MathX;
 import util.ResourcesLoader;
 import util.SimpleLog;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Semaphore;
@@ -67,62 +66,26 @@ public class RegularClient {
         }
 
         if (args.length == 0) {
-            regularClient.run(new SocketClient.ServerCallBack() {
-                @Override
-                public void onResponse(Request request, Response response) {
-                    if (response.getAttachment() != null) {
-                        regularClient.onTableUpdated(response.getAttachment());
-                        regularClient.connect();
-                    }
-                }
-
-                @Override
-                public void onFailure(Request request, String error) {
-                    SimpleLog.v(error);
-                }
-            });
+            regularClient.launchTerminal();
         }
         else if (args[0].equals("-r")) {
             if (args.length >= 2) {
-                regularClient.run(new SocketClient.ServerCallBack() {
-                    @Override
-                    public void onResponse(Request request, Response response) {
-                        if (response.getAttachment() != null) {
-                            regularClient.onTableUpdated(response.getAttachment());
-                            int numOfRequests = Config.getInstance().getNumberOfRequests();
-                            int delayToStopAll = Config.getInstance().getDelayToStopAll();
-                            if (args.length >= 3) numOfRequests = Integer.valueOf(args[2]);
-                            if (args.length == 4) delayToStopAll = Integer.valueOf(args[3]);
-                            regularClient.generateRequest(args[1], numOfRequests, delayToStopAll);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Request request, String error) {
-                        SimpleLog.v(error);
-                    }
-                });
+                regularClient.launchRequestGenerator(args);
             }
             else {
                 System.out.println ("Usage: RegularClient -r <filename> [number of requests]");
             }
         }
-        else {
-            String[] params = args[0].split(":");
-            InetSocketAddress address;
-
-            if (params.length == 2) {
-                address = new InetSocketAddress(params[0], Integer.valueOf(params[1]));
-            }
-            else if (params.length == 1) {
-                address = new InetSocketAddress("localhost", Integer.valueOf(params[0]));
+        else if (args[0].equals("-f")) {
+            if (args.length == 4) {
+                regularClient.launchFileRequestGenerator(args);
             }
             else {
-                System.out.println ("Usage: RegularClient [ip:]<port>");
-                return;
+                System.out.println ("Usage: RegularClient -f <file in> <file out> <number of requests>");
             }
-
-            regularClient.connect(address);
+        }
+        else {
+            regularClient.launchTerminal(args);
         }
     }
 
@@ -163,6 +126,66 @@ public class RegularClient {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void launchTerminal() {
+        run(new SocketClient.ServerCallBack() {
+            @Override
+            public void onResponse(Request request, Response response) {
+                if (response.getAttachment() != null) {
+                    onTableUpdated(response.getAttachment());
+                    connect();
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, String error) {
+                SimpleLog.v(error);
+            }
+        });
+    }
+
+    private void launchTerminal(String[] args) {
+        String[] params = args[0].split(":");
+        InetSocketAddress address;
+
+        if (params.length == 2) {
+            address = new InetSocketAddress(params[0], Integer.valueOf(params[1]));
+        }
+        else if (params.length == 1) {
+            address = new InetSocketAddress("localhost", Integer.valueOf(params[0]));
+        }
+        else {
+            System.out.println ("Usage: RegularClient [ip:]<port>");
+            return;
+        }
+
+        connect(address);
+    }
+
+    private void launchRequestGenerator(String[] args) {
+        run(new SocketClient.ServerCallBack() {
+            @Override
+            public void onResponse(Request request, Response response) {
+                if (response.getAttachment() != null) {
+                    onTableUpdated(response.getAttachment());
+                    int numOfRequests = Config.getInstance().getNumberOfRequests();
+                    int delayToStopAll = Config.getInstance().getDelayToStopAll();
+                    if (args.length >= 3) numOfRequests = Integer.valueOf(args[2]);
+                    if (args.length == 4) delayToStopAll = Integer.valueOf(args[3]);
+                    generateRequest(args[1], numOfRequests, delayToStopAll);
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, String error) {
+                SimpleLog.v(error);
+            }
+        });
+    }
+
+    private void launchFileRequestGenerator(String[] args) {
+        generateRequestFile(args[0], args[1], Integer.valueOf(args[3]));
     }
 
     private void connect() {
@@ -210,6 +233,36 @@ public class RegularClient {
         }
     }
 
+    private void onFinished(){
+        socketClient.stop();
+        terminal.destroy();
+    }
+
+    private void generateRequestFile(String filename, String fileOut, int numOfRequests) {
+        try {
+            StaticTree tree = StaticTree.getStaticTree(filename);
+            FileWriter w = new FileWriter(fileOut);
+            BufferedWriter bw = new BufferedWriter(w);
+            PrintWriter wr = new PrintWriter(bw, true);
+
+            RequestGenerator generator = new ClientRequestGenerator(tree, terminal);
+            int numThreads = Config.getInstance().getNumberOfThreads();
+            RequestService service = new RequestService(1,
+                    0,
+                    numOfRequests * numThreads,
+                    generator,
+                    (request, client) -> wr.write(request.toCommand()));
+
+            service.start();
+            onFinished();
+            wr.close();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
+
     private void generateRequest(String filename, int numOfRequests, int delayToStopAll) {
         StaticTree tree;
         try {
@@ -230,8 +283,7 @@ public class RegularClient {
         StopWatch watch = new StopWatch();
         watch.start();
         service.start();
-        socketClient.stop();
-        terminal.destroy();
+        onFinished();
         try {
             if (delayToStopAll > 0) {
                 Thread.sleep(delayToStopAll * 1000);
