@@ -20,7 +20,7 @@ public abstract class RequestGenerator {
         Map<Request, Double> requestTypes = loadRequestRatio();
         this.headerGenerator = new RequestTypeGenerator(
                 loadRequestRatio(),
-                loadGenerator(requestTypes.size()));
+                new UniformGenerator(requestTypes.size()));
     }
 
     public abstract Request next() throws Exception;
