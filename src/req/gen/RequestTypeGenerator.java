@@ -1,4 +1,4 @@
-package req;
+package req.gen;
 
 import commonmodels.transport.Request;
 import req.rand.RandomGenerator;

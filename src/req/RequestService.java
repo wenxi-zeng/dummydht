@@ -1,5 +1,7 @@
 package req;
 
+import req.gen.RequestGenerator;
+
 import java.util.concurrent.*;
 
 public class RequestService {

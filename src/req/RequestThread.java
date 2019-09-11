@@ -1,6 +1,7 @@
 package req;
 
 import commonmodels.transport.Request;
+import req.gen.RequestGenerator;
 import socket.SocketClient;
 
 import java.util.concurrent.CountDownLatch;

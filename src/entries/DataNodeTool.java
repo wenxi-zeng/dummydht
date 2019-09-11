@@ -13,7 +13,7 @@ import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
 import org.apache.commons.lang3.StringUtils;
-import req.RequestGenerator;
+import req.gen.RequestGenerator;
 import req.RequestService;
 import req.RequestThread;
 import ring.RingDataNode;
