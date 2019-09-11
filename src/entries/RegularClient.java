@@ -11,17 +11,15 @@ import commonmodels.transport.Response;
 import elastic.ElasticTerminal;
 import org.apache.commons.lang3.time.StopWatch;
 import req.RequestGenerator;
-import req.RequestService;
+import req.SingleGeneratorService;
 import req.RequestThread;
 import req.StaticTree;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
 import util.MathX;
-import util.ResourcesLoader;
 import util.SimpleLog;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -221,7 +219,7 @@ public class RegularClient {
 
         RequestGenerator generator = new ClientRequestGenerator(tree, terminal);
         int numThreads = Config.getInstance().getNumberOfThreads();
-        RequestService service = new RequestService(numThreads,
+        SingleGeneratorService service = new SingleGeneratorService(numThreads,
                 Config.getInstance().getReadWriteInterArrivalTime(),
                 numOfRequests,
                 generator,

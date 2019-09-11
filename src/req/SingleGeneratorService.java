@@ -2,7 +2,7 @@ package req;
 
 import java.util.concurrent.*;
 
-public class RequestService {
+public class SingleGeneratorService {
 
     private final int numberOfThreads;
 
@@ -16,7 +16,7 @@ public class RequestService {
 
     private final CountDownLatch latch;
 
-    public RequestService(int numberOfThreads, long interArrivalTime, int numOfRequests, RequestGenerator generator, RequestThread.RequestGenerateThreadCallBack callBack) {
+    public SingleGeneratorService(int numberOfThreads, long interArrivalTime, int numOfRequests, RequestGenerator generator, RequestThread.RequestGenerateThreadCallBack callBack) {
         this.numberOfThreads = numberOfThreads;
         this.generator = generator;
         this.interArrivalTime = interArrivalTime;
