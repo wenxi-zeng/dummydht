@@ -14,7 +14,7 @@ import commonmodels.transport.Response;
 import elastic.ElasticDataNode;
 import org.apache.commons.lang3.StringUtils;
 import req.RequestGenerator;
-import req.SingleGeneratorService;
+import req.RequestService;
 import req.RequestThread;
 import ring.RingDataNode;
 import socket.SocketClient;
@@ -134,7 +134,7 @@ public class DataNodeTool {
     private void generateRequest() {
         RequestGenerator generator = new ControlRequestGenerator(new ArrayList<>(), dataNode);
         int numThreads = Config.getInstance().getNumberOfThreads();
-        SingleGeneratorService service = new SingleGeneratorService(numThreads,
+        RequestService service = new RequestService(numThreads,
                 Config.getInstance().getLoadBalancingInterArrivalTime(),
                 -1,
                 generator,
