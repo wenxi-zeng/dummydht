@@ -301,7 +301,6 @@ public class StaticTree{
 
         protected void parse(Tree tree,String filename,boolean fillEmpty) throws IOException{
             long count=1;
-            boolean pattern=true;
             try(BufferedReader br=new BufferedReader(new InputStreamReader(new FileInputStream(filename),"UTF8"))){
                 for(String line;(line=br.readLine())!=null;++count){
                     //  skip blank line
@@ -320,7 +319,7 @@ public class StaticTree{
                     if(indent==0 && name.startsWith("directory")){  //  root
                         name=name.replaceFirst("directory\\s*","");
 //						System.out.println("Root:"+name);
-                    }else if(pattern && indent>0){   //  non root, check [size,modify time] part
+                    }else if(indent>0){   //  non root, check [size,modify time] part
                         Matcher m=reg.matcher(name);
                         if(m.matches()){
 //							System.out.println("[0]"+m.group(0)+" [1]"+m.group(1)+" [2]"+m.group(2)+" [3]"+m.group(3)+" [4]"+m.group(4));
@@ -329,7 +328,8 @@ public class StaticTree{
                                 node.size=Long.parseLong(m.group(2));
                                 //  don't care about modify time
                             }else{
-                                pattern=false;
+                                // pattern=false;
+                                continue;
                             }
                         }else throw new InvalidParameterException(String.format("%d: %s",count,line));
                     }
