@@ -19,8 +19,17 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
     protected final LookupTable table;
 
+    private float readOverhead;
+
+    private float writeOverhead;
+
+    private long interval;
+
     public RingLoadChangeHandler(LookupTable table) {
         this.table = table;
+        readOverhead = Config.getInstance().getReadOverhead();
+        writeOverhead = Config.getInstance().getWriteOverhead();
+        interval = Config.getInstance().getLoadInfoReportInterval() / 1000;
     }
 
     @Override
@@ -87,7 +96,11 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         int start = predecessor.getHash() + 1; // the hash of predecessor needs to be excluded
         while (inRange(iterator, start, current.getHash())) {
             FileBucket bucket = map.get(iterator--);
-            if (bucket != null && !solution.update(bucket.getKey(), bucket.getSizeOfWrites(), target))
+            if (bucket != null &&
+                    !solution.update(
+                            bucket.getKey(),
+                            bucket.getLoad(readOverhead, writeOverhead, interval),
+                            target))
                 break;
 
             if (iterator < 0) iterator = Config.getInstance().getNumberOfHashSlots() - 1;

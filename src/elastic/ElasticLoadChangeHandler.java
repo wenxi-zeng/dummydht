@@ -145,8 +145,7 @@ public class ElasticLoadChangeHandler implements LoadChangeHandler {
     }
 
     private double getLoad(FileBucket bucket) {
-        return ((writeOverhead * bucket.getNumberOfWrites() + bucket.getSizeOfWrites()) * 1.0) / interval +
-                ((readOverhead * bucket.getNumberOfReads() + bucket.getSizeOfReads()) * 1.0) / interval;
+        return bucket.getLoad(readOverhead, writeOverhead, interval);
     }
 
     private class Solution {

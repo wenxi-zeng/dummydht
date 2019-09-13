@@ -158,6 +158,18 @@ public class FileBucket extends Transportable implements Serializable, Cloneable
         this.numberOfLockConflicts = numberOfLockConflicts;
     }
 
+    public long getReadLoad(float readOverhead, long interval) {
+        return (long)(((readOverhead * getNumberOfReads() + getSizeOfReads()) * 1.0) / interval);
+    }
+
+    public long getWriteLoad(float writeOverhead, long interval) {
+        return (long)(((writeOverhead * getNumberOfWrites() + getSizeOfWrites()) * 1.0) / interval);
+    }
+
+    public long getLoad(float readOverhead, float writeOverhead, long interval) {
+        return getReadLoad(readOverhead, interval) + getWriteLoad(writeOverhead, interval);
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("key", key).append("sizeOfWrites", sizeOfWrites).append("sizeOfReads", sizeOfReads).append("locked", locked).append("numberOfReads", numberOfReads).append("numberOfWrites", numberOfWrites).toString();
