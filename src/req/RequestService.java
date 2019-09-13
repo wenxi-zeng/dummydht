@@ -30,7 +30,7 @@ public class RequestService {
     public void start() {
         ScheduledExecutorService pool = Executors.newScheduledThreadPool(numberOfThreads);
         for (int i = 0; i < numberOfThreads; ++i) {
-            pool.scheduleAtFixedRate(new RequestThread(generator, latch, numOfRequests, callBack),
+            pool.scheduleAtFixedRate(new RequestThread(generator, latch, i, numOfRequests, callBack),
                     0, interArrivalTime, TimeUnit.MILLISECONDS);
         }
         try {

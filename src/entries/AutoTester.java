@@ -87,7 +87,7 @@ public class AutoTester {
 
                 System.out.println("Launch client...");
                 // RegularClient.main(new String[]{ "-r", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt" });
-                cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-r", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt"};
+                cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-s", ResourcesLoader.getRelativeFileName("requests.txt")};
                 await(cmd);
                 //Runtime.getRuntime().exec("java -jar dummydht.jar -c -r ~/test/full5.txt").waitFor();
 

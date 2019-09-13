@@ -23,7 +23,7 @@ public class ClientRequestGenerator extends RequestGenerator {
     }
 
     @Override
-    public Request next() {
+    public Request nextFor(int threadId) {
         Request header = headerGenerator.next();
         if (header.getHeader().equals(RingCommand.READ.name()))
             return nextRead();

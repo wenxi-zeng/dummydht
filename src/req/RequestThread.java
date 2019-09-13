@@ -16,12 +16,15 @@ public class RequestThread implements Runnable {
 
     private final CountDownLatch latch;
 
+    private final int threadId;
+
     private int numOfRequests;
 
-    public RequestThread(RequestGenerator requestGenerator, CountDownLatch latch, int numOfRequests, RequestGenerateThreadCallBack callBack) {
+    public RequestThread(RequestGenerator requestGenerator, CountDownLatch latch, int threadId, int numOfRequests, RequestGenerateThreadCallBack callBack) {
         this.requestGenerator = requestGenerator;
         this.callBack = callBack;
         this.latch = latch;
+        this.threadId = threadId;
         this.numOfRequests = numOfRequests;
         socketClient = SocketClient.newInstance();
     }
@@ -44,7 +47,7 @@ public class RequestThread implements Runnable {
 
     private void generate() {
         try {
-            Request request = requestGenerator.next();
+            Request request = requestGenerator.nextFor(threadId);
             callBack.onRequestGenerated(request, socketClient);
         } catch (Exception e) {
             e.printStackTrace();

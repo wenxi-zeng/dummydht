@@ -23,7 +23,7 @@ public abstract class RequestGenerator {
                 new UniformGenerator(requestTypes.size()));
     }
 
-    public abstract Request next() throws Exception;
+    public abstract Request nextFor(int threadId) throws Exception;
 
     public abstract Map<Request, Double> loadRequestRatio();
 

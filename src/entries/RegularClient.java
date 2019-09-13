@@ -15,6 +15,7 @@ import req.gen.RequestGenerator;
 import req.RequestService;
 import req.RequestThread;
 import req.StaticTree;
+import req.gen.SequentialRequestGenerator;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
@@ -70,18 +71,28 @@ public class RegularClient {
         }
         else if (args[0].equals("-r")) {
             if (args.length >= 2) {
-                regularClient.launchRequestGenerator(args);
+                RequestGenerator generator = regularClient.getGenerator(args[1]);
+                regularClient.launchRequestGenerator(args, generator);
             }
             else {
                 System.out.println ("Usage: RegularClient -r <filename> [number of requests]");
             }
         }
         else if (args[0].equals("-f")) {
-            if (args.length == 4) {
+            if (args.length == 3) {
                 regularClient.launchFileRequestGenerator(args);
             }
             else {
-                System.out.println ("Usage: RegularClient -f <file in> <file out> <number of requests>");
+                System.out.println ("Usage: RegularClient -f <file in> <file out>");
+            }
+        }
+        else if (args[0].equals("-s")) {
+            if (args.length >= 2) {
+                RequestGenerator generator = regularClient.getSequentialGenerator(args[1]);
+                regularClient.launchRequestGenerator(args, generator);
+            }
+            else {
+                System.out.println ("Usage: RegularClient -r <filename>");
             }
         }
         else {
@@ -163,7 +174,7 @@ public class RegularClient {
         connect(address);
     }
 
-    private void launchRequestGenerator(String[] args) {
+    private void launchRequestGenerator(String[] args, RequestGenerator generator) {
         run(new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response response) {
@@ -173,7 +184,7 @@ public class RegularClient {
                     int delayToStopAll = Config.getInstance().getDelayToStopAll();
                     if (args.length >= 3) numOfRequests = Integer.valueOf(args[2]);
                     if (args.length == 4) delayToStopAll = Integer.valueOf(args[3]);
-                    generateRequest(args[1], numOfRequests, delayToStopAll);
+                    generateRequest(generator, numOfRequests, delayToStopAll);
                 }
             }
 
@@ -185,7 +196,7 @@ public class RegularClient {
     }
 
     private void launchFileRequestGenerator(String[] args) {
-        generateRequestFile(args[0], args[1], Integer.valueOf(args[3]));
+        generateRequestFile(args[1], args[2], Config.getInstance().getNumberOfRequests());
     }
 
     private void connect() {
@@ -238,6 +249,36 @@ public class RegularClient {
         terminal.destroy();
     }
 
+    private RequestGenerator getGenerator(String filename) {
+        StaticTree tree;
+        try {
+            tree = StaticTree.getStaticTree(filename);
+            return new ClientRequestGenerator(tree, terminal);
+        } catch (IOException e) {
+            System.out.println("Failed to load file");
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return null;
+    }
+
+    private RequestGenerator getSequentialGenerator(String filename) {
+        try {
+            return new SequentialRequestGenerator(
+                    Config.getInstance().getNumberOfThreads(),
+                    Config.getInstance().getNumberOfRequests(),
+                    filename,
+                    terminal
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        return null;
+    }
+
     private void generateRequestFile(String filename, String fileOut, int numOfRequests) {
         try {
             StaticTree tree = StaticTree.getStaticTree(filename);
@@ -248,10 +289,10 @@ public class RegularClient {
             RequestGenerator generator = new ClientRequestGenerator(tree, terminal);
             int numThreads = Config.getInstance().getNumberOfThreads();
             RequestService service = new RequestService(1,
-                    0,
+                    1,
                     numOfRequests * numThreads,
                     generator,
-                    (request, client) -> wr.write(request.toCommand()));
+                    (request, client) -> wr.println(request.toCommand()));
 
             service.start();
             onFinished();
@@ -263,16 +304,7 @@ public class RegularClient {
         System.exit(0);
     }
 
-    private void generateRequest(String filename, int numOfRequests, int delayToStopAll) {
-        StaticTree tree;
-        try {
-            tree = StaticTree.getStaticTree(filename);
-        } catch (IOException e) {
-            System.out.println("Failed to load file");
-            return;
-        }
-
-        RequestGenerator generator = new ClientRequestGenerator(tree, terminal);
+    private void generateRequest(RequestGenerator generator, int numOfRequests, int delayToStopAll) {
         int numThreads = Config.getInstance().getNumberOfThreads();
         RequestService service = new RequestService(numThreads,
                 Config.getInstance().getReadWriteInterArrivalTime(),
