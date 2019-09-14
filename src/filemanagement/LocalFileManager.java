@@ -4,8 +4,8 @@ import loadmanagement.LoadInfo;
 import util.Config;
 import util.MathX;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class LocalFileManager {
@@ -23,7 +23,7 @@ public class LocalFileManager {
     private static volatile LocalFileManager instance = null;
 
     private LocalFileManager() {
-        localBuckets = new HashMap<>();
+        localBuckets = new ConcurrentHashMap<>();
         numberOfMiss = 0;
         readOverhead = Config.getInstance().getReadOverhead();
         writeOverhead = Config.getInstance().getWriteOverhead();

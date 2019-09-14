@@ -495,17 +495,19 @@ public enum RingCommand implements Command {
                     List<Request> delta = (List<Request>) attachment;
                     for (Request r : delta) {
                         // SimpleLog.i("Apply delta: " + r);
-                        if (r.getTimestamp() > LookupTable.getInstance().getEpoch()) {
+                        if (r.getTimestamp() >= LookupTable.getInstance().getEpoch()) {
                             RingCommand cmd = RingCommand.valueOf(r.getHeader());
                             response = cmd.execute(r);
+                            LookupTable.getInstance().setEpoch(r.getTimestamp());
                         }
                     }
                 } else if (attachment instanceof Request) {
                     Request r = (Request) attachment;
                     // SimpleLog.i("Apply delta: " + r);
-                    if (r.getTimestamp() > LookupTable.getInstance().getEpoch()) {
+                    if (r.getTimestamp() >= LookupTable.getInstance().getEpoch()) {
                         RingCommand cmd = RingCommand.valueOf(r.getHeader());
                         response = cmd.execute(r);
+                        LookupTable.getInstance().setEpoch(r.getTimestamp());
                     }
                 } else {
                     String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
