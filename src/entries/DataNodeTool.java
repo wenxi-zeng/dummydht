@@ -6,7 +6,6 @@ import commands.CommonCommand;
 import commands.ElasticCommand;
 import commands.RingCommand;
 import commonmodels.DataNode;
-import commonmodels.PhysicalNode;
 import commonmodels.Terminal;
 import commonmodels.transport.InvalidRequestException;
 import commonmodels.transport.Request;
@@ -136,7 +135,7 @@ public class DataNodeTool {
         RequestGenerator generator = new ControlRequestGenerator(new ArrayList<>(), dataNode);
         int numThreads = Config.getInstance().getNumberOfThreads();
         RequestService service = new RequestService(numThreads,
-                Config.getInstance().getLoadBalancingInterArrivalTime(),
+                Config.getInstance().getLoadBalancingInterArrivalRate(),
                 -1,
                 generator,
                 requestGenerateThreadCallBack);

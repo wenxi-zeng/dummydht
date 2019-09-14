@@ -307,7 +307,7 @@ public class RegularClient {
     private void generateRequest(RequestGenerator generator, int numOfRequests, int delayToStopAll) {
         int numThreads = Config.getInstance().getNumberOfThreads();
         RequestService service = new RequestService(numThreads,
-                Config.getInstance().getReadWriteInterArrivalTime(),
+                Config.getInstance().getReadWriteInterArrivalRate(),
                 numOfRequests,
                 generator,
                 requestGenerateThreadCallBack);

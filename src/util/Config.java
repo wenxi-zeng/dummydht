@@ -29,8 +29,8 @@ public class Config {
     private final static String PROPERTY_NETWORK_SPEED = "network_speed";
     private final static String PROPERTY_RATIO_READ_WRITE = "read_write_ratio";
     private final static String PROPERTY_RATIO_LOAD_BALANCING = "load_balancing_ratio";
-    private final static String PROPERTY_INTER_ARRIVAL_TIME_READ_WRITE = "read_write_inter_arrival_time";
-    private final static String PROPERTY_INTER_ARRIVAL_TIME_LOAD_BALANCING = "load_balancing_inter_arrival_time";
+    private final static String PROPERTY_INTER_ARRIVAL_RATE_READ_WRITE = "read_write_inter_arrival_rate";
+    private final static String PROPERTY_INTER_ARRIVAL_RATE_LOAD_BALANCING = "load_balancing_inter_arrival_rate";
     private final static String PROPERTY_REQUEST_CLIENT = "request_client";
     private final static String PROPERTY_REQUEST_DISTRIBUTION = "request_distribution";
     private final static String PROPERTY_REQUEST_ZIPF_ALPHA = "alpha";
@@ -245,12 +245,12 @@ public class Config {
                 .toArray();
     }
 
-    public long getReadWriteInterArrivalTime() {
-        return Long.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_TIME_READ_WRITE));
+    public double getReadWriteInterArrivalRate() {
+        return Double.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_RATE_READ_WRITE));
     }
 
-    public long getLoadBalancingInterArrivalTime() {
-        return Long.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_TIME_LOAD_BALANCING));
+    public double getLoadBalancingInterArrivalRate() {
+        return Double.valueOf(rb.getString(PROPERTY_INTER_ARRIVAL_RATE_LOAD_BALANCING));
     }
 
     public String getRequestDistribution() {
