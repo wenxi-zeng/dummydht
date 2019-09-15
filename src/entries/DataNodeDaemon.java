@@ -317,7 +317,7 @@ public class DataNodeDaemon implements Daemon, ReadWriteCallBack {
 
     public void propagateTable() {
         Request request = new Request()
-                .withHeader(CommonCommand.UPDATE.name())
+                .withHeader(RingCommand.UPDATE.name())
                 .withLargeAttachment(dataNodeServer.getDataNodeTable());
 
         propagateTableChanges(request);

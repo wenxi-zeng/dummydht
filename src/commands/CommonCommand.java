@@ -335,6 +335,42 @@ public enum CommonCommand implements Command {
                 return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
             }
             else {
+                Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+                DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
+
+                return response;
+            }
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CommonCommand.STATUS.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    DELTA {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CommonCommand.UPDATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+            if (DataNodeDaemon.getInstance() == null) {
+                result = "Daemon not started";
+                return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
+            }
+            else if (DataNodeDaemon.getInstance().getDataNodeServer() == null){
+                result = "Data node not started";
+                return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
+            }
+            else {
                 Object attachment = request.getLargeAttachment();
 
                 Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);

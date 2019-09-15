@@ -124,7 +124,7 @@ public class DataNodeTool {
 
     private void onTableFetched(Object table) {
         Request request = new Request()
-                .withHeader(CommonCommand.UPDATE.name())
+                .withHeader(RingCommand.UPDATE.name())
                 .withLargeAttachment(table);
 
         Response response = dataNode.execute(request);

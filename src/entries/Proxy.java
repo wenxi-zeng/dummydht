@@ -1,6 +1,7 @@
 package entries;
 
 import commands.CommonCommand;
+import commands.RingCommand;
 import commonmodels.Daemon;
 import commonmodels.NotableLoadChangeCallback;
 import commonmodels.PhysicalNode;
@@ -256,7 +257,7 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
         }
 
         Request delta = new Request()
-                .withHeader(CommonCommand.UPDATE.name())
+                .withHeader(RingCommand.DELTA.name())
                 .withLargeAttachment(requests);
         daemon.propagateTableChanges(delta);
     }

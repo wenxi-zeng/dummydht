@@ -335,7 +335,7 @@ public class RegularClient {
 
     private void onTableUpdated(Object table) {
         Request request = new Request()
-                .withHeader(CommonCommand.UPDATE.name())
+                .withHeader(RingCommand.DELTA.name())
                 .withLargeAttachment(table);
 
         Response response = terminal.process(request);

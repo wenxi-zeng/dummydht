@@ -416,6 +416,35 @@ public enum CephCommand implements Command {
 
         @Override
         public Response execute(Request request) {
+            Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+            String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
+            if (result.equals(ClusterMap.UPDATE_STATUS_DONE)) {
+                ClusterMap.getInstance().scheduleLoadBalancing();
+            }
+            response.setMessage(result);
+
+            return response;
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CephCommand.UPDATE.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
+    DELTA {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CephCommand.UPDATE.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
             Object attachment = request.getLargeAttachment();
 
             // SimpleLog.v("Attachment: ====================================\n" + attachment);
