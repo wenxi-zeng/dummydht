@@ -44,6 +44,10 @@ public class ScriptGenerator {
 
     public final static String FILE_STOP_ALL_BUT_CLIENT = "stop-all-but_client.sh";
 
+    public final static String FILE_CHECK_POINTS_ALL = "check-points-all.sh";
+
+    public final static String FILE_CHECK_POINTS = "db-chk-pts.sh";
+
     public static String SELF;
 
     public static void main(String[] args) {
@@ -62,6 +66,27 @@ public class ScriptGenerator {
         generateGenerateAll();
         generateStartProxy();
         generateStopAllButClient();
+        generateCheckPointsAll();
+    }
+
+    private static void generateCheckPointsAll() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_CHECK_POINTS_ALL);
+        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder command = new StringBuilder();
+        command.append(". ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append(FILE_CHECK_POINTS).append("\n");
+
+        for (String node : getAllServers()) {
+            if (node.contains(SELF))
+                stringBuilder.append(command);
+            else
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void generateGenerateAll() {
