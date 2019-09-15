@@ -59,7 +59,6 @@ public class SQLiteConnector implements Connector{
                 String url = "jdbc:sqlite:" + dbFilePath;
                 SimpleLog.v(url);
                 connection = DriverManager.getConnection(url + "?journal_mode=WAL&synchronous=OFF");
-                connection.setAutoCommit(false);
                 createTables();
                 connected = true;
             } catch (Exception e) {
