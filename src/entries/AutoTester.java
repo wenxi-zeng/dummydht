@@ -14,27 +14,34 @@ public class AutoTester {
     private final int startTag;
     private final int endTag;
     private final int delay;
+    private final int step;
     private int currentTag;
+    private int currentRequests;
+    private int suffix;
     private final TestCallBack callBack = AutoTester.this::start;
 
     public static void main(String[] args) {
-        if (args.length != 3) {
-            System.out.println("Invalid Arguments. Try: dummydht.jar -a <startTag> <endTag> <delay>");
+        if (args.length < 3) {
+            System.out.println("Invalid Arguments. Try: dummydht.jar -a <startTag> <endTag> <delay> [step]");
             return;
         }
         int startTag = Integer.valueOf(args[0]);
         int endTag = Integer.valueOf(args[1]);
         int delay = Integer.valueOf(args[2]);
-        AutoTester tester = new AutoTester(startTag, endTag, delay);
+        int step = args.length == 4 ? Integer.valueOf(args[3]) : 0;
+        AutoTester tester = new AutoTester(startTag, endTag, delay, step);
         tester.start();
     }
 
-    public AutoTester(int startTag, int endTag, int delay) {
+    public AutoTester(int startTag, int endTag, int delay, int step) {
         timer = new Timer();
         this.startTag = startTag;
         this.endTag = endTag;
         this.delay = delay;
+        this.step = step;
+        this.currentRequests = -1;
         this.currentTag = startTag;
+        this.suffix = 0;
     }
 
     private void start() {
@@ -48,7 +55,10 @@ public class AutoTester {
                 System.exit(0);
                 return;
             }
+            if (currentRequests < 0)
+                currentRequests = Integer.valueOf(prop.getProperty(Config.PROPERTY_NUMBER_OF_REQUESTS));
             prop.setProperty(Config.PROPERTY_TRIAL_TAG, String.valueOf(currentTag));
+            prop.setProperty(Config.PROPERTY_NUMBER_OF_REQUESTS, String.valueOf(currentRequests));
             prop.store(new FileOutputStream(propPath), null);
             System.out.println("Tag updated...");
         } catch (IOException e) {
@@ -87,7 +97,16 @@ public class AutoTester {
 
                 System.out.println("Launch client...");
                 // RegularClient.main(new String[]{ "-r", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt" });
-                cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-s", ResourcesLoader.getRelativeFileName("requests.txt")};
+                String requestFilePath = ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "requests" + currentRequests + "s" + suffix + ".txt";
+                File requestFile = new File(requestFilePath);
+                if (requestFile.exists()) {
+                    cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-s", requestFilePath};
+                }
+                else {
+                    cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-f", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt", requestFilePath};
+                    await(cmd);
+                    cmd = new String[]{"java", "-jar", "dummydht.jar", "-c", "-s", requestFilePath};
+                }
                 await(cmd);
                 //Runtime.getRuntime().exec("java -jar dummydht.jar -c -r ~/test/full5.txt").waitFor();
 
@@ -95,7 +114,14 @@ public class AutoTester {
                 await(cmd);
                 System.out.println("Test[" + currentTag +  "] done!");
 
-                currentTag++;
+                if (step > 0) {
+                    currentTag += (step / 10);
+                    currentRequests += step;
+                }
+                else {
+                    currentTag++;
+                    suffix++;
+                }
                 if (testCallBack != null)
                     testCallBack.onTestFinished();
             } catch (Exception e) {
