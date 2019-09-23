@@ -210,6 +210,7 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
     // 10                       receive
     private void onFollowupAddNode(String followupAddress, Response response) {
         Request request = (Request) response.getAttachment();
+        request.setToken(response.getToken());
         send(request.getReceiver(), request, this);
     }
 
@@ -227,6 +228,7 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
     // 10                       receive
     private void onFollowupRemoveNode(String followupAddress, Response response) {
         Request request = (Request) response.getAttachment();
+        request.setToken(response.getToken());
         send(request.getReceiver(), request, this);
         if (followupAddress == null) {
             SimpleLog.i("Could not find the address to follow up");
@@ -235,6 +237,7 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
         Request followRequest = daemon.getDataNodeServer()
                 .getDataNode()
                 .prepareRemoveNodeCommand(followupAddress);
+        followRequest.setToken(response.getToken());
         processDataNodeCommand(followRequest);
     }
 
@@ -246,19 +249,22 @@ public class Proxy implements Daemon, NotableLoadChangeCallback {
         Request request = daemon.getDataNodeServer()
                 .getDataNode()
                 .prepareAddNodeCommand(followupAddress);
+        request.setToken(response.getToken());
         processDataNodeCommand(request);
     }
 
     @Override
     public void onRequestAvailable(List<Request> requests) {
+        Request delta = new Request()
+                .withHeader(RingCommand.DELTA.name());
+
         for (Request request : requests) {
+            request.setToken(delta.getToken()); // set all the delta token to be the same, so it only counts once
             processDataNodeCommand(request);
             StatInfoManager.getInstance().statExecution(request, request.getTimestamp()); // stat load balancing event
         }
 
-        Request delta = new Request()
-                .withHeader(RingCommand.DELTA.name())
-                .withLargeAttachment(requests);
+        delta.setLargeAttachment(requests);
         daemon.propagateTableChanges(delta);
     }
 }

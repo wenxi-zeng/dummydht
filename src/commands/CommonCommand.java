@@ -476,7 +476,8 @@ public enum CommonCommand implements Command {
         public Response execute(Request request) {
             Request followupRequest = new Request()
                     .withHeader(CommonCommand.START.name())
-                    .withReceiver(request.getAttachment());
+                    .withReceiver(request.getAttachment())
+                    .withToken(request.getToken());
             return new Response(request)
                     .withStatus(Response.STATUS_SUCCESS)
                     .withAttachment(followupRequest);
@@ -509,7 +510,8 @@ public enum CommonCommand implements Command {
         public Response execute(Request request) {
             Request followupRequest = new Request()
                     .withHeader(CommonCommand.STOP.name())
-                    .withReceiver(request.getAttachment());
+                    .withReceiver(request.getAttachment())
+                    .withToken(request.getToken());
             return new Response(request)
                     .withStatus(Response.STATUS_SUCCESS)
                     .withAttachment(followupRequest);
