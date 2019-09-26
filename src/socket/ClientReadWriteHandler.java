@@ -34,7 +34,9 @@ public class ClientReadWriteHandler implements Runnable, ClientHandler {
         this.selectionKey = selectionKey;
         this.socketChannel = (SocketChannel)selectionKey.channel();
         this.callBack = callBack;
-        this.dataPool = new LinkedList<>(dataPool);
+        this.dataPool = new LinkedList<>();
+        while(!dataPool.isEmpty())
+            this.dataPool.add(dataPool.poll());
     }
 
     @Override

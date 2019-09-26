@@ -161,7 +161,11 @@ public class DataNodeTool {
     }
 
     private void process(Request request) throws Exception {
-        dataNode.execute(request);
+        try {
+            dataNode.execute(request);
+        }
+        catch (Exception ignored) {}
+
         Config config = Config.getInstance();
         if (config.getMode().equals(Config.MODE_CENTRIALIZED)) {
             if (config.getSeeds().size() > 0) {
