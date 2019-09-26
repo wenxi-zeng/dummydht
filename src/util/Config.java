@@ -7,12 +7,12 @@ import java.util.ResourceBundle;
 public class Config {
     private final static String CONFIG_PATH = "config";
 
-    private final static String PROPERTY_HASH_SLOTS = "hash_slots";
+    public final static String PROPERTY_HASH_SLOTS = "hash_slots";
     private final static String PROPERTY_NODES = "nodes";
     private final static String PROPERTY_START_PORT = "start_port";
     private final static String PROPERTY_PORT_RANGE = "port_range";
     private final static String PROPERTY_NUMBER_OF_REPLICAS = "number_of_replicas";
-    private final static String PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES = "init_number_of_active_nodes";
+    public final static String PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES = "init_number_of_active_nodes";
     private final static String PROPERTY_VIRTUAL_PHYSICAL_RATIO = "virtual_physical_ratio";
     private final static String PROPERTY_NUMBER_OF_PLACEMENT_GROUPS = "number_of_placement_groups";
     private final static String PROPERTY_INITIAL_WEIGHT = "initial_weight";
@@ -22,10 +22,10 @@ public class Config {
     private final static String PROPERTY_ENABLE_CROSS_CLUSTER_LOAD_BALANCING = "enable_cross_clusters_load_balancing";
     private final static String PROPERTY_SEEDS = "seeds";
     private final static String PROPERTY_CLUSTER_NAME = "cluster_name";
-    private final static String PROPERTY_MODE = "mode";
+    public final static String PROPERTY_MODE = "mode";
     private final static String PROPERTY_LOG_SERVER = "log_server";
     private final static String PROPERTY_LOG_MODE = "log_mode";
-    private final static String PROPERTY_SCHEME = "scheme";
+    public final static String PROPERTY_SCHEME = "scheme";
     private final static String PROPERTY_NETWORK_SPEED = "network_speed";
     private final static String PROPERTY_RATIO_READ_WRITE = "read_write_ratio";
     private final static String PROPERTY_RATIO_LOAD_BALANCING = "load_balancing_ratio";

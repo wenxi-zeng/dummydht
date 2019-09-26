@@ -19,6 +19,9 @@ public class AutoTester {
     private int currentRequests;
     private int suffix;
     private final TestCallBack callBack = AutoTester.this::start;
+    private static final String[] MODE_SCHEME = {"centralized-ring-1000", "centralized-elastic-100"};
+    private static final int MODE_SCHEME_TAG_DIFF = 100000;
+    private int modeCounter;
 
     public static void main(String[] args) {
         if (args.length < 3) {
@@ -42,6 +45,7 @@ public class AutoTester {
         this.currentRequests = -1;
         this.currentTag = startTag;
         this.suffix = 0;
+        this.modeCounter = 0;
     }
 
     private void start() {
@@ -50,13 +54,21 @@ public class AutoTester {
             String propPath = ResourcesLoader.getRelativePathToRes("config.properties");
             InputStream in = new FileInputStream(propPath);
             prop.load(in);
-            if (currentTag > endTag) {
+            String[] currentModeScheme = MODE_SCHEME[modeCounter].split("-");
+            String mode = currentModeScheme[0];
+            String scheme = currentModeScheme[1];
+            int pvRatio = Integer.valueOf(currentModeScheme[2]);
+            if (currentTag - modeCounter * MODE_SCHEME_TAG_DIFF > endTag) {
                 System.out.println("All tests finished!");
                 System.exit(0);
                 return;
             }
             if (currentRequests < 0)
                 currentRequests = Integer.valueOf(prop.getProperty(Config.PROPERTY_NUMBER_OF_REQUESTS));
+            int physicalNodes = Integer.valueOf(prop.getProperty(Config.PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES));
+            prop.setProperty(Config.PROPERTY_HASH_SLOTS, String.valueOf(physicalNodes * pvRatio));
+            prop.setProperty(Config.PROPERTY_MODE, mode);
+            prop.setProperty(Config.PROPERTY_SCHEME, scheme);
             prop.setProperty(Config.PROPERTY_TRIAL_TAG, String.valueOf(currentTag));
             prop.setProperty(Config.PROPERTY_NUMBER_OF_REQUESTS, String.valueOf(currentRequests));
             prop.store(new FileOutputStream(propPath), null);
@@ -114,13 +126,19 @@ public class AutoTester {
                 await(cmd);
                 System.out.println("Test[" + currentTag +  "] done!");
 
-                if (step > 0) {
-                    currentTag += (step / 10);
-                    currentRequests += step;
+                modeCounter = (modeCounter + 1) % MODE_SCHEME.length;
+                if (modeCounter == 0) {
+                    currentTag -= (MODE_SCHEME.length - 1) * MODE_SCHEME_TAG_DIFF;
+                    if (step > 0) {
+                        currentTag += (step / 10);
+                        currentRequests += step;
+                    } else {
+                        currentTag++;
+                        suffix++;
+                    }
                 }
                 else {
-                    currentTag++;
-                    suffix++;
+                    currentTag += MODE_SCHEME_TAG_DIFF;
                 }
                 if (testCallBack != null)
                     testCallBack.onTestFinished();
