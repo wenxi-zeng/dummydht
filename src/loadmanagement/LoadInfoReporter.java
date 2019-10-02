@@ -10,8 +10,6 @@ public class LoadInfoReporter {
 
     private ScheduledExecutorService scheduledExecutorService;
 
-    private ThreadPoolExecutor threadService;
-
     private LoadInfoReportHandler handler;
 
     private final LoadInfoManager loadInfoManager;
@@ -25,14 +23,11 @@ public class LoadInfoReporter {
         this.reportInterval = Config.getInstance().getLoadInfoReportInterval();
         repo = DummyDhtRepository.getInstance();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(8);
-        threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
-                new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     public void start() {
         scheduledExecutorService.scheduleAtFixedRate(
-                () -> threadService.execute(this::report),
+                this::report,
                 reportInterval, reportInterval, TimeUnit.MILLISECONDS
         );
     }
