@@ -48,7 +48,7 @@ public class DataNodeTool {
 
     private RequestThread.RequestGenerateThreadCallBack requestGenerateThreadCallBack = (request, client) -> {
         try {
-            process(request);
+            process(request, callBack);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,7 +67,7 @@ public class DataNodeTool {
                 String command = in.nextLine();
 
                 while (!command.equalsIgnoreCase("exit")){
-                    dataNodeTool.process(command);
+                    dataNodeTool.process(command, dataNodeTool.callBack);
                     command = in.nextLine();
                 }
             }
@@ -81,7 +81,22 @@ public class DataNodeTool {
                 }
             }
             else {
-                dataNodeTool.process(StringUtils.join(args,  ' '));
+                dataNodeTool.process(StringUtils.join(args, ' '), new SocketClient.ServerCallBack() {
+                    @Override
+                    public void onResponse(Request request, Response o) {
+                        if (o.getHeader().equals(CommonCommand.FETCH.name())) {
+                            dataNodeTool.onTableFetched(o.getAttachment());
+                        }
+                        SimpleLog.v(String.valueOf(o));
+                        dataNodeTool.stop();
+                    }
+
+                    @Override
+                    public void onFailure(Request request, String error) {
+                        SimpleLog.v(error);
+                        dataNodeTool.stop();
+                    }
+                });
                 // System.exit(1);
             }
         } catch (Exception e) {
@@ -122,6 +137,12 @@ public class DataNodeTool {
         }
     }
 
+    private void stop() {
+        socketClient.stop();
+        dataNode.destroy();
+        System.exit(0);
+    }
+
     private void onTableFetched(Object table) {
         Request request = new Request()
                 .withHeader(RingCommand.UPDATE.name())
@@ -143,7 +164,7 @@ public class DataNodeTool {
         service.start();
     }
 
-    private void process(String command) throws Exception {
+    private void process(String command, SocketClient.ServerCallBack callBack) throws Exception {
         if (command.equalsIgnoreCase("help")) {
             SimpleLog.v(getHelp());
             return;
@@ -157,10 +178,10 @@ public class DataNodeTool {
             request = new CommonTerminal().translate(command);
         }
 
-        process(request);
+        process(request, callBack);
     }
 
-    private void process(Request request) throws Exception {
+    private void process(Request request, SocketClient.ServerCallBack callBack) throws Exception {
         try {
             dataNode.execute(request);
         }

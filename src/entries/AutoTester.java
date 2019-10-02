@@ -19,7 +19,8 @@ public class AutoTester {
     private int currentRequests;
     private int suffix;
     private final TestCallBack callBack = AutoTester.this::start;
-    private static final String[] MODE_SCHEME = {"centralized-ring-1000", "centralized-elastic-100"};
+    // private static final String[] MODE_SCHEME = {"centralized-ring-1000", "centralized-elastic-100"};
+    private static final String[] MODE_SCHEME = {"distributed-ring-1000", "distributed-elastic-100"};
     private static final int MODE_SCHEME_TAG_DIFF = 100000;
     private int modeCounter;
 
@@ -102,10 +103,15 @@ public class AutoTester {
                 await(cmd);
                 System.out.println("Daemons started...");
 
-                cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_START_PROXY)};
+//                cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_START_PROXY)};
+//                await(cmd);
+//                System.out.println("Proxy started...");
+//                Thread.sleep(5 * 1000);
+
+                cmd = new String[]{"java", "-jar", "dummydht.jar", "-n", "addnode", "192.168.29.150:50000"};
                 await(cmd);
-                System.out.println("Proxy started...");
-                Thread.sleep(5 * 1000);
+                System.out.println("Bootstrapping...");
+                Thread.sleep(10 * 1000);
 
                 System.out.println("Launch client...");
                 // RegularClient.main(new String[]{ "-r", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt" });
