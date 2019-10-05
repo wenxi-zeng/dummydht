@@ -226,17 +226,21 @@ public class FileTransferManager {
     }
 
     private void callFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        if (isCompliedWithPolicy(from, toNode) && callBacks != null)
+        if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
+            markReceivedBuckets(buckets, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
-                callBack.onTransferring(buckets, from , toNode);
+                callBack.onTransferring(buckets, from, toNode);
             }
+        }
     }
 
     private void callFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
-        if (isCompliedWithPolicy(from, toNode) && callBacks != null)
+        if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
+            markReceivedBuckets(buckets, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
-                callBack.onReplicating(buckets, from , toNode);
+                callBack.onReplicating(buckets, from, toNode);
             }
+        }
     }
 
     private void callTransmitted(List<FileBucket> buckets, PhysicalNode from, PhysicalNode toNode) {
@@ -273,6 +277,12 @@ public class FileTransferManager {
             case All:
             default:
                 return true;
+        }
+    }
+
+    private void markReceivedBuckets(List<Integer> buckets, PhysicalNode to) {
+        if (mySelf.equals(to.getFullAddress())) {
+            localFileManager.getGentiles().addAll(buckets);
         }
     }
 

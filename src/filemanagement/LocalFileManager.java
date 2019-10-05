@@ -4,13 +4,17 @@ import loadmanagement.LoadInfo;
 import util.Config;
 import util.MathX;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class LocalFileManager {
 
     private Map<Integer, FileBucket> localBuckets;
+
+    private Set<Integer> gentiles;
 
     private long numberOfMiss;
 
@@ -24,6 +28,7 @@ public class LocalFileManager {
 
     private LocalFileManager() {
         localBuckets = new ConcurrentHashMap<>();
+        gentiles = new HashSet<>();
         numberOfMiss = 0;
         readOverhead = Config.getInstance().getReadOverhead();
         writeOverhead = Config.getInstance().getWriteOverhead();
@@ -58,6 +63,10 @@ public class LocalFileManager {
         for (int i = 0; i < numberOfBuckets; i++) {
             localBuckets.put(i, new FileBucket(i, MathX.nextInt(1000, 10000), MathX.nextInt(Integer.MAX_VALUE)));
         }
+    }
+
+    public Set<Integer> getGentiles() {
+        return gentiles;
     }
 
     public FileBucket read(int bucket, long filesize) {
