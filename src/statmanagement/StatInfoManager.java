@@ -1,6 +1,5 @@
 package statmanagement;
 
-import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 
@@ -33,7 +32,7 @@ public class StatInfoManager {
         instance = null;
     }
 
-    public void statResponse(@NotNull Request request, @NotNull Response response, long respSize) {
+    public void statResponse(Request request, Response response, long respSize) {
         StatInfo responseStat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
@@ -50,7 +49,7 @@ public class StatInfoManager {
         reporter.report(roundTripStat);
     }
 
-    public void statRoundTripFailure(@NotNull Request request) {
+    public void statRoundTripFailure(Request request) {
         StatInfo stat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
@@ -59,7 +58,7 @@ public class StatInfoManager {
         reporter.report(stat);
     }
 
-    public void statRequest(@NotNull Request request, long receiveStamp, long reqSize) {
+    public void statRequest(Request request, long receiveStamp, long reqSize) {
         StatInfo stat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())
@@ -69,7 +68,7 @@ public class StatInfoManager {
         reporter.report(stat);
     }
 
-    public void statExecution(@NotNull Request request, long receiveStamp) {
+    public void statExecution(Request request, long receiveStamp) {
         StatInfo stat = new StatInfo()
                 .withHeader(request.getHeader())
                 .withToken(request.getToken())

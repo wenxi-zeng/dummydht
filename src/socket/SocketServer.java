@@ -1,6 +1,5 @@
 package socket;
 
-import com.sun.istack.internal.NotNull;
 import commonmodels.transport.Request;
 import commonmodels.transport.Response;
 import util.SimpleLog;
@@ -25,7 +24,6 @@ public class SocketServer implements Runnable{
 
     private final AtomicBoolean keepRunning = new AtomicBoolean(true);
 
-    @NotNull
     private EventHandler eventHandler;
 
     private Queue<Attachable> attachments;
@@ -34,7 +32,7 @@ public class SocketServer implements Runnable{
 
     private static final int WORKER_POOL_SIZE = 16;
 
-    public SocketServer(int port, @NotNull EventHandler eventHandler) throws IOException {
+    public SocketServer(int port, EventHandler eventHandler) throws IOException {
         this.eventHandler = eventHandler;
         this.selector = Selector.open();
         this.attachments = new LinkedList<Attachable>() {
