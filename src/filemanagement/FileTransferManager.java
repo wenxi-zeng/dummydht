@@ -227,7 +227,10 @@ public class FileTransferManager {
 
     private void callFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
+            // if the current node is receiving node, we mark all the new buckets as gentile
             markReceivedBuckets(buckets, toNode);
+            // if the current node is sending node, we report an overload event happened
+            reportTransfer(from);
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onTransferring(buckets, from, toNode);
             }
@@ -236,6 +239,7 @@ public class FileTransferManager {
 
     private void callFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
+            // if the current node is receiving node, we mark all the new buckets as gentile
             markReceivedBuckets(buckets, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onReplicating(buckets, from, toNode);
@@ -282,8 +286,14 @@ public class FileTransferManager {
 
     private void markReceivedBuckets(List<Integer> buckets, PhysicalNode to) {
         if (mySelf.equals(to.getFullAddress())) {
-            localFileManager.getGentiles().addAll(buckets);
+            for (int bucket : buckets)
+                localFileManager.getGentiles().put(bucket, to.getFullAddress());
         }
+    }
+
+    private void reportTransfer(PhysicalNode from) {
+        if (mySelf.equals(from.getFullAddress()))
+            BucketMigrateInfoManager.getInstance().record(localFileManager.getMigrateInfo());
     }
 
     public enum FileTransferPolicy {

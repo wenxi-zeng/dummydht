@@ -4,6 +4,7 @@ import commonmodels.Queueable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class BucketMigrateInfo implements Queueable {
 
@@ -17,12 +18,15 @@ public class BucketMigrateInfo implements Queueable {
 
     private boolean causedByGentile;
 
+    private long timestamp;
+
     public BucketMigrateInfo(String nodeId) {
         this.nodeId = nodeId;
         this.originalBucketLoad = 0;
         this.gentileBucketMap = new HashMap<>();
         this.gentileBucketLoad = 0;
         this.causedByGentile = false;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String getNodeId() {
@@ -45,6 +49,14 @@ public class BucketMigrateInfo implements Queueable {
         return gentileBucketMap;
     }
 
+    public String getGentileBucketMapString() {
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<String, Long> entry : gentileBucketMap.entrySet()) {
+            builder.append(entry.getKey()).append("-").append(entry.getValue()).append(";");
+        }
+        return builder.toString();
+    }
+
     public void setGentileBucketMap(Map<String, Long> gentileBucketMap) {
         this.gentileBucketMap = gentileBucketMap;
     }
@@ -63,5 +75,13 @@ public class BucketMigrateInfo implements Queueable {
 
     public void setCausedByGentile(boolean causedByGentile) {
         this.causedByGentile = causedByGentile;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

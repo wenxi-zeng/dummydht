@@ -4,6 +4,7 @@ import loadmanagement.LoadInfo;
 import util.Config;
 import util.MathX;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +15,9 @@ public class LocalFileManager {
 
     private Map<Integer, FileBucket> localBuckets;
 
-    private Set<Integer> gentiles;
+    private Map<Integer, String> gentiles;
+
+    private BucketMigrateInfo migrateInfo;
 
     private long numberOfMiss;
 
@@ -24,15 +27,18 @@ public class LocalFileManager {
 
     private long interval;
 
+    private long lbUpperBound;
+
     private static volatile LocalFileManager instance = null;
 
     private LocalFileManager() {
         localBuckets = new ConcurrentHashMap<>();
-        gentiles = new HashSet<>();
+        gentiles = new HashMap<>();
         numberOfMiss = 0;
         readOverhead = Config.getInstance().getReadOverhead();
         writeOverhead = Config.getInstance().getWriteOverhead();
         interval = Config.getInstance().getLoadInfoReportInterval() / 1000;
+        lbUpperBound = Config.getInstance().getLoadBalancingUpperBound();
     }
 
     public static LocalFileManager getInstance() {
@@ -65,7 +71,7 @@ public class LocalFileManager {
         }
     }
 
-    public Set<Integer> getGentiles() {
+    public Map<Integer, String> getGentiles() {
         return gentiles;
     }
 
@@ -126,17 +132,39 @@ public class LocalFileManager {
     }
 
     public LoadInfo updateLoadInfo(LoadInfo loadInfo) {
+        // load info preparation
         FileBucket dummyBucket = new FileBucket(-1);
         loadInfo.getBucketInfoList().clear();
         loadInfo.setLoadBalancing(false);
 
+        // migrate info preparation
+        FileBucket originalBuckets = new FileBucket(-1);
+        FileBucket gentileBuckets = new FileBucket(-1);
+        Map<String, Long> gentileBucketMap = new HashMap<>();
+
         for (FileBucket bucket : localBuckets.values()) {
+            // load info calculation
             if (bucket.isLocked()) loadInfo.setLoadBalancing(true);
             dummyBucket.merge(bucket);
             loadInfo.getBucketInfoList().add((FileBucket) bucket.clone());
+
+            // migration info calculation
+            if (gentiles.containsKey(bucket.getKey())) {
+                int key = bucket.getKey();
+                String nodeId = gentiles.get(key);
+                long load = gentileBucketMap.getOrDefault(nodeId, 0L) +
+                        bucket.getLoad(readOverhead, writeOverhead, interval);
+                gentileBucketMap.put(nodeId, load);
+                gentileBuckets.merge(bucket);
+            }
+            else {
+                originalBuckets.merge(bucket);
+            }
+
             bucket.reset();
         }
 
+        // load info finalization
         loadInfo.setSizeOfFiles(dummyBucket.getSizeOfWrites());
         loadInfo.setFileLoad(dummyBucket.getSizeOfWrites());
         loadInfo.setWriteLoad(dummyBucket.getWriteLoad(writeOverhead, interval));
@@ -147,6 +175,19 @@ public class LocalFileManager {
                 dummyBucket.getNumberOfWrites() +
                 dummyBucket.getNumberOfLockConflicts() +
                 numberOfMiss);
+
+        // migrate info finalization
+        BucketMigrateInfo newMigrateInfo = new BucketMigrateInfo(loadInfo.getNodeId());
+        newMigrateInfo.setGentileBucketMap(gentileBucketMap);
+        newMigrateInfo.setGentileBucketLoad(gentileBuckets.getLoad(readOverhead, writeOverhead, interval));
+        newMigrateInfo.setOriginalBucketLoad(originalBuckets.getLoad(readOverhead, writeOverhead, interval));
+        newMigrateInfo.setCausedByGentile(newMigrateInfo.getOriginalBucketLoad() < lbUpperBound);
+        migrateInfo = newMigrateInfo;
+
         return loadInfo;
+    }
+
+    public BucketMigrateInfo getMigrateInfo() {
+        return migrateInfo;
     }
 }
