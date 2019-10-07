@@ -145,11 +145,30 @@ public class SQLiteConnector implements Connector{
         }
     }
 
+    private void createMigrateInfoTable (String mode, String scheme) {
+        String sql = "CREATE TABLE IF NOT EXISTS " + DummyDhtTables.MIGRATE_INFO.getName() + "(\n" +
+                "            node_id TEXT,\n" +
+                "            original_load INTEGER,\n" +
+                "            gentiles_load INTEGER,\n" +
+                "            gentile_load_map TEXT,\n" +
+                "            caused_by_gentile TEXT,\n" +
+                "            report_time INTEGER\n" +
+                ");";
+
+        try{
+            Statement stmt = connection.createStatement();
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void createTables() {
         String mode = Config.getInstance().getMode();
         String scheme = Config.getInstance().getScheme();
         createHistoricalLoadInfoTable(mode, scheme);
         createLoadInfoTable(mode, scheme);
         createStatInfoTable(mode, scheme);
+        createMigrateInfoTable(mode, scheme);
     }
 }

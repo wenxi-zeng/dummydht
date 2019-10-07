@@ -1,6 +1,7 @@
 package data;
 
 import commonmodels.Queueable;
+import filemanagement.BucketMigrateInfo;
 import loadmanagement.LoadInfo;
 import statmanagement.StatInfo;
 import util.Config;
@@ -98,6 +99,8 @@ public class DummyDhtRepository {
                     insertStatInfo((StatInfo) queueable);
                 else if (queueable instanceof LoadInfo)
                     insertLoadInfo((LoadInfo) queueable);
+                else if (queueable instanceof BucketMigrateInfo)
+                    insertMigrateInfo((BucketMigrateInfo) queueable);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -140,6 +143,24 @@ public class DummyDhtRepository {
             statement.setString(6, info.getType());
             statement.setLong(7, info.getSize());
             statement.setInt(8, tag);
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void insertMigrateInfo(BucketMigrateInfo info) {
+        try {
+            PreparedStatement statement = session.prepareStatement(
+                    "INSERT INTO " + TABLE_STAT_INFO + " (node_id, original_load, gentiles_load, gentile_load_map, caused_by_gentile, report_time) " +
+                            "VALUES (?, ?, ?, ? , ? , ?)");
+            statement.setString(1, info.getNodeId());
+            statement.setLong(2, info.getOriginalBucketLoad());
+            statement.setLong(3, info.getGentileBucketLoad());
+            statement.setString(4, info.getGentileBucketMapString());
+            statement.setString(5, String.valueOf(info.isCausedByGentile()));
+            statement.setTimestamp(6, new Timestamp(info.getTimestamp()));
 
             statement.executeUpdate();
         } catch (SQLException e) {

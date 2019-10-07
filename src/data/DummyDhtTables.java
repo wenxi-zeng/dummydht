@@ -1,7 +1,10 @@
 package data;
 
 public enum DummyDhtTables {
-    STAT_INFO ("statinfo"), LOAD_INFO("loadinfo"), HISTORICAL_LOAD_INFO("historicalloadinfo");
+    STAT_INFO ("statinfo"),
+    LOAD_INFO("loadinfo"),
+    HISTORICAL_LOAD_INFO("historicalloadinfo"),
+    MIGRATE_INFO("migrate");
 
     private final String name;
 
