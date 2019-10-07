@@ -227,10 +227,10 @@ public class FileTransferManager {
 
     private void callFileTransfer(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
-            // if the current node is receiving node, we mark all the new buckets as gentile
-            markReceivedBuckets(buckets, toNode);
             // if the current node is sending node, we report an overload event happened
             reportTransfer(from);
+            // if the current node is receiving node, we mark all the new buckets as gentile
+            markReceivedBuckets(buckets, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onTransferring(buckets, from, toNode);
             }
@@ -287,7 +287,7 @@ public class FileTransferManager {
     private void markReceivedBuckets(List<Integer> buckets, PhysicalNode to) {
         if (mySelf.equals(to.getFullAddress())) {
             for (int bucket : buckets)
-                localFileManager.getGentiles().put(bucket, to.getFullAddress());
+                localFileManager.addGentile(bucket, to.getFullAddress());
         }
     }
 

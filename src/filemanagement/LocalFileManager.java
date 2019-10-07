@@ -4,10 +4,10 @@ import loadmanagement.LoadInfo;
 import util.Config;
 import util.MathX;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -15,7 +15,7 @@ public class LocalFileManager {
 
     private Map<Integer, FileBucket> localBuckets;
 
-    private Map<Integer, String> gentiles;
+    private Map<Integer, Gentile> gentiles;
 
     private BucketMigrateInfo migrateInfo;
 
@@ -33,7 +33,7 @@ public class LocalFileManager {
 
     private LocalFileManager() {
         localBuckets = new ConcurrentHashMap<>();
-        gentiles = new HashMap<>();
+        gentiles = new ConcurrentHashMap<>();
         numberOfMiss = 0;
         readOverhead = Config.getInstance().getReadOverhead();
         writeOverhead = Config.getInstance().getWriteOverhead();
@@ -71,7 +71,7 @@ public class LocalFileManager {
         }
     }
 
-    public Map<Integer, String> getGentiles() {
+    public Map<Integer, Gentile> getGentiles() {
         return gentiles;
     }
 
@@ -151,10 +151,10 @@ public class LocalFileManager {
             // migration info calculation
             if (gentiles.containsKey(bucket.getKey())) {
                 int key = bucket.getKey();
-                String nodeId = gentiles.get(key);
-                long load = gentileBucketMap.getOrDefault(nodeId, 0L) +
+                Gentile gentile = gentiles.get(key);
+                long load = gentileBucketMap.getOrDefault(gentile.getNodeId(), 0L) +
                         bucket.getLoad(readOverhead, writeOverhead, interval);
-                gentileBucketMap.put(nodeId, load);
+                gentileBucketMap.put(gentile.getNodeId(), load);
                 gentileBuckets.merge(bucket);
             }
             else {
@@ -184,10 +184,54 @@ public class LocalFileManager {
         newMigrateInfo.setCausedByGentile(newMigrateInfo.getOriginalBucketLoad() < lbUpperBound);
         migrateInfo = newMigrateInfo;
 
+        cleanupGentiles();
+
         return loadInfo;
     }
 
     public BucketMigrateInfo getMigrateInfo() {
         return migrateInfo;
+    }
+
+    public void addGentile(int bucket, String nodeId) {
+        Gentile gentile = new Gentile(nodeId);
+        gentiles.put(bucket, gentile);
+    }
+
+    public void cleanupGentiles() {
+        List<Integer> deadList = new ArrayList<>();
+        for (Map.Entry<Integer, Gentile> entry : gentiles.entrySet()) {
+            Gentile gentile = entry.getValue();
+            gentile.countDown();
+            if (gentile.getCounter() < 1) {
+                deadList.add(entry.getKey());
+            }
+        }
+
+        for (Integer key : deadList) {
+            gentiles.remove(key);
+        }
+    }
+
+    private static class Gentile {
+        private String nodeId;
+        private int counter;
+
+        public Gentile(String nodeId) {
+            this.nodeId = nodeId;
+            this.counter = 5;
+        }
+
+        public void countDown() {
+            this.counter--;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public int getCounter() {
+            return counter;
+        }
     }
 }
