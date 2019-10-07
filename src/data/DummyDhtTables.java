@@ -4,7 +4,7 @@ public enum DummyDhtTables {
     STAT_INFO ("statinfo"),
     LOAD_INFO("loadinfo"),
     HISTORICAL_LOAD_INFO("historicalloadinfo"),
-    MIGRATE_INFO("migrate");
+    MIGRATE_INFO("migrateinfo");
 
     private final String name;
 

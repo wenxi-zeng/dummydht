@@ -208,7 +208,7 @@ public class FileTransferManager {
             // if the current node is sending node, we report an overload event happened
             reportTransfer(from);
             // if the current node is receiving node, we mark all the new buckets as gentile
-            markReceivedBuckets(buckets, toNode);
+            markReceivedBuckets(buckets, from, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onTransferring(buckets, from, toNode);
             }
@@ -218,7 +218,7 @@ public class FileTransferManager {
     private void callFileReplicate(List<Integer> buckets, PhysicalNode from, PhysicalNode toNode) {
         if (isCompliedWithPolicy(from, toNode) && callBacks != null) {
             // if the current node is receiving node, we mark all the new buckets as gentile
-            markReceivedBuckets(buckets, toNode);
+            markReceivedBuckets(buckets, from, toNode);
             for (FileTransferRequestCallBack callBack : callBacks) {
                 callBack.onReplicating(buckets, from, toNode);
             }
@@ -262,10 +262,10 @@ public class FileTransferManager {
         }
     }
 
-    private void markReceivedBuckets(List<Integer> buckets, PhysicalNode to) {
+    private void markReceivedBuckets(List<Integer> buckets, PhysicalNode from, PhysicalNode to) {
         if (mySelf.equals(to.getFullAddress())) {
             for (int bucket : buckets)
-                localFileManager.addGentile(bucket, to.getFullAddress());
+                localFileManager.addGentile(bucket, from.getFullAddress());
         }
     }
 
