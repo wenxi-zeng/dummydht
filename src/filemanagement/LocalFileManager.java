@@ -219,7 +219,7 @@ public class LocalFileManager {
 
         public Gentile(String nodeId) {
             this.nodeId = nodeId;
-            this.counter = 5;
+            this.counter = 2;
         }
 
         public void countDown() {

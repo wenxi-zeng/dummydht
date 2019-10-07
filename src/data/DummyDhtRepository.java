@@ -21,6 +21,7 @@ public class DummyDhtRepository {
     private final String TABLE_STAT_INFO;
     private final String TABLE_LOAD_INFO;
     private final String TABLE_HISTORICAL_LOAD_INFO;
+    private final String TABLE_MIGRATE_INFO;
 
     private Connector connector;
 
@@ -47,6 +48,7 @@ public class DummyDhtRepository {
         TABLE_STAT_INFO = DummyDhtTables.STAT_INFO.getName();
         TABLE_LOAD_INFO = DummyDhtTables.LOAD_INFO.getName();
         TABLE_HISTORICAL_LOAD_INFO = DummyDhtTables.HISTORICAL_LOAD_INFO.getName();
+        TABLE_MIGRATE_INFO = DummyDhtTables.MIGRATE_INFO.getName();
 
         registerShutdownHook();
         executor.execute(this::consume);
@@ -153,7 +155,7 @@ public class DummyDhtRepository {
     private void insertMigrateInfo(BucketMigrateInfo info) {
         try {
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_STAT_INFO + " (node_id, original_load, gentiles_load, gentile_load_map, caused_by_gentile, report_time) " +
+                    "INSERT INTO " + TABLE_MIGRATE_INFO + " (node_id, original_load, gentiles_load, gentile_load_map, caused_by_gentile, report_time) " +
                             "VALUES (?, ?, ?, ? , ? , ?)");
             statement.setString(1, info.getNodeId());
             statement.setLong(2, info.getOriginalBucketLoad());
