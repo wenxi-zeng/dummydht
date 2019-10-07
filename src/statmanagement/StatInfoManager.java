@@ -74,6 +74,12 @@ public class StatInfoManager {
                 .withToken(request.getToken())
                 .withType(StatInfo.TYPE_EXECUTION)
                 .calcElapsed(receiveStamp);
+
+        try {
+            long size = Long.parseLong(request.getAttachment());
+            stat.setSize(size);
+        } catch (NumberFormatException ignored) {}
+
         stat.setElapsed(stat.getElapsed() + (long)request.getProcessTime());
         reporter.report(stat);
     }

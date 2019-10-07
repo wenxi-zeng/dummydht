@@ -184,12 +184,17 @@ public enum CommonCommand implements Command {
                         .map(Integer::valueOf)
                         .collect(Collectors.toList());
 
-                result = FileTransferManager.getInstance().transfer(
+                long sizeOfFilesTransferred = FileTransferManager.getInstance().transfer(
                             buckets,
                             new PhysicalNode(request.getSender()),
                             new PhysicalNode(request.getReceiver())
                         );
+                request.setAttachment(String.valueOf(sizeOfFilesTransferred));
+                result = "Message from : " + request.getSender()
+                        + ":\n         Transferring to " + request.getReceiver()
+                        + ",\n         Total size: " + sizeOfFilesTransferred;
 
+                SimpleLog.i(result);
                 return new Response(request)
                         .withStatus(Response.STATUS_SUCCESS)
                         .withAttachment(result);
@@ -238,12 +243,18 @@ public enum CommonCommand implements Command {
                         .map(Integer::valueOf)
                         .collect(Collectors.toList());
 
-                result = FileTransferManager.getInstance().copy(
+                long sizeOfFilesReplicated = FileTransferManager.getInstance().copy(
                         buckets,
                         new PhysicalNode(request.getSender()),
                         new PhysicalNode(request.getReceiver())
                 );
+                request.setAttachment(String.valueOf(sizeOfFilesReplicated));
 
+                result = "Message from : " + request.getSender()
+                        + ":\n         Transferring to " + request.getReceiver()
+                        + ",\n         Total size: " + sizeOfFilesReplicated;
+
+                SimpleLog.i(result);
                 return new Response(request)
                         .withStatus(Response.STATUS_SUCCESS)
                         .withAttachment(result);
