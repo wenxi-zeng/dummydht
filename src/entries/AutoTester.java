@@ -19,10 +19,11 @@ public class AutoTester {
     private int currentRequests;
     private int suffix;
     private final TestCallBack callBack = AutoTester.this::start;
-    // private static final String[] MODE_SCHEME = {"centralized-ring-1000", "centralized-elastic-100"};
-    private static final String[] MODE_SCHEME = {"distributed-ring-1000", "distributed-elastic-100"};
+    private static final String[] MODE_SCHEME = {"centralized-ring-1000", "centralized-elastic-100"};
+//    private static final String[] MODE_SCHEME = {"distributed-ring-1000", "distributed-elastic-100"};
     private static final int MODE_SCHEME_TAG_DIFF = 100000;
     private int modeCounter;
+    private String mode;
 
     public static void main(String[] args) {
         if (args.length < 3) {
@@ -47,6 +48,7 @@ public class AutoTester {
         this.currentTag = startTag;
         this.suffix = 0;
         this.modeCounter = 0;
+        this.mode = "centralized";
     }
 
     private void start() {
@@ -103,15 +105,18 @@ public class AutoTester {
                 await(cmd);
                 System.out.println("Daemons started...");
 
-//                cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_START_PROXY)};
-//                await(cmd);
-//                System.out.println("Proxy started...");
-//                Thread.sleep(5 * 1000);
-
-                cmd = new String[]{"java", "-jar", "dummydht.jar", "-n", "addnode", "192.168.29.150:50000"};
-                await(cmd);
-                System.out.println("Bootstrapping...");
-                Thread.sleep(10 * 1000);
+                if (mode.equals("centralized")) {
+                    cmd = new String[]{"/bin/sh", ResourcesLoader.getRelativeFileName(ScriptGenerator.FILE_START_PROXY)};
+                    await(cmd);
+                    System.out.println("Proxy started...");
+                    Thread.sleep(5 * 1000);
+                }
+                else {
+                    cmd = new String[]{"java", "-jar", "dummydht.jar", "-n", "addnode", "192.168.29.150:50000"};
+                    await(cmd);
+                    System.out.println("Bootstrapping...");
+                    Thread.sleep(10 * 1000);
+                }
 
                 System.out.println("Launch client...");
                 // RegularClient.main(new String[]{ "-r", ResourcesLoader.getParentDirOfProgramPath() + File.separator + "test" + File.separator + "full5.txt" });
