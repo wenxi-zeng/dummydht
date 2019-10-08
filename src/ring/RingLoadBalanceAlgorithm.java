@@ -7,6 +7,8 @@ import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
+import java.util.UUID;
+
 public class RingLoadBalanceAlgorithm {
 
     public void increaseLoad(LookupTable table, PhysicalNode node) {
@@ -18,6 +20,7 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
+        String token = UUID.randomUUID().toString();
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable successor = table.getTable().next(vnode);
             if (successor == null) {
@@ -29,7 +32,7 @@ public class RingLoadBalanceAlgorithm {
             int delta = MathX.nextInt(bound);
             int hf = (vnode.getHash() + delta) % Config.getInstance().getNumberOfHashSlots();
             SimpleLog.i("Increasing load for virtual node of " + node.toString() + ", delta h=" + delta);
-            increaseLoad(table, hf, vnode);
+            increaseLoad(table, hf, vnode, token);
         }
     }
 
@@ -42,9 +45,10 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
+        String token = UUID.randomUUID().toString();
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
-            increaseLoad(table, hashVal[i], vnode);
+            increaseLoad(table, hashVal[i], vnode, token);
         }
     }
 
@@ -57,6 +61,7 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
+        String token = UUID.randomUUID().toString();
         for (Indexable vnode : pnode.getVirtualNodes()) {
             Indexable predecessor = table.getTable().pre(vnode);
             if (predecessor == null) {
@@ -69,7 +74,7 @@ public class RingLoadBalanceAlgorithm {
             int hf = vnode.getHash() - delta;
             if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
             SimpleLog.i("Decreasing load for virtual node of " + node.toString() + ", delta h=" + delta);
-            decreaseLoad(table, hf, vnode);
+            decreaseLoad(table, hf, vnode, token);
         }
     }
 
@@ -82,9 +87,10 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
+        String token = UUID.randomUUID().toString();
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
             Indexable vnode = pnode.getVirtualNodes().get(i);
-            decreaseLoad(table, hashVal[i], vnode);
+            decreaseLoad(table, hashVal[i], vnode, token);
         }
     }
 
@@ -131,7 +137,7 @@ public class RingLoadBalanceAlgorithm {
         return hashVals;
     }
 
-    public void decreaseLoad(LookupTable table, int hf, Indexable node) {
+    public void decreaseLoad(LookupTable table, int hf, Indexable node, String token) {
         int hi = node.getHash();
 
         Indexable predecessor = table.getTable().pre(node);
@@ -145,7 +151,7 @@ public class RingLoadBalanceAlgorithm {
         }
 
         Indexable toNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
-        requestTransfer(table, hf, hi, node, toNode);   // transfer(start, end, from, to). (start, end]
+        requestTransfer(table, hf, hi, node, toNode, token);   // transfer(start, end, from, to). (start, end]
 
         // node.setHash(hf);
         table.getTable().get(node.getIndex()).setHash(hf);
@@ -153,7 +159,7 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Updated node info: " + node.toString());
     }
 
-    public void increaseLoad(LookupTable table, int hf, Indexable node) {
+    public void increaseLoad(LookupTable table, int hf, Indexable node, String token) {
         int hi = node.getHash();
 
         Indexable successor = table.getTable().next(node);
@@ -167,7 +173,7 @@ public class RingLoadBalanceAlgorithm {
         }
 
         Indexable fromNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
-        requestTransfer(table, hi, hf, fromNode, node); // requestTransfer(start, end, from, to). (start, end]
+        requestTransfer(table, hi, hf, fromNode, node, token); // requestTransfer(start, end, from, to). (start, end]
 
         // node.setHash(hf);
         table.getTable().get(node.getIndex()).setHash(hf);
@@ -182,11 +188,12 @@ public class RingLoadBalanceAlgorithm {
         Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas());
         Indexable endNode = table.getTable().next(startNode);
 
+        String token = UUID.randomUUID().toString();
         for (int i = 0; i < Config.getInstance().getNumberOfReplicas(); i++) {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 
-            requestTransfer(table, hi, hf, successor, node); // requestTransfer(start, end, from, to). (start, end]
+            requestTransfer(table, hi, hf, successor, node, token); // requestTransfer(start, end, from, to). (start, end]
 
             startNode = endNode;
             endNode = table.getTable().next(startNode);
@@ -239,10 +246,11 @@ public class RingLoadBalanceAlgorithm {
         }
     }
 
-    private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode) {
+    private void requestTransfer(LookupTable table, int hi, int hf, Indexable fromNode, Indexable toNode, String token) {
         SimpleLog.i("Request to transfer hash (" + hi + ", "+ hf + "] from " + fromNode.toString() + " to " + toNode.toString());
         String fromNodeId = ((VirtualNode)fromNode).getPhysicalNodeId();
         String toNodeId = ((VirtualNode)toNode).getPhysicalNodeId();
+        FileTransferManager.getInstance().setTransferToken(token);
         FileTransferManager.getInstance().requestTransfer(hi, hf, table.getPhysicalNodeMap().get(fromNodeId), table.getPhysicalNodeMap().get(toNodeId));
     }
 

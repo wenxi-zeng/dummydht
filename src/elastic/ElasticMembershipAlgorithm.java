@@ -6,10 +6,7 @@ import util.Config;
 import util.MathX;
 import util.SimpleLog;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class ElasticMembershipAlgorithm {
 
@@ -81,12 +78,13 @@ public class ElasticMembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
+        String token = UUID.randomUUID().toString();
         int[] bucketPool = generateSpareBuckets(table);
         for (int bucket : bucketPool) {
             BucketNode bucketNode = table.getTable()[bucket];
             node.getVirtualNodes().add(bucketNode);
 
-            table.transferBucket(bucketNode, node);
+            table.transferBucket(bucketNode, node, token);
         }
 
         SimpleLog.i("Physical node added...");
@@ -106,11 +104,12 @@ public class ElasticMembershipAlgorithm {
         SimpleLog.i("Adding new physical node: " + node.toString() + "...");
         table.getPhysicalNodeMap().put(node.getId(), node);
 
+        String token = UUID.randomUUID().toString();
         for (int bucket: buckets) {
             BucketNode bucketNode = table.getTable()[bucket];
             node.getVirtualNodes().add(bucketNode);
 
-            table.transferBucket(bucketNode, node);
+            table.transferBucket(bucketNode, node, token);
         }
 
         SimpleLog.i("Physical node added...");

@@ -29,7 +29,8 @@ public class BucketMigrateInfoManager {
         instance = null;
     }
 
-    public void record(BucketMigrateInfo migrateInfo) {
+    public void record(BucketMigrateInfo migrateInfo, String token) {
+        migrateInfo.setToken(token);
         reporter.report(migrateInfo);
     }
 }

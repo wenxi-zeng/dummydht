@@ -181,8 +181,8 @@ public class LookupTable extends Transportable implements Serializable {
         loadBalanceAlgorithm.copyBucket(this, node, to);
     }
 
-    public void transferBucket(BucketNode node, PhysicalNode to) {
-        loadBalanceAlgorithm.transferBucket(this, node, to);
+    public void transferBucket(BucketNode node, PhysicalNode to, String token) {
+        loadBalanceAlgorithm.transferBucket(this, node, to, token);
     }
 
     public List<PhysicalNode> lookup(String filename) {

@@ -25,10 +25,11 @@ public class CephLoadBalanceAlgorithm {
             transferTupleList = computeTransferTuples(map, map.getSelf());
         }
 
+        String token = UUID.randomUUID().toString();
         for (Tuple tuple : transferTupleList) {
             tuple.from.getVirtualNodes().removeAll(tuple.placementGroup);
             tuple.to.getVirtualNodes().addAll(tuple.placementGroup);
-            requestTransfer(tuple.placementGroup, tuple.from, tuple.to);
+            requestTransfer(tuple.placementGroup, tuple.from, tuple.to, token);
         }
 
         // no need to invoke TableChangedHandler().onFinished(),
@@ -208,13 +209,14 @@ public class CephLoadBalanceAlgorithm {
         // start load balancing and file transfer according to updated map
     }
 
-    private void requestTransfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode) {
+    private void requestTransfer(List<Indexable> placementGroups, PhysicalNode fromNode, PhysicalNode toNode, String token) {
         StringBuilder result = new StringBuilder();
 
         for (Indexable pg : placementGroups)
             result.append(pg.getDisplayId()).append(' ');
 
         SimpleLog.i("Transfer placement groups: " + result.toString() + "from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().setTransferToken(token);
         FileTransferManager.getInstance().requestTransfer(
                 placementGroups.stream().map(Indexable::getHash).collect(Collectors.toList()),
                 fromNode,

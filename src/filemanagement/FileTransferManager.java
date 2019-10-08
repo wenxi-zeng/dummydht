@@ -5,10 +5,7 @@ import commonmodels.PhysicalNode;
 import util.Config;
 import util.SimpleLog;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class FileTransferManager {
 
@@ -22,10 +19,13 @@ public class FileTransferManager {
 
     private String mySelf;
 
+    private String transferToken;
+
     private FileTransferManager() {
         localFileManager = LocalFileManager.getInstance();
         callBacks = new ArrayList<>();
         policy = FileTransferPolicy.All;
+        transferToken = "";
     }
 
     public static FileTransferManager getInstance() {
@@ -183,6 +183,10 @@ public class FileTransferManager {
         callFileReplicate(buckets, from ,toNode);
     }
 
+    public void setTransferToken(String token) {
+        transferToken = token;
+    }
+
     private List<Integer> rangeToList(int hi, int hf) {
         List<Integer> buckets = new ArrayList<>();
 
@@ -271,7 +275,7 @@ public class FileTransferManager {
 
     private void reportTransfer(PhysicalNode from) {
         if (mySelf.equals(from.getFullAddress()))
-            BucketMigrateInfoManager.getInstance().record(localFileManager.getMigrateInfo());
+            BucketMigrateInfoManager.getInstance().record(localFileManager.getMigrateInfo(), transferToken);
     }
 
     public enum FileTransferPolicy {

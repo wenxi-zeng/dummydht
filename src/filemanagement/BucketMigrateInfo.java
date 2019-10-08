@@ -18,6 +18,8 @@ public class BucketMigrateInfo implements Queueable {
 
     private boolean causedByGentile;
 
+    private String token;
+
     private long timestamp;
 
     public BucketMigrateInfo(String nodeId) {
@@ -83,5 +85,13 @@ public class BucketMigrateInfo implements Queueable {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

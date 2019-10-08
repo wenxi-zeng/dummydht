@@ -8,6 +8,7 @@ import util.SimpleLog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public class ElasticLoadBalanceAlgorithm {
 
@@ -40,7 +41,8 @@ public class ElasticLoadBalanceAlgorithm {
         node.getPhysicalNodes().add(toNode.getId());
         toNode.getVirtualNodes().add(node);
 
-        requestTransfer(node, from ,to);
+        String token = UUID.randomUUID().toString();
+        requestTransfer(node, from ,to, token);
 
         SimpleLog.i("Moving bucket [" + node.getHash() + "] from " + from.getId() + " to " + to.getId());
         SimpleLog.i("Updated bucket info: " + node.toString());
@@ -63,6 +65,7 @@ public class ElasticLoadBalanceAlgorithm {
             return;
         }
 
+        String token = UUID.randomUUID().toString();
         List<Integer> bucketsToTransfer = new ArrayList<>();
         for (BucketNode bucketNode : nodes) {
             if (!fromNode.getVirtualNodes().contains(bucketNode)){
@@ -82,7 +85,7 @@ public class ElasticLoadBalanceAlgorithm {
             bucketsToTransfer.add(bucketNode.getHash());
         }
 
-        requestTransfer(bucketsToTransfer, from ,to);
+        requestTransfer(bucketsToTransfer, from ,to, token);
 
         SimpleLog.i("Moving buckets [" + nodes + "] from " + from.getId() + " to " + to.getId());
         SimpleLog.i("Updated buckets info: " + nodes.toString());
@@ -98,12 +101,13 @@ public class ElasticLoadBalanceAlgorithm {
                 to);
     }
 
-    public void transferBucket(LookupTable lookupTable, BucketNode node, PhysicalNode to) {
+    public void transferBucket(LookupTable lookupTable, BucketNode node, PhysicalNode to, String token) {
         Random random = new Random();
         int index = random.nextInt(node.getPhysicalNodes().size());
         requestTransfer(node,
                 lookupTable.getPhysicalNodeMap().get(node.getPhysicalNodes().get(index)),
-                to);
+                to,
+                token);
         node.getPhysicalNodes().remove(index);
         node.getPhysicalNodes().add(to.getId());
     }
@@ -134,6 +138,7 @@ public class ElasticLoadBalanceAlgorithm {
         }
         int newSize = table.getTable().length / 2;
 
+        String token = UUID.randomUUID().toString();
         for (int i = 0; i< newSize; i++) {
             for (String nodeId : table.getTable()[newSize + i].getPhysicalNodes()) {
                 if (table.getTable()[i].getPhysicalNodes().contains(nodeId)) continue;
@@ -141,7 +146,8 @@ public class ElasticLoadBalanceAlgorithm {
                 for (String targetId : table.getTable()[i].getPhysicalNodes()) {
                     requestTransfer(table.getTable()[newSize + i],
                             table.getPhysicalNodeMap().get(nodeId),
-                            table.getPhysicalNodeMap().get(targetId));
+                            table.getPhysicalNodeMap().get(targetId),
+                            token);
                 }
             }
         }
@@ -150,13 +156,15 @@ public class ElasticLoadBalanceAlgorithm {
         SimpleLog.i("Table shrank.");
     }
 
-    private void requestTransfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode) {
+    private void requestTransfer(BucketNode node, PhysicalNode fromNode, PhysicalNode toNode, String token) {
         SimpleLog.i("Request to transfer hash bucket [" + node.getHash() + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().setTransferToken(token);
         FileTransferManager.getInstance().requestTransfer(node.getHash(), fromNode, toNode);
     }
 
-    private void requestTransfer(List<Integer> nodes, PhysicalNode fromNode, PhysicalNode toNode) {
+    private void requestTransfer(List<Integer> nodes, PhysicalNode fromNode, PhysicalNode toNode, String token) {
         SimpleLog.i("Request to transfer hash bucket [" + nodes + "] from " + fromNode.toString() + " to " + toNode.toString());
+        FileTransferManager.getInstance().setTransferToken(token);
         FileTransferManager.getInstance().requestTransfer(nodes, fromNode, toNode);
     }
 
