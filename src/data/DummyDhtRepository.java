@@ -155,7 +155,7 @@ public class DummyDhtRepository {
     private void insertMigrateInfo(BucketMigrateInfo info) {
         try {
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + TABLE_MIGRATE_INFO + " (node_id, original_load, gentiles_load, gentile_load_map, caused_by_gentile, report_time, token, tag) " +
+                    "INSERT INTO " + TABLE_MIGRATE_INFO + " (node_id, original_load, gentiles_load, gentile_load_map, caused_by_gentile, report_time, entry_token, tag) " +
                             "VALUES (?, ?, ?, ? , ? , ?, ?, ?)");
             statement.setString(1, info.getNodeId());
             statement.setLong(2, info.getOriginalBucketLoad());

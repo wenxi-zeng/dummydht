@@ -152,7 +152,9 @@ public class SQLiteConnector implements Connector{
                 "            gentiles_load INTEGER,\n" +
                 "            gentile_load_map TEXT,\n" +
                 "            caused_by_gentile TEXT,\n" +
-                "            report_time INTEGER\n" +
+                "            report_time INTEGER,\n" +
+                "            entry_token TEXT,\n" +
+                "            tag INTEGER\n" +
                 ");";
 
         try{
