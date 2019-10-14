@@ -92,7 +92,8 @@ public class SQLiteConnector implements Connector{
                 "            number_of_miss INTEGER,\n" +
                 "            number_of_lock_conflicts INTEGER,\n" +
                 "            number_of_hits INTEGER,\n" +
-                "            tag INTEGER\n" +
+                "            tag INTEGER,\n" +
+                "            serial_number INTEGER\n" +
                 ");";
 
         try{
@@ -114,7 +115,8 @@ public class SQLiteConnector implements Connector{
                 "            number_of_miss INTEGER,\n" +
                 "            number_of_lock_conflicts INTEGER,\n" +
                 "            number_of_hits INTEGER,\n" +
-                "            tag INTEGER\n" +
+                "            tag INTEGER,\n" +
+                "            serial_number INTEGER\n" +
                 ");";
 
         try{

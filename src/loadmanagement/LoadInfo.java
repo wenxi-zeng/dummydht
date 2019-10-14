@@ -30,6 +30,8 @@ public class LoadInfo extends Transportable implements Serializable, Queueable
 
     private transient boolean loadBalancing = false;
 
+    private transient int serialNumber;
+
     public final static int LEVEL_LIGHT = 0;
     public final static int LEVEL_MEDIAN_LIGHT = 1;
     public final static int LEVEL_VERY_LIGHT = 2;
@@ -189,6 +191,14 @@ public class LoadInfo extends Transportable implements Serializable, Queueable
 
     public void setLoadBalancing(boolean loadBalancing) {
         this.loadBalancing = loadBalancing;
+    }
+
+    public int getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(int serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public long getLoad() {

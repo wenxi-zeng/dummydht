@@ -113,8 +113,8 @@ public class DummyDhtRepository {
         try {
             String table = info.isConsolidated() ? TABLE_HISTORICAL_LOAD_INFO : TABLE_LOAD_INFO;
             PreparedStatement statement = session.prepareStatement(
-                    "INSERT INTO " + table + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load, tag) " +
-                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?, ?)");
+                    "INSERT INTO " + table + " (report_time, node_id, file_load, number_of_hits, number_of_lock_conflicts, number_of_miss, read_load, size_of_files, write_load, tag, serial_number) " +
+                            "VALUES (?, ?, ?, ? , ? , ?, ?, ?, ?, ?, ?)");
             statement.setTimestamp(1, new Timestamp(info.getReportTime()));
             statement.setString(2, info.getNodeId());
             statement.setLong(3, info.getFileLoad());
@@ -125,6 +125,7 @@ public class DummyDhtRepository {
             statement.setLong(8, info.getSizeOfFiles());
             statement.setLong(9, info.getWriteLoad());
             statement.setInt(10, tag);
+            statement.setLong(11, info.getSerialNumber());
 
             statement.executeUpdate();
         } catch (SQLException e) {
