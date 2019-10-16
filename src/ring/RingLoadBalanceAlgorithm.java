@@ -150,7 +150,7 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
-        Indexable toNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas() - 1);
+        Indexable toNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hf, hi, node, toNode, token);   // transfer(start, end, from, to). (start, end]
 
         // node.setHash(hf);
@@ -172,7 +172,7 @@ public class RingLoadBalanceAlgorithm {
             return;
         }
 
-        Indexable fromNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas() - 1);
+        Indexable fromNode = table.getTable().get(node.getIndex() + Config.getInstance().getNumberOfReplicas());
         requestTransfer(table, hi, hf, fromNode, node, token); // requestTransfer(start, end, from, to). (start, end]
 
         // node.setHash(hf);
@@ -185,11 +185,11 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Adding virtual node [hash=" + node.getHash() + "] for " + ((VirtualNode)node).getPhysicalNodeId());
 
         Indexable successor = table.getTable().next(node);
-        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas() + 1);
+        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas());
         Indexable endNode = table.getTable().next(startNode);
 
         String token = UUID.randomUUID().toString();
-        for (int i = 0; i < Config.getInstance().getNumberOfReplicas() - 1; i++) {
+        for (int i = 0; i < Config.getInstance().getNumberOfReplicas(); i++) {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 
@@ -208,10 +208,10 @@ public class RingLoadBalanceAlgorithm {
 
         Indexable successor = table.getTable().get(node.getIndex());
         Indexable predecessor = table.getTable().pre(successor);
-        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas() + 1);
+        Indexable startNode = table.getTable().get(node.getIndex() - Config.getInstance().getNumberOfReplicas());
         Indexable endNode = table.getTable().next(startNode);
 
-        for (int i = 0; i < Config.getInstance().getNumberOfReplicas() - 1; i++) {
+        for (int i = 0; i < Config.getInstance().getNumberOfReplicas(); i++) {
             int hi = startNode.getHash();
             int hf = endNode.getHash();
 

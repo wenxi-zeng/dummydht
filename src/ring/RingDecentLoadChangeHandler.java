@@ -20,7 +20,7 @@ public class RingDecentLoadChangeHandler extends RingLoadChangeHandler {
         PhysicalNode node = new PhysicalNode(loadInfoList.get(0).getNodeId());
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         if (pnode == null) return false;
-        Indexable targetNode = table.getTable().get(curr.getIndex() + Config.getInstance().getNumberOfReplicas() - 1);
+        Indexable targetNode = table.getTable().get(curr.getIndex() + Config.getInstance().getNumberOfReplicas());
 
         for (Indexable vnode : pnode.getVirtualNodes()) {
             if (vnode.getIndex() == targetNode.getIndex())
