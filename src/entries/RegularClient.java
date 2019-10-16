@@ -16,6 +16,8 @@ import req.RequestService;
 import req.RequestThread;
 import req.StaticTree;
 import req.gen.SequentialRequestGenerator;
+import req.rand.RandomGenerator;
+import req.rand.UniformGenerator;
 import ring.RingTerminal;
 import socket.SocketClient;
 import util.Config;
@@ -71,11 +73,11 @@ public class RegularClient {
         }
         else if (args[0].equals("-r")) {
             if (args.length >= 2) {
-                RequestGenerator generator = regularClient.getGenerator(args[1]);
-                regularClient.launchRequestGenerator(args, generator);
+                RequestGenerator generator = regularClient.getGenerator(args[1], args[2]);
+                regularClient.launchRequestGenerator(generator);
             }
             else {
-                System.out.println ("Usage: RegularClient -r <filename> [number of requests]");
+                System.out.println ("Usage: RegularClient -r <filename> [rank filename]");
             }
         }
         else if (args[0].equals("-f")) {
@@ -89,10 +91,18 @@ public class RegularClient {
         else if (args[0].equals("-s")) {
             if (args.length >= 2) {
                 RequestGenerator generator = regularClient.getSequentialGenerator(args[1]);
-                regularClient.launchRequestGenerator(args, generator);
+                regularClient.launchRequestGenerator(generator);
             }
             else {
                 System.out.println ("Usage: RegularClient -r <filename>");
+            }
+        }
+        else if (args[0].equals("-z")) {
+            if (args.length >= 2) {
+                regularClient.launchRankFileGenerator(args);
+            }
+            else {
+                System.out.println ("Usage: RegularClient -r <filename> <rank filename>");
             }
         }
         else {
@@ -174,7 +184,7 @@ public class RegularClient {
         connect(address);
     }
 
-    private void launchRequestGenerator(String[] args, RequestGenerator generator) {
+    private void launchRequestGenerator(RequestGenerator generator) {
         run(new SocketClient.ServerCallBack() {
             @Override
             public void onResponse(Request request, Response response) {
@@ -182,8 +192,6 @@ public class RegularClient {
                     onTableUpdated(response.getAttachment());
                     int numOfRequests = Config.getInstance().getNumberOfRequests();
                     int delayToStopAll = Config.getInstance().getDelayToStopAll();
-                    if (args.length >= 3) numOfRequests = Integer.valueOf(args[2]);
-                    if (args.length == 4) delayToStopAll = Integer.valueOf(args[3]);
                     generateRequest(generator, numOfRequests, delayToStopAll);
                 }
             }
@@ -197,6 +205,10 @@ public class RegularClient {
 
     private void launchFileRequestGenerator(String[] args) {
         generateRequestFile(args[1], args[2], Config.getInstance().getNumberOfRequests());
+    }
+
+    private void launchRankFileGenerator(String[] args) {
+        generateRankFile(args[1], args[2]);
     }
 
     private void connect() {
@@ -249,10 +261,12 @@ public class RegularClient {
         terminal.destroy();
     }
 
-    private RequestGenerator getGenerator(String filename) {
+    private RequestGenerator getGenerator(String filename, String rankFile) {
         StaticTree tree;
         try {
             tree = StaticTree.getStaticTree(filename);
+            if (rankFile != null)
+                tree.shuffleFilesUneven(rankFile);
             return new ClientRequestGenerator(tree, terminal);
         } catch (IOException e) {
             System.out.println("Failed to load file");
@@ -298,6 +312,27 @@ public class RegularClient {
             onFinished();
             wr.close();
             bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
+
+    private void generateRankFile(String filename, String fileOut) {
+        try (Writer out = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(fileOut), "UTF-8"))) {
+            StaticTree tree = StaticTree.getStaticTree(filename);
+            RandomGenerator uniform = new UniformGenerator();
+            for (int i = 0; i < tree.getFileSize(); ++i) {
+                List<Integer> order = new ArrayList<>();
+                for (int j = 1; j < 10; ++j) order.add(j);
+                StaticTree.plainShuffle(order, uniform);
+                int find = uniform.nextInt(6) + 1; //  1~6
+                List list = order.subList(0, find);
+                String lstring = list.toString();
+
+                out.write(lstring.substring(1, lstring.length() - 1) + "\n");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
