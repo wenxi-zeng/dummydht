@@ -155,13 +155,16 @@ public class StaticTree{
         List<K> l=new ArrayList<>(set);
         K chosen=l.get(generator.nextInt(l.size()));
         List<T> removeList=new ArrayList<>();
+        List<T> keepList=new ArrayList<>();
         for(int i=0;i<weight.size();++i){
             if(weight.get(i).contains(chosen)) removeList.add(list.get(i));
+            else keepList.add(list.get(i));
         }
-        list.removeAll(removeList);
-        plainShuffle(list,generator);
+        list.clear();
+        plainShuffle(keepList,generator);
         plainShuffle(removeList,generator);
-        list.addAll(0,removeList);
+        list.addAll(removeList);
+        list.addAll(keepList);
     }
 
     static public List<Integer> parseShuffle(String file) throws IOException{

@@ -73,7 +73,7 @@ public class RegularClient {
         }
         else if (args[0].equals("-r")) {
             if (args.length >= 2) {
-                RequestGenerator generator = regularClient.getGenerator(args[1], args[2]);
+                RequestGenerator generator = regularClient.getGenerator(args[1], args.length >= 3 ? args[2] : null);
                 regularClient.launchRequestGenerator(generator);
             }
             else {
@@ -267,6 +267,7 @@ public class RegularClient {
             tree = StaticTree.getStaticTree(filename);
             if (rankFile != null)
                 tree.shuffleFilesUneven(rankFile);
+            System.out.println("tree size: " + tree.getFileSize());
             return new ClientRequestGenerator(tree, terminal);
         } catch (IOException e) {
             System.out.println("Failed to load file");
