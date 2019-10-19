@@ -152,7 +152,7 @@ public abstract class DataNode {
     }
 
     public LoadChangeHandler getLoadChangeHandler() {
-        return new LoadChangeHandlerFactory().getHandler(mode, Config.getInstance().getScheme(), getTable());
+        return new LoadChangeHandlerFactory().getHandler(mode, Config.getInstance().getScheme(), Config.getInstance().useVNode(), getTable());
     }
 
     public TableChangedHandler getTableChangedHandler() {
