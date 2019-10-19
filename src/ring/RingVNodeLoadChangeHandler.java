@@ -1,5 +1,6 @@
 package ring;
 
+import commands.RingCommand;
 import commonmodels.Indexable;
 import commonmodels.LoadChangeHandler;
 import commonmodels.PhysicalNode;
@@ -38,39 +39,14 @@ public class RingVNodeLoadChangeHandler implements LoadChangeHandler {
         List<LoadInfo> sortedTargets = sortTargets(globalLoad, loadInfo, lowerBound, upperBound);
         if (sortedTargets == null) return null;
 
-        for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
-            Indexable vnode = pnode.getVirtualNodes().get(i);
-            Indexable predecessor = table.getTable().pre(vnode);
-            Solution solution = evaluate(loadInfo, predecessor, vnode, target);
-
-            if (bestSolution == null || solution.getResultLoad() < bestSolution.getResultLoad())
-                bestSolution = solution;
-        }
-        List<FileBucket> temp = new ArrayList<>();
-        for (FileBucket bucket : loadInfo.getBucketInfoList()) {
-            double load = getLoad(bucket);
-            if (load > 0 && load < upperBound) // filter empty buckets and overloaded buckets
-                temp.add(bucket);
-        }
-        FileBucket[] fileBuckets = new FileBucket[temp.size()];
-        fileBuckets = temp.toArray(fileBuckets);
-        Arrays.sort(fileBuckets, (o1, o2) -> -1 * Double.compare(getLoad(o1), getLoad(o2)));
-
         long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
-        List<Solution> solutions = evaluate(sortedTargets, loadInfo, fileBuckets, target, upperBound);
+        List<Solution> solutions = evaluate(sortedTargets, loadInfo, pnode.getVirtualNodes(), target, upperBound);
         List<Request> requests = new ArrayList<>();
         if (solutions != null) {
-            if (solutions.size() < 1) {
-                requests.add(new Request()
-                        .withHeader(ElasticCommand.EXPAND.name())
-                        .withAttachment(String.valueOf(table.getTable().length * 2)));
-            }
-            else {
-                for (Solution solution : solutions) {
-                    requests.add(new Request().withHeader(ElasticCommand.MOVEBUCKET.name())
-                            .withReceiver(loadInfo.getNodeId())
-                            .withAttachment(loadInfo.getNodeId() + " " + solution.getTargetNodeId() + " " + StringUtils.join(solution.getVnodes(), ',')));
-                }
+            for (Solution solution : solutions) {
+                requests.add(new Request().withHeader(RingCommand.MOVEVNODE.name())
+                        .withReceiver(loadInfo.getNodeId())
+                        .withAttachment(loadInfo.getNodeId() + " " + solution.getTargetNodeId() + " " + StringUtils.join(solution.getVnodes(), ',')));
             }
         }
 
