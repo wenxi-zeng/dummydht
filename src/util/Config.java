@@ -48,6 +48,7 @@ public class Config {
     private final static String PROPERTY_GOSSIP_STRATEGY = "gossip_strategy";
     private final static String PROPERTY_NUMBER_OF_GOSSIP_NEIGHBORS = "number_of_gossip_neighbor";
     private final static String PROPERTY_TABLE_DELTA_SIZE = "table_delta_size";
+    private final static String PROPERTY_USE_VNODE = "use_vnode";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -335,5 +336,9 @@ public class Config {
 
     public int getDelayToStopAll() {
         return Integer.valueOf(rb.getString(PROPERTY_DELAY_TO_STOP_ALL));
+    }
+
+    public boolean useVNode() {
+        return Boolean.valueOf(rb.getString(PROPERTY_USE_VNODE));
     }
 }
