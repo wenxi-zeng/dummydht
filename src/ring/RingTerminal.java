@@ -20,6 +20,7 @@ public class RingTerminal implements Terminal {
         tableChangeCommand.add(RingCommand.REMOVENODE.name());
         tableChangeCommand.add(RingCommand.INCREASELOAD.name());
         tableChangeCommand.add(RingCommand.DECREASELOAD.name());
+        tableChangeCommand.add(RingCommand.MOVEVNODE.name());
     }
 
     @Override
@@ -40,7 +41,7 @@ public class RingTerminal implements Terminal {
                 RingCommand.ADDNODE.getHelpString() + "\n" +
                 RingCommand.REMOVENODE.getHelpString() + "\n" +
                 RingCommand.INCREASELOAD.getHelpString() + "\n" +
-                RingCommand.DECREASELOAD.getHelpString() + "\n" +
+                RingCommand.MOVEVNODE.getHelpString() + "\n" +
                 RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n");
     }

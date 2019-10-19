@@ -195,6 +195,11 @@ public class LookupTable extends Transportable implements Serializable {
         update(); // commit the change, gossip to other nodes
     }
 
+    public void moveVNode(VirtualNode node, PhysicalNode from , PhysicalNode to) {
+        ((RingVNodeLoadBalanceAlgorithm)loadBalanceAlgorithm).moveVNode(this, node, from, to);
+        update(); // commit the change, gossip to other nodes
+    }
+
     public List<PhysicalNode> lookup(String filename) {
         return readWriteAlgorithm.lookup(this, filename);
     }

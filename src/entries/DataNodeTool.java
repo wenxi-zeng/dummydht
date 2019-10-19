@@ -227,6 +227,7 @@ public class DataNodeTool {
                 RingCommand.REMOVENODE.getHelpString() + "\n" +
                 RingCommand.INCREASELOAD.getHelpString() + "\n" +
                 RingCommand.DECREASELOAD.getHelpString() + "\n" +
+                RingCommand.MOVEVNODE.getHelpString() + "\n" +
                 RingCommand.LISTPHYSICALNODES.getHelpString() + "\n" +
                 RingCommand.PRINTLOOKUPTABLE.getHelpString() + "\n";
     }

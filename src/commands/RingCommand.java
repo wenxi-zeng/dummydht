@@ -10,6 +10,7 @@ import filemanagement.FileBucket;
 import filemanagement.LocalFileManager;
 import org.apache.commons.lang3.StringUtils;
 import ring.LookupTable;
+import ring.VirtualNode;
 import util.Config;
 import util.MathX;
 import util.SimpleLog;
@@ -415,6 +416,55 @@ public enum RingCommand implements Command {
             return String.format(getParameterizedString(), "<ip>", "<port>");
         }
 
+    },
+
+    MOVEVNODE{
+        @Override
+        public Request convertToRequest(String[] args) throws InvalidRequestException {
+            if (args.length != 4)  {
+                throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
+            }
+
+            String[] address1 = args[1].split(":");
+            String[] address2 = args[2].split(":");
+
+            if (address1.length != 2 || address2.length != 2) {
+                throw new InvalidRequestException("Invalid ip format. Try: " + getHelpString());
+            }
+
+            String attachment = args[1] + " " + args[2] + " " + args[3];
+            return new Request().withHeader(RingCommand.MOVEVNODE.name())
+                    .withAttachment(attachment);
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+
+            String[] args = request.getAttachment().split(" ");
+
+            String[] address1 = args[0].split(":");
+            String[] address2 = args[1].split(":");
+            int hash = Integer.parseInt(args[2]);
+
+            PhysicalNode from = new PhysicalNode(address1[0], Integer.parseInt(address1[1]));
+            PhysicalNode to = new PhysicalNode(address2[0], Integer.parseInt(address2[1]));
+            VirtualNode vnode = new VirtualNode(hash, from.getId());
+            LookupTable.getInstance().moveVNode(vnode, from , to);
+
+            result = "vnode moved";
+            return new Response(request).withStatus(Response.STATUS_SUCCESS).withMessage(result);
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return MOVEVNODE.MOVEVNODE.name() + " %s:%s %s:%s %s";
+        }
+
+        @Override
+        public String getHelpString() {
+            return String.format(getParameterizedString(), "<from ip>", "<port>", "<to ip>", "<port>", "<vnode>");
+        }
     },
 
     LISTPHYSICALNODES {
