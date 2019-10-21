@@ -67,4 +67,17 @@ public class VirtualNode extends Transportable implements Indexable {
                 ", physicalNodeId='" + physicalNodeId + '\'' +
                 '}';
     }
+
+    @Override
+    public int hashCode() {
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof VirtualNode)
+            return this.hashCode() == obj.hashCode();
+        else
+            return false;
+    }
 }

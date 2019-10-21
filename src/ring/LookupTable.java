@@ -20,6 +20,8 @@ public class LookupTable extends Transportable implements Serializable {
 
     private transient RingLoadBalanceAlgorithm loadBalanceAlgorithm;
 
+    private transient RingVNodeLoadBalanceAlgorithm vNodeLoadBalanceAlgorithm;
+
     private transient RingMembershipAlgorithm membershipAlgorithm;
 
     private transient RingReadWriteAlgorithm readWriteAlgorithm;
@@ -39,6 +41,7 @@ public class LookupTable extends Transportable implements Serializable {
 
         membershipAlgorithm = new RingMembershipAlgorithm();
         loadBalanceAlgorithm = new RingLoadBalanceAlgorithm();
+        vNodeLoadBalanceAlgorithm = new RingVNodeLoadBalanceAlgorithm();
         readWriteAlgorithm = new RingReadWriteAlgorithm();
     }
 
@@ -196,7 +199,7 @@ public class LookupTable extends Transportable implements Serializable {
     }
 
     public void moveVNode(VirtualNode node, PhysicalNode from , PhysicalNode to) {
-        ((RingVNodeLoadBalanceAlgorithm)loadBalanceAlgorithm).moveVNode(this, node, from, to);
+        vNodeLoadBalanceAlgorithm.moveVNode(this, node, from, to);
         update(); // commit the change, gossip to other nodes
     }
 

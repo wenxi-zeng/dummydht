@@ -418,6 +418,8 @@ public class ScriptGenerator {
         nodes.add(config.getStatServer().substring(0, config.getStatServer().indexOf(':')));
         nodes.add(config.getDataServer().substring(0, config.getDataServer().indexOf(':')));
         nodes.add(config.getRequestClient().substring(0, config.getRequestClient().indexOf(':')));
+        for (String seed : config.getSeeds())
+            nodes.add(seed.substring(0, seed.indexOf(':')));
 
         return nodes;
     }

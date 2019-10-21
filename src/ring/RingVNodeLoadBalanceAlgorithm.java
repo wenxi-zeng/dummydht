@@ -12,6 +12,7 @@ public class RingVNodeLoadBalanceAlgorithm extends RingLoadBalanceAlgorithm {
     public void moveVNode(LookupTable lookupTable, VirtualNode node, PhysicalNode from, PhysicalNode to) {
         SimpleLog.i("Moving vnode [" + node.getHash() + "] from " + from.getId() + " to " + to.getId());
 
+        node = (VirtualNode) lookupTable.getTable().findNode(node);
         PhysicalNode fromNode = lookupTable.getPhysicalNodeMap().get(from.getId());
         if (fromNode == null) {
             SimpleLog.i(from.getId() + " does not exist.");
