@@ -49,6 +49,7 @@ public class Config {
     private final static String PROPERTY_NUMBER_OF_GOSSIP_NEIGHBORS = "number_of_gossip_neighbor";
     private final static String PROPERTY_TABLE_DELTA_SIZE = "table_delta_size";
     private final static String PROPERTY_USE_VNODE = "use_vnode";
+    private final static String PROPERTY_MAX_LOOK_FORWARD = "max_look_forward";
 
     public final static String STATUS_ACTIVE = "active";
     public final static String STATUS_INACTIVE = "inactive";
@@ -340,5 +341,9 @@ public class Config {
 
     public boolean useVNode() {
         return Boolean.valueOf(rb.getString(PROPERTY_USE_VNODE));
+    }
+
+    public int getMaxLookForward() {
+        return Integer.valueOf(rb.getString(PROPERTY_MAX_LOOK_FORWARD));
     }
 }

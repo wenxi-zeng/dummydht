@@ -19,11 +19,11 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
     protected final LookupTable table;
 
-    private float readOverhead;
+    protected float readOverhead;
 
-    private float writeOverhead;
+    protected float writeOverhead;
 
-    private long interval;
+    protected long interval;
 
     public RingLoadChangeHandler(LookupTable table) {
         this.table = table;
@@ -54,22 +54,8 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
         if (bestSolution == null) return null;
 
-        List<Integer> hashList = new ArrayList<>();
-        for (Indexable vnode : pnode.getVirtualNodes()) {
-            if (vnode.getHash() == bestSolution.getVnodeHash()) {
-                int hf = vnode.getHash() - bestSolution.getDelta();
-                if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
-                hashList.add(hf);
-            }
-            else {
-                hashList.add(vnode.getHash());
-            }
-        }
-
         List<Request> requests = new ArrayList<>();
-        requests.add(new Request().withHeader(RingCommand.DECREASELOAD.name())
-                .withReceiver(loadInfo.getNodeId())
-                .withAttachments(loadInfo.getNodeId(), StringUtils.join(hashList, ',')));
+        requests.add(generateRequestBasedOnSolution(pnode, bestSolution));
         return requests;
     }
 
@@ -87,8 +73,26 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         return true;
     }
 
-    private Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long target) {
-        Solution solution = new Solution(loadInfo.getLoad(), current.getHash());
+    protected Request generateRequestBasedOnSolution(PhysicalNode pnode, Solution solution) {
+        List<Integer> hashList = new ArrayList<>();
+        for (Indexable vnode : pnode.getVirtualNodes()) {
+            if (vnode.getHash() == solution.getVnodeHash()) {
+                int hf = vnode.getHash() - solution.getDelta();
+                if (hf < 0) hf = Config.getInstance().getNumberOfHashSlots() + hf;
+                hashList.add(hf);
+            }
+            else {
+                hashList.add(vnode.getHash());
+            }
+        }
+
+        return new Request().withHeader(RingCommand.DECREASELOAD.name())
+                .withReceiver(pnode.getFullAddress())
+                .withAttachments(pnode.getFullAddress(), StringUtils.join(hashList, ','));
+    }
+
+    protected Solution evaluate(LoadInfo loadInfo, Indexable predecessor, Indexable current, long target) {
+        Solution solution = new Solution(loadInfo.getLoad(), current.getHash(), loadInfo.getNodeId());
         Map<Integer, FileBucket> map = loadInfo.getBucketInfoList().stream().collect(
                 Collectors.toMap(FileBucket::getKey, bucket -> bucket, FileBucket::merge));
 
@@ -119,17 +123,19 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
         }
     }
 
-    private class Solution {
+    protected static class Solution {
         private List<Integer> buckets;
         private long resultLoad;
         private int delta;
         private int vnodeHash;
+        private String nodeId;
 
-        public Solution(long initLoad, int vnodeHash) {
+        public Solution(long initLoad, int vnodeHash, String nodeId) {
             buckets = new ArrayList<>();
             resultLoad = initLoad;
             delta = 0;
             this.vnodeHash = vnodeHash;
+            this.nodeId = nodeId;
         }
 
         public List<Integer> getBuckets() {
@@ -162,6 +168,14 @@ public class RingLoadChangeHandler implements LoadChangeHandler {
 
         public void setVnodeHash(int vnodeHash) {
             this.vnodeHash = vnodeHash;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public void setNodeId(String nodeId) {
+            this.nodeId = nodeId;
         }
 
         public boolean update(int bucket, long load, long target) {
