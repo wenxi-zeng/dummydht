@@ -48,7 +48,10 @@ public class Config {
     private final static String PROPERTY_GOSSIP_STRATEGY = "gossip_strategy";
     private final static String PROPERTY_NUMBER_OF_GOSSIP_NEIGHBORS = "number_of_gossip_neighbor";
     private final static String PROPERTY_TABLE_DELTA_SIZE = "table_delta_size";
-    private final static String PROPERTY_USE_VNODE = "use_vnode";
+    public final static String PROPERTY_TRIAL_TAG = "trial_tag";
+    public final static String PROPERTY_NUMBER_OF_REQUESTS = "num_of_requests";
+    public final static String PROPERTY_DELAY_TO_STOP_ALL = "delay_to_stop_all";
+    private final static String PROPERTY_RING_LB_ALGORITHM = "ring_lb_algorithm";
     private final static String PROPERTY_MAX_LOOK_FORWARD = "max_look_forward";
 
     public final static String STATUS_ACTIVE = "active";
@@ -72,9 +75,9 @@ public class Config {
     public final static String REQUEST_DISTRIBUTION_EXP = "exp";
     public final static String GOSSIP_STRATEGY_SIMPLE = "simple";
     public final static String GOSSIP_STRATEGY_NEIGHBOR = "neighbor";
-    public static final String PROPERTY_TRIAL_TAG = "trial_tag";
-    public static final String PROPERTY_NUMBER_OF_REQUESTS = "num_of_requests";
-    public static final String PROPERTY_DELAY_TO_STOP_ALL = "delay_to_stop_all";
+    public final static String RING_LB_ALGO_NORMAL = "normal";
+    public final static String RING_LB_ALGO_VNODE = "vnode";
+    public final static String RING_LB_ALGO_FORWARD = "forward";
 
     private static volatile Config instance = null;
 
@@ -339,8 +342,8 @@ public class Config {
         return Integer.valueOf(rb.getString(PROPERTY_DELAY_TO_STOP_ALL));
     }
 
-    public boolean useVNode() {
-        return Boolean.valueOf(rb.getString(PROPERTY_USE_VNODE));
+    public String getRingLbAlgorithm() {
+        return rb.getString(PROPERTY_RING_LB_ALGORITHM);
     }
 
     public int getMaxLookForward() {
