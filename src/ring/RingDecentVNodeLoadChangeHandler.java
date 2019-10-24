@@ -4,7 +4,7 @@ import loadmanagement.LoadInfo;
 
 import java.util.List;
 
-public class RingDecentVNodeLoadChangeHandler extends  RingVNodeLoadChangeHandler{
+public class RingDecentVNodeLoadChangeHandler extends RingVNodeLoadChangeHandler{
     public RingDecentVNodeLoadChangeHandler(LookupTable table) {
         super(table);
     }

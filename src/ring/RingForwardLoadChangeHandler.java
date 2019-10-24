@@ -1,5 +1,6 @@
 package ring;
 
+import commands.RingCommand;
 import commonmodels.Indexable;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
@@ -27,6 +28,7 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         List<Solution> bestSolutions = null;
         long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
+        long delta = loadInfo.getLoad() - target;
 
         if (pnode == null || pnode.getVirtualNodes() == null) return null;
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
@@ -44,9 +46,11 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
 
         List<Request> requests = new ArrayList<>();
         for (Solution solution : bestSolutions) {
-            PhysicalNode p = new PhysicalNode(solution.getNodeId());
-            p = table.getPhysicalNodeMap().get(p.getId());
-            requests.add(generateRequestBasedOnSolution(p, solution));
+            Request request = new Request().withHeader(RingCommand.DECREASELOAD.name())
+                    .withReceiver(solution.getNodeId())
+                    .withAttachments(solution.getNodeId(), solution.getVnodeHash(), delta);
+
+            requests.add(request);
         }
 
         return requests;
@@ -56,12 +60,9 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         List<Indexable> sequence = getLookForwardSequence(globalLoad, current, upperBound);
         if (sequence.size() == 0) return null;
         List<Solution> solutions = new ArrayList<>();
-        long delta = loadInfo.getLoad() - target;
 
         for (Indexable r : sequence) {
-            Indexable predecessor = table.getTable().pre(r);
-            LoadInfo info = getLoadInfoOf(((VirtualNode)r).getPhysicalNodeId(), globalLoad);
-            Solution solution = evaluate(info, predecessor, r, info.getLoad() - delta);
+            Solution solution = new Solution(0, r.getHash(), ((VirtualNode) r).getPhysicalNodeId());
             solutions.add(solution);
         }
 
@@ -69,7 +70,6 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
     }
 
     private List<Indexable> getLookForwardSequence(List<LoadInfo> globalLoad, Indexable current, long upperBound) {
-        String currentId = ((VirtualNode) current).getPhysicalNodeId();
         Indexable iterator = current;
         List<Indexable> sequence = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
             // if we already checked all of numOfReplicas-th successors
             // that means no nodes are available for load balancing.
             // so we need to clear the sequence.
-            if (nonReplicaSuccessorId.equals(currentId)) {
+            if (nonReplicaSuccessor.getIndex() == current.getIndex()) {
                 sequence.clear();
                 break;
             }
@@ -118,15 +118,5 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         }
 
         return result;
-    }
-
-    private boolean inRange(int bucket, int start, int end) {
-        if (start > end) {
-            return (bucket > start && bucket < Config.getInstance().getNumberOfHashSlots()) ||
-                    (bucket >= 0 && bucket <= end);
-        }
-        else {
-            return bucket > start && bucket <= end;
-        }
     }
 }

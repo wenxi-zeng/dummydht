@@ -226,7 +226,7 @@ public class RingLoadBalanceAlgorithm {
         SimpleLog.i("Virtual node [hash=" + node.getHash() + "] removed");
     }
 
-    private boolean inRange(int bucket, int start, int end) {
+    protected boolean inRange(int bucket, int start, int end) {
         if (start > end) {
             return (bucket > start && bucket < Config.getInstance().getNumberOfHashSlots()) ||
                     (bucket >= 0 && bucket < end);

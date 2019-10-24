@@ -395,9 +395,12 @@ public enum RingCommand implements Command {
             if (args.length == 1) {
                 LookupTable.getInstance().decreaseLoad(pnode);
             }
-            else {
+            else if (args.length == 2){
                 String[] deltaHash = args[1].split(",");
                 LookupTable.getInstance().decreaseLoad(pnode, Arrays.stream(deltaHash).mapToInt(Integer::parseInt).toArray());
+            }
+            else {
+                LookupTable.getInstance().decreaseLoad(pnode, Integer.valueOf(args[1]), Long.valueOf(args[2]));
             }
 
             result = "Load decreased";
