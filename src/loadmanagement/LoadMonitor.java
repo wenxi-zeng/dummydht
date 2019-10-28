@@ -42,7 +42,7 @@ public class LoadMonitor extends AbstractLoadMonitor {
             handler.optimize(requests);
 
             if (requests.size() < 1) {
-                SimpleLog.i("Failed to auto balance load. No applicable node found");
+                SimpleLog.v("Failed to auto balance load. No applicable node found");
                 return;
             }
 

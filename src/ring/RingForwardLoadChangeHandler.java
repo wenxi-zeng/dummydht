@@ -62,7 +62,7 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         List<Solution> solutions = new ArrayList<>();
 
         for (Indexable r : sequence) {
-            Solution solution = new Solution(0, r.getHash(), ((VirtualNode) r).getPhysicalNodeId());
+            Solution solution = new Solution(0, r.getHash(), ((VirtualNode) r).getNodeId());
             solutions.add(solution);
         }
 
@@ -72,12 +72,13 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
     private List<Indexable> getLookForwardSequence(List<LoadInfo> globalLoad, Indexable current, long upperBound) {
         Indexable iterator = current;
         List<Indexable> sequence = new ArrayList<>();
+        sequence.add(current);
 
         // look forward every numOfReplicas-th successor until we find a light node.
         int k = 0;
         for (; k < maxLookForward; k++) {
             Indexable nonReplicaSuccessor = table.getTable().get(iterator.getIndex() + numOfReplicas);
-            String nonReplicaSuccessorId = ((VirtualNode) nonReplicaSuccessor).getPhysicalNodeId();
+            String nonReplicaSuccessorId = ((VirtualNode) nonReplicaSuccessor).getNodeId();
 
             // if we already checked all of numOfReplicas-th successors
             // that means no nodes are available for load balancing.
@@ -91,11 +92,12 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
             LoadInfo nonReplicaSuccessorLoadInfo = getLoadInfoOf(nonReplicaSuccessorId, globalLoad);
             if (nonReplicaSuccessorLoadInfo == null) continue;
 
-            // put the nonReplicaSuccessor to the sequence
-            sequence.add(nonReplicaSuccessor);
             // if nonReplicaSuccessor is capable for load balancing, then we find the target
             if (nonReplicaSuccessorLoadInfo.getLoad() < upperBound) break;
-            // otherwise, iterate the next nonReplicaSuccessor
+
+            // otherwise, put the nonReplicaSuccessor to the sequence
+            // iterate the next nonReplicaSuccessor
+            sequence.add(nonReplicaSuccessor);
             iterator = nonReplicaSuccessor;
         }
 

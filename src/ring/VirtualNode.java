@@ -54,6 +54,10 @@ public class VirtualNode extends Transportable implements Indexable {
         return String.valueOf(getHash());
     }
 
+    public String getNodeId() {
+        return physicalNodeId == null ? null : physicalNodeId.substring(1);
+    }
+
     @Override
     public int compareTo(Indexable o) {
         return Integer.compare(this.hash, o.getHash());
