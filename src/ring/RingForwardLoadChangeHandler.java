@@ -28,7 +28,6 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         PhysicalNode pnode = table.getPhysicalNodeMap().get(node.getId());
         List<Solution> bestSolutions = null;
         long target = computeTargetLoad(globalLoad, loadInfo, lowerBound, upperBound);
-        long delta = loadInfo.getLoad() - target;
 
         if (pnode == null || pnode.getVirtualNodes() == null) return null;
         for (int i = 0; i < pnode.getVirtualNodes().size(); i++) {
@@ -46,11 +45,7 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
 
         List<Request> requests = new ArrayList<>();
         for (Solution solution : bestSolutions) {
-            Request request = new Request().withHeader(RingCommand.DECREASELOAD.name())
-                    .withReceiver(solution.getNodeId())
-                    .withAttachments(solution.getNodeId(), solution.getVnodeHash(), delta);
-
-            requests.add(request);
+            requests.add(generateRequestBasedOnSolution(pnode, solution));
         }
 
         return requests;
@@ -62,7 +57,8 @@ public class RingForwardLoadChangeHandler extends RingLoadChangeHandler {
         List<Solution> solutions = new ArrayList<>();
 
         for (Indexable r : sequence) {
-            Solution solution = new Solution(0, r.getHash(), ((VirtualNode) r).getNodeId());
+            Indexable predecessor = table.getTable().pre(r);
+            Solution solution = super.evaluate(loadInfo, predecessor, current, target);
             solutions.add(solution);
         }
 
