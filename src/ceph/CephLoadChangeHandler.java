@@ -1,12 +1,13 @@
 package ceph;
 
-import commands.CommonCommand;
+import commands.CephCommand;
 import commonmodels.Clusterable;
 import commonmodels.LoadChangeHandler;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import loadmanagement.LoadInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
         node = map.getPhysicalNodeMap().get(node.getId());
         Clusterable parent = map.findParentOf(node);
 
-        Map<String, LoadInfo> map = globalLoad.stream().collect(
+        Map<String, LoadInfo> loadInfoMap = globalLoad.stream().collect(
                 Collectors.toMap(LoadInfo::getNodeId, info -> info));
         float halfWeight = 0;
         int numberOfLightNodes = 0;
@@ -34,7 +35,8 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
             if (child == null) continue;
             if (child instanceof PhysicalNode) {
                 PhysicalNode pchild = (PhysicalNode) child;
-                LoadInfo info = map.get(pchild.getFullAddress());
+                LoadInfo info = loadInfoMap.get(pchild.getFullAddress());
+                if (info == null) continue;
 
                 if (pchild.getId().equals(node.getId())) {
                     halfWeight = pchild.getWeight() / 2;
@@ -53,7 +55,8 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
             if (child == null) continue;
             if (child instanceof PhysicalNode) {
                 PhysicalNode pchild = (PhysicalNode) child;
-                LoadInfo info = map.get(pchild.getFullAddress());
+                LoadInfo info = loadInfoMap.get(pchild.getFullAddress());
+                if (info == null) continue;
 
                 if (pchild.getId().equals(node.getId())) {
                     pchild.setWeight(halfWeight);
@@ -64,15 +67,18 @@ public class CephLoadChangeHandler implements LoadChangeHandler {
             }
         }
 
-        // no need to generate request for changed nodes,
-        // since every node has to have a update request.
-        // requests are generated in the optimize method.
-        return null;
+        map.update();
+        List<Request> requests = new ArrayList<>();
+        requests.add(new Request()
+                .withHeader(CephCommand.UPDATEMAP.name())
+                .withLargeAttachment(map));
+
+        return requests;
     }
 
     @Override
     public void optimize(List<Request> requests) {
-        requests.add(new Request().withHeader(CommonCommand.PROPAGATE.name()));
+
     }
 
     @Override

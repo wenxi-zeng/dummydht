@@ -408,10 +408,10 @@ public enum CephCommand implements Command {
         }
     },
 
-    UPDATE {
+    UPDATEMAP {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CephCommand.UPDATE.name());
+            return new Request().withHeader(CephCommand.UPDATEMAP.name());
         }
 
         @Override
@@ -428,7 +428,7 @@ public enum CephCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CephCommand.UPDATE.name();
+            return CephCommand.UPDATEMAP.name();
         }
 
         @Override
@@ -440,7 +440,7 @@ public enum CephCommand implements Command {
     DELTA {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(CephCommand.UPDATE.name());
+            return new Request().withHeader(CephCommand.DELTA.name());
         }
 
         @Override
@@ -455,14 +455,20 @@ public enum CephCommand implements Command {
                     List<Request> delta = (List<Request>) attachment;
                     for (Request r : delta) {
                         // SimpleLog.i("Apply delta: " + r);
-                        CephCommand cmd = CephCommand.valueOf(r.getHeader());
-                        response = cmd.execute(r);
+                        if (r.getTimestamp() >= ClusterMap.getInstance().getEpoch()) {
+                            CephCommand cmd = CephCommand.valueOf(r.getHeader());
+                            response = cmd.execute(r);
+                            ClusterMap.getInstance().setEpoch(r.getTimestamp());
+                        }
                     }
                 } else if (attachment instanceof Request) {
                     Request r = (Request) attachment;
                     // SimpleLog.i("Apply delta: " + r);
-                    CephCommand cmd = CephCommand.valueOf(r.getHeader());
-                    response = cmd.execute(r);
+                    if (r.getTimestamp() >= ClusterMap.getInstance().getEpoch()) {
+                        CephCommand cmd = CephCommand.valueOf(r.getHeader());
+                        response = cmd.execute(r);
+                        ClusterMap.getInstance().setEpoch(r.getTimestamp());
+                    }
                 } else {
                     String result = ClusterMap.getInstance().updateTable(request.getLargeAttachment());
                     if (result.equals(ClusterMap.UPDATE_STATUS_DONE)) {
@@ -479,7 +485,7 @@ public enum CephCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return CephCommand.UPDATE.name();
+            return CephCommand.DELTA.name();
         }
 
         @Override
