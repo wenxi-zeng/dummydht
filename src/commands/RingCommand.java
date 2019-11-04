@@ -527,32 +527,6 @@ public enum RingCommand implements Command {
 
     },
 
-    UPDATE {
-        @Override
-        public Request convertToRequest(String[] args) {
-            return new Request().withHeader(RingCommand.UPDATE.name());
-        }
-
-        @Override
-        public Response execute(Request request) {
-            Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
-            String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
-            response.setMessage(result);
-
-            return response.withAttachment(LookupTable.getInstance().getTable());
-        }
-
-        @Override
-        public String getParameterizedString() {
-            return RingCommand.UPDATE.name();
-        }
-
-        @Override
-        public String getHelpString() {
-            return getParameterizedString();
-        }
-    },
-
     DELTA {
         @Override
         public Request convertToRequest(String[] args) {

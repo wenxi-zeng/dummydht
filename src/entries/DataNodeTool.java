@@ -145,11 +145,10 @@ public class DataNodeTool {
 
     private void onTableFetched(Object table) {
         Request request = new Request()
-                .withHeader(RingCommand.UPDATE.name())
+                .withHeader(CommonCommand.UPDATE.name())
                 .withLargeAttachment(table);
 
-        Response response = dataNode.execute(request);
-        SimpleLog.v(String.valueOf(response));
+        dataNode.updateTable(table);
     }
 
     private void generateRequest() {

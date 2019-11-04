@@ -507,36 +507,10 @@ public enum ElasticCommand implements Command {
         }
     },
 
-    UPDATE {
-        @Override
-        public Request convertToRequest(String[] args) {
-            return new Request().withHeader(ElasticCommand.UPDATE.name());
-        }
-
-        @Override
-        public Response execute(Request request) {
-            Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
-            String result = LookupTable.getInstance().updateTable(request.getLargeAttachment());
-            response.setMessage(result);
-
-            return response;
-        }
-
-        @Override
-        public String getParameterizedString() {
-            return ElasticCommand.UPDATE.name();
-        }
-
-        @Override
-        public String getHelpString() {
-            return getParameterizedString();
-        }
-    },
-
     DELTA {
         @Override
         public Request convertToRequest(String[] args) {
-            return new Request().withHeader(ElasticCommand.UPDATE.name());
+            return new Request().withHeader(ElasticCommand.DELTA.name());
         }
 
         @Override
@@ -578,7 +552,7 @@ public enum ElasticCommand implements Command {
 
         @Override
         public String getParameterizedString() {
-            return ElasticCommand.UPDATE.name();
+            return ElasticCommand.DELTA.name();
         }
 
         @Override
