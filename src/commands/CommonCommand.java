@@ -364,6 +364,60 @@ public enum CommonCommand implements Command {
         }
     },
 
+    DELTA {
+        @Override
+        public Request convertToRequest(String[] args) {
+            return new Request().withHeader(CommonCommand.DELTA.name());
+        }
+
+        @Override
+        public Response execute(Request request) {
+            String result;
+            if (DataNodeDaemon.getInstance() == null) {
+                result = "Daemon not started";
+                return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
+            }
+            else if (DataNodeDaemon.getInstance().getDataNodeServer() == null){
+                result = "Data node not started";
+                return new Response(request).withStatus(Response.STATUS_FAILED).withMessage(result);
+            }
+            else {
+                Object attachment = request.getLargeAttachment();
+
+                Response response = new Response(request).withStatus(Response.STATUS_SUCCESS);
+                try {
+                    if (attachment instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<Request> delta = (List<Request>) attachment;
+                        for (Request r : delta) {
+                            DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
+                        }
+                    } else if (attachment instanceof Request) {
+                        Request r = (Request) attachment;
+                        DataNodeDaemon.getInstance().getDataNodeServer().processCommand(r);
+                    } else {
+                        DataNodeDaemon.getInstance().getDataNodeServer().updateTable(request.getLargeAttachment());
+                    }
+                } catch (Exception e) {
+
+                    response.withStatus(Response.STATUS_FAILED).withMessage(e.getMessage());
+                }
+
+                return response;
+            }
+        }
+
+        @Override
+        public String getParameterizedString() {
+            return CommonCommand.DELTA.name();
+        }
+
+        @Override
+        public String getHelpString() {
+            return getParameterizedString();
+        }
+    },
+
     LOADHANDSHAKE{
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {

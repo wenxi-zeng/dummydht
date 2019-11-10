@@ -227,7 +227,7 @@ public enum CephCommand implements Command {
     ADDNODE{
         @Override
         public Request convertToRequest(String[] args) throws InvalidRequestException {
-            if (args.length != 3) {
+            if (args.length < 2) {
                 throw new InvalidRequestException("Wrong arguments. Try: " + getHelpString());
             }
 
@@ -235,7 +235,7 @@ public enum CephCommand implements Command {
                 throw new InvalidRequestException("Invalid ip format. Try: " + getHelpString());
             }
 
-            String attachment = args[1] + " " + args[2];
+            String attachment = args[1] + " " + (args.length == 3 ? args[2] : "");
             return new Request().withHeader(CephCommand.ADDNODE.name())
                     .withAttachment(attachment)
                     .withReceiver(args[1]);
@@ -477,6 +477,7 @@ public enum CephCommand implements Command {
                     response.setMessage(result);
                 }
             } catch (Exception e) {
+                SimpleLog.e(e);
                 response.withStatus(Response.STATUS_FAILED).withMessage(e.getMessage());
             }
 

@@ -200,7 +200,14 @@ public class CephLoadBalanceAlgorithm {
             return;
         }
 
-        map.getWeightDistributeStrategy().onWeightChanged(map, pnode, deltaWeight);
+        Clusterable clusterable = map.findCluster(pnode.getId());
+        if (clusterable == null) {
+            SimpleLog.i(node.getId() + " does not exist.");
+            return;
+        }
+
+        map.getWeightDistributeStrategy().onWeightChanged(map, clusterable, deltaWeight);
+        pnode.setWeight(clusterable.getWeight());
         loadBalancing(map, map.getRoot());
         SimpleLog.i("Weight updated. deltaWeight="  + deltaWeight + ", new weight=" + pnode.getWeight());
 

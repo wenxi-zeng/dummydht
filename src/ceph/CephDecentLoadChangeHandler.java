@@ -1,10 +1,12 @@
 package ceph;
 
+import commands.CephCommand;
 import commonmodels.Clusterable;
 import commonmodels.PhysicalNode;
 import commonmodels.transport.Request;
 import loadmanagement.LoadInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CephDecentLoadChangeHandler extends CephLoadChangeHandler {
@@ -20,37 +22,22 @@ public class CephDecentLoadChangeHandler extends CephLoadChangeHandler {
         node = map.getPhysicalNodeMap().get(node.getId());
         Clusterable parent = map.findParentOf(node);
 
-        float halfWeight = 0;
+        List<Request> requests = new ArrayList<>();
         for (int i = 0; i < parent.getSubClusters().length; i++) {
             Clusterable child = parent.getSubClusters()[i];
             if (child == null) continue;
             if (child instanceof PhysicalNode) {
                 PhysicalNode pchild = (PhysicalNode) child;
-
                 if (pchild.getId().equals(node.getId())) {
-                    halfWeight = pchild.getWeight() / 2;
+                    Request r = new Request().withHeader(CephCommand.CHANGEWEIGHT.name())
+                            .withReceiver(pchild.getFullAddress())
+                            .withAttachments(pchild.getFullAddress(), pchild.getWeight() * 1.5);
+                    requests.add(r);
+                    break;
                 }
             }
         }
 
-        for (int i = 0; i < parent.getSubClusters().length; i++) {
-            Clusterable child = parent.getSubClusters()[i];
-            if (child == null) continue;
-            if (child instanceof PhysicalNode) {
-                PhysicalNode pchild = (PhysicalNode) child;
-
-                if (pchild.getId().equals(node.getId())) {
-                    pchild.setWeight(halfWeight);
-                }
-                else if(loadInfoList.get(0).getNodeId().equals(node.getId())) {
-                    pchild.setWeight(pchild.getWeight() + halfWeight);
-                }
-            }
-        }
-
-        // no need to generate request for changed nodes,
-        // since every node has to have a update request.
-        // requests are generated in the optimize method.
-        return null;
+        return requests;
     }
 }

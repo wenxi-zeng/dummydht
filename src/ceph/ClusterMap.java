@@ -347,6 +347,6 @@ public class ClusterMap extends Transportable implements Serializable {
     }
 
     public PhysicalNode getSelf() {
-        return physicalNodeMap.get(self.getId());
+        return self == null ? null : physicalNodeMap.get(self.getId());
     }
 }
