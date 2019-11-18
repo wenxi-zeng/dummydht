@@ -42,6 +42,8 @@ public class ScriptGenerator {
 
     public final static String FILE_START_PROXY = "start-proxy.sh";
 
+    public final static String FILE_START_SEEDS = "start-seeds.sh";
+
     public final static String FILE_STOP_ALL_BUT_CLIENT = "stop-all-but_client.sh";
 
     public final static String FILE_CHECK_POINTS_ALL = "check-points-all.sh";
@@ -65,6 +67,7 @@ public class ScriptGenerator {
         generateImportData();
         generateGenerateAll();
         generateStartProxy();
+        generateStartSeeds();
         generateStopAllButClient();
         generateCheckPointsAll();
     }
@@ -162,6 +165,27 @@ public class ScriptGenerator {
                 stringBuilder.append(command);
             else
                 stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(node).append(" << EOF").append('\n').append(command).append("exit").append('\n').append("EOF").append('\n');
+        }
+
+        try (PrintStream out = new PrintStream(createFile(filename))) {
+            out.println(stringBuilder.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateStartSeeds() {
+        String filename = ResourcesLoader.getRelativeFileName(FILE_START_SEEDS);
+        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder command = new StringBuilder();
+        command.append("java -jar ").append(File.separator).append("root").append(File.separator).append("dummydht").append(File.separator).append("dummydht.jar -daemon ");
+
+        for (String node : Config.getInstance().getSeeds()) {
+            String[] str = node.split(":");
+            if (str[0].contains(SELF))
+                stringBuilder.append(command).append(str[1]).append("\n");
+            else
+                stringBuilder.append("sshpass -p alien1 ssh -tt root@").append(str[0]).append(" << EOF").append('\n').append(command).append(str[1]).append(" & \n").append("exit").append('\n').append("EOF").append('\n');
         }
 
         try (PrintStream out = new PrintStream(createFile(filename))) {

@@ -14,7 +14,7 @@ public class Config {
     private final static String PROPERTY_NUMBER_OF_REPLICAS = "number_of_replicas";
     public final static String PROPERTY_INIT_NUMBER_OF_ACTIVE_NODES = "init_number_of_active_nodes";
     private final static String PROPERTY_VIRTUAL_PHYSICAL_RATIO = "virtual_physical_ratio";
-    private final static String PROPERTY_NUMBER_OF_PLACEMENT_GROUPS = "number_of_placement_groups";
+    public final static String PROPERTY_NUMBER_OF_PLACEMENT_GROUPS = "number_of_placement_groups";
     private final static String PROPERTY_INITIAL_WEIGHT = "initial_weight";
     private final static String PROPERTY_NUMBER_OF_RUSH_LEVEL = "number_of_rush_level";
     private final static String PROPERTY_CLUSTER_CAPACITY = "cluster_capacity";
